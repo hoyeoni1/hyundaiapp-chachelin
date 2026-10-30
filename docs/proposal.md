@@ -172,7 +172,7 @@
 
 ## 7. 참고자료
 
-- GitHub 저장소: 【제출 전 기입 — 팀 Organization 저장소 주소】 (소스 코드 + apk/Chachelin_release.apk)
+- GitHub 저장소: 【제출 전 기입 — GitHub 저장소 주소】 (소스 코드 + apk/SamgakGorae_Chachelin_release.apk)
 - 시연 영상: 【제출 전 기입 — 영상 링크 또는 첨부 파일명】
 - 시연 데이터 안내: 배터리 잔량은 에뮬레이터 콘솔로 주입한 값이며, 다른 차량의 충전 기록은 시연용 시드 데이터다.
 
