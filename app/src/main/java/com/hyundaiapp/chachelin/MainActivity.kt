@@ -1,17 +1,20 @@
 package com.hyundaiapp.chachelin
 
-import android.app.Activity
 import android.os.Bundle
-import android.widget.TextView
+import androidx.activity.ComponentActivity
+import androidx.activity.compose.setContent
+import com.hyundaiapp.chachelin.ui.ChachelinNav
+import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
 
-// 뼈대. 화면은 길민종이 교체한다
-class MainActivity : Activity() {
+// DO(주행 중 사용) 미선언 앱: 주행 중에는 플랫폼이 이 화면을 막는다(PRD 3.2)
+class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(TextView(this).apply {
-            textSize = 28f
-            setPadding(48, 48, 48, 48)
-            text = getString(R.string.app_name)
-        })
+        val container = (application as ChachelinApp).container
+        setContent {
+            ChachelinTheme {
+                ChachelinNav(container)
+            }
+        }
     }
 }
