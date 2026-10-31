@@ -8,7 +8,7 @@
   - 와이어프레임: https://claude.ai/artifact/9vidSJtHrxzCqtEcjJjVTf (비공개 — 팀이 보려면 Share로 공유 필요)
   - 화면: `stations/StationListScreen.kt`(S1), `stations/StationDetailScreen.kt`(S2), `charging/ChargingScreen.kt`(S3), `review/ReviewScreen.kt`(S4), `review/FailureNoticeScreen.kt`(S5), `history/HistoryScreen.kt`(S6), `onboarding/OnboardingScreen.kt`(S7)
   - 데이터: S1만 실제 `StationListViewModel`. 나머지는 `PreviewData`나 `ChachelinNav` 안의 임시 상태로 동작
-- 진행 중 브랜치·PR: `feat/ui-screens` (PR 전)
+- 진행 중 브랜치·PR: `feat/ui-screens` → https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 (리뷰·머지 대기)
 - 다음 할 일(우선순위 순):
   1. 에뮬레이터에서 개발 메뉴 → 각 화면 확인(터치 반응·글자 크기)
   2. 이상준 ViewModel이 나오면 `*Nav.kt`의 임시 상태·`PreviewData`를 ViewModel로 교체
