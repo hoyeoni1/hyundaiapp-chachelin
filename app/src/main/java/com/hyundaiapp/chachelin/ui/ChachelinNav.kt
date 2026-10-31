@@ -7,21 +7,32 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.hyundaiapp.chachelin.AppContainer
 import com.hyundaiapp.chachelin.BuildConfig
+import com.hyundaiapp.chachelin.ui.charging.ChargingScreen
 import com.hyundaiapp.chachelin.ui.debug.SignalMonitorScreen
+import com.hyundaiapp.chachelin.ui.history.HistoryScreen
+import com.hyundaiapp.chachelin.ui.onboarding.OnboardingScreen
+import com.hyundaiapp.chachelin.ui.onboarding.Terms
+import com.hyundaiapp.chachelin.ui.review.FailureNoticeScreen
+import com.hyundaiapp.chachelin.ui.review.ReviewScreen
+import com.hyundaiapp.chachelin.ui.stations.StationDetailScreen
 import com.hyundaiapp.chachelin.ui.stations.StationListScreen
 import com.hyundaiapp.chachelin.ui.stations.StationListViewModel
 
@@ -43,7 +54,14 @@ enum class Screen(val title: String) {
 fun ChachelinNav(container: AppContainer) {
     val stack = remember { mutableStateListOf(if (BuildConfig.DEBUG) Screen.DEV_MENU else Screen.STATIONS) }
     val go: (Screen) -> Unit = { stack.add(it) }
-    BackHandler(enabled = stack.size > 1) { stack.removeAt(stack.lastIndex) }
+    val back: () -> Unit = { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
+    BackHandler(enabled = stack.size > 1) { back() }
+
+    // S2·S4·S7은 아직 ViewModel이 없다 → 화면 동작 확인용으로 여기서 상태를 들고 있는다(이상준 ViewModel로 교체)
+    var detail by remember { mutableStateOf(PreviewData.stationDetail) }
+    var review by remember { mutableStateOf(PreviewData.review) }
+    var onboarding by remember { mutableStateOf(OnboardingUiState()) }
+    var terms by remember { mutableStateOf<Terms?>(null) }
 
     Surface(Modifier.fillMaxSize()) {
         when (stack.last()) {
@@ -51,18 +69,60 @@ fun ChachelinNav(container: AppContainer) {
             Screen.STATIONS -> {
                 val vm = viewModel { StationListViewModel(container.signals, container.stations) }
                 val state by vm.state.collectAsState()
-                StationListScreen(state, onStationClick = { go(Screen.STATION_DETAIL) })
+                StationListScreen(
+                    state,
+                    onStationClick = { go(Screen.STATION_DETAIL) },
+                    onHistoryClick = { go(Screen.HISTORY) },
+                    onRetry = vm::refresh,
+                )
             }
             Screen.SIGNALS -> SignalMonitorScreen(container.signals)
-            // 아래는 아직 ViewModel이 없다 → 미리보기 데이터로 상태만 보여 준다
-            Screen.STATION_DETAIL -> Placeholder(Screen.STATION_DETAIL, PreviewData.stationDetail)
-            Screen.CHARGING -> Placeholder(Screen.CHARGING, PreviewData.charging)
-            Screen.REVIEW -> Placeholder(Screen.REVIEW, PreviewData.review)
-            Screen.FAILURE -> Placeholder(Screen.FAILURE, PreviewData.failure)
-            Screen.HISTORY -> Placeholder(Screen.HISTORY, PreviewData.history)
-            Screen.ONBOARDING -> Placeholder(Screen.ONBOARDING, OnboardingUiState())
+            // 아래는 아직 ViewModel이 없다 → 미리보기 데이터로 그린다
+            Screen.STATION_DETAIL -> StationDetailScreen(
+                detail,
+                onBack = back,
+                onRouteClick = { detail = detail.copy(confirmRoute = true) },
+                // 실제 경로 설정(NaviHelper requestRoute)은 이상준 ViewModel에서
+                onConfirmRoute = { detail = detail.copy(confirmRoute = false) },
+                onDismissRoute = { detail = detail.copy(confirmRoute = false) },
+            )
+            Screen.CHARGING -> ChargingScreen(PreviewData.charging)
+            Screen.REVIEW -> ReviewScreen(
+                review,
+                onRate = { review = review.copy(rating = it) },
+                onToggleTag = { tag ->
+                    review = review.copy(
+                        selectedTags = if (tag in review.selectedTags) review.selectedTags - tag else review.selectedTags + tag,
+                    )
+                },
+                onSubmit = { review = PreviewData.review; back(); go(Screen.HISTORY) },
+                onLater = back,
+            )
+            Screen.FAILURE -> FailureNoticeScreen(PreviewData.failure, onNotFailure = back, onConfirm = back)
+            Screen.HISTORY -> HistoryScreen(PreviewData.history, onBack = back)
+            Screen.ONBOARDING -> OnboardingScreen(
+                onboarding,
+                onAgreeLocation = { onboarding = onboarding.copy(locationAgreed = true) },
+                onAgreePrivacy = { onboarding = onboarding.copy(privacyAgreed = true) },
+                onSelectPreset = { onboarding = onboarding.copy(selectedPreset = it) },
+                onShowTerms = { terms = it },
+                onStart = back,
+            )
         }
     }
+
+    terms?.let { TermsDialog(it, onDismiss = { terms = null }) }
+}
+
+/** 약관 전문 자리. 문구는 장호연이 정리하면 바꾼다. 닫기는 동의가 아니다 */
+@Composable
+private fun TermsDialog(terms: Terms, onDismiss: () -> Unit) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(if (terms == Terms.LOCATION) "위치정보 이용" else "개인정보 수집·이용") },
+        text = { Text("[약관 전문 준비 중]") },
+        confirmButton = { TextButton(onClick = onDismiss) { Text("닫기") } },
+    )
 }
 
 @Composable
@@ -75,14 +135,5 @@ private fun DevMenu(go: (Screen) -> Unit) {
         Screen.entries.filter { it != Screen.DEV_MENU }.forEach { s ->
             Button(onClick = { go(s) }) { Text(s.title) }
         }
-    }
-}
-
-@Composable
-private fun Placeholder(screen: Screen, state: Any) {
-    Column(Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState())) {
-        Text(screen.title, style = MaterialTheme.typography.headlineMedium)
-        Text("화면 미구현 — 아래 UiState로 그린다", modifier = Modifier.padding(vertical = 12.dp))
-        Text(state.toString())
     }
 }

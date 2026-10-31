@@ -1,0 +1,148 @@
+package com.hyundaiapp.chachelin.ui.charging
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
+import com.hyundaiapp.chachelin.ui.ChargingUiState
+import com.hyundaiapp.chachelin.ui.PreviewData
+import com.hyundaiapp.chachelin.ui.components.CarCard
+import com.hyundaiapp.chachelin.ui.components.CarIcons
+import com.hyundaiapp.chachelin.ui.components.StatTile
+import com.hyundaiapp.chachelin.ui.components.formatDuration
+import com.hyundaiapp.chachelin.ui.components.formatWhole
+import com.hyundaiapp.chachelin.ui.theme.CarColors
+import com.hyundaiapp.chachelin.ui.theme.CarDimens
+import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
+
+/** 시작 SoC 구간을 나머지와 구분하는 어두운 파랑 */
+private val StartSegment = Color(0xFF2B7EA3)
+
+/**
+ * S3 충전 중(정차 중). SoC를 크게, 경과 시간·지금까지 실측 평균을 옆에.
+ * 사용자 조작은 없다. 충전구를 닫으면 ViewModel이 S4/S5로 넘긴다.
+ */
+@Composable
+fun ChargingScreen(state: ChargingUiState) {
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val portrait = maxWidth < maxHeight
+        Column(
+            Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 40.dp),
+            verticalArrangement = Arrangement.spacedBy(32.dp),
+        ) {
+            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                Icon(CarIcons.Bolt, contentDescription = null, tint = CarColors.Primary, modifier = Modifier.size(36.dp))
+                Text("충전 기록 중", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
+                if (!portrait && state.stationName != null) {
+                    Text(state.stationName, style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
+                }
+            }
+            if (portrait) {
+                state.stationName?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant) }
+                SocCard(state, Modifier.fillMaxWidth().weight(1f))
+                Side(state, Modifier.fillMaxWidth().height(220.dp), vertical = false)
+            } else {
+                Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                    SocCard(state, Modifier.weight(3f).fillMaxHeight())
+                    Side(state, Modifier.weight(2f).fillMaxHeight(), vertical = true)
+                }
+            }
+            Text("충전구를 닫으면 자동으로 기록하고 평가 화면을 띄워요", style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun SocCard(state: ChargingUiState, modifier: Modifier) {
+    val gained = state.socNow - state.socStart
+    CarCard(
+        modifier.semantics { contentDescription = "배터리 ${state.socNow}%, 시작 ${state.socStart}%" },
+        contentPadding = PaddingValues(40.dp),
+        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+    ) {
+        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+            Text("${state.socNow}%", style = MaterialTheme.typography.displayLarge.copy(fontSize = 140.sp, lineHeight = 140.sp))
+            Text(
+                "시작 ${state.socStart}%에서 ${if (gained >= 0) "+" else ""}${gained}%p",
+                style = MaterialTheme.typography.titleMedium,
+                color = CarColors.OnSurfaceVariant,
+                modifier = Modifier.padding(bottom = 20.dp),
+            )
+        }
+        val shape = RoundedCornerShape(16.dp)
+        Box(Modifier.fillMaxWidth().height(32.dp).clip(shape).background(CarColors.Track)) {
+            Box(Modifier.fillMaxHeight().fillMaxWidth(state.socNow.coerceIn(0, 100) / 100f).clip(shape).background(CarColors.Primary))
+            Box(Modifier.fillMaxHeight().fillMaxWidth(state.socStart.coerceIn(0, 100) / 100f).background(StartSegment))
+        }
+        Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.SpaceBetween) {
+            Text("0%", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
+            Text("100%", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
+        }
+    }
+}
+
+@Composable
+private fun Side(state: ChargingUiState, modifier: Modifier, vertical: Boolean) {
+    val big = MaterialTheme.typography.displayMedium
+    val centered = Arrangement.spacedBy(12.dp, Alignment.CenterVertically)
+    // 1시간 미만은 숫자만 크게 + "분"을 단위로, 넘으면 "1시간 5분" 통째로
+    val minutes = state.elapsedSec / 60
+    val elapsed: @Composable (Modifier) -> Unit = { m ->
+        if (minutes < 60) {
+            StatTile("경과 시간", "$minutes", m, unit = "분", valueStyle = big, verticalArrangement = centered)
+        } else {
+            StatTile("경과 시간", formatDuration(state.elapsedSec), m, valueStyle = big, verticalArrangement = centered)
+        }
+    }
+    val speed: @Composable (Modifier) -> Unit = { m ->
+        StatTile("지금까지 실측 평균", formatWhole(state.avgKw), m, unit = "kW", valueStyle = big, verticalArrangement = centered)
+    }
+    if (vertical) {
+        Column(modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            elapsed(Modifier.fillMaxWidth().weight(1f))
+            speed(Modifier.fillMaxWidth().weight(1f))
+        }
+    } else {
+        Row(modifier, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
+            elapsed(Modifier.weight(1f).fillMaxHeight())
+            speed(Modifier.weight(1f).fillMaxHeight())
+        }
+    }
+}
+
+@Preview(name = "S3 가로", widthDp = 1280, heightDp = 720)
+@Composable
+private fun ChargingPreview() {
+    ChachelinTheme { Surface { ChargingScreen(PreviewData.charging) } }
+}
+
+@Preview(name = "S3 세로", widthDp = 720, heightDp = 1280)
+@Composable
+private fun ChargingPortraitPreview() {
+    ChachelinTheme { Surface { ChargingScreen(PreviewData.charging) } }
+}
