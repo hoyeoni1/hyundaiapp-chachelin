@@ -17,6 +17,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -113,6 +114,7 @@ private fun Presets(state: OnboardingUiState, onSelectPreset: (Int) -> Unit) {
                     onClick = { onSelectPreset(i) },
                     modifier = Modifier.weight(1f),
                     height = 96.dp,
+                    role = Role.RadioButton,
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(preset.substringBefore(" ("), style = MaterialTheme.typography.labelLarge.copy(fontSize = MaterialTheme.typography.bodyLarge.fontSize))

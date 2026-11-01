@@ -2,15 +2,15 @@
 
 담당 경로: `app/src/main/java/com/hyundaiapp/*/ui/`(화면·테마). 상태 계약 `ui/UiStates.kt`는 로직 담당과 합의
 
-## 현재 상태 (2026-10-31 기준, 매번 덮어쓰기)
+## 현재 상태 (2026-11-01 기준, 매번 덮어쓰기)
 
 - 한 일 요약: 공통 테마 + 차슐랭 S1~S7(가로·세로) 화면을 와이어프레임대로 구현. 두 앱 모두 `assembleDebug`·`test` 통과, Robolectric으로 화면을 이미지로 렌더해 눈으로 확인함. **에뮬레이터 실행은 아직 안 해 봄.**
   - 와이어프레임: https://claude.ai/artifact/9vidSJtHrxzCqtEcjJjVTf (비공개 — 팀이 보려면 Share로 공유 필요)
   - 화면: `stations/StationListScreen.kt`(S1), `stations/StationDetailScreen.kt`(S2), `charging/ChargingScreen.kt`(S3), `review/ReviewScreen.kt`(S4), `review/FailureNoticeScreen.kt`(S5), `history/HistoryScreen.kt`(S6), `onboarding/OnboardingScreen.kt`(S7)
   - 데이터: S1만 실제 `StationListViewModel`. 나머지는 `PreviewData`나 `ChachelinNav` 안의 임시 상태로 동작
-- 진행 중 브랜치·PR: `feat/ui-screens` → https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 (리뷰·머지 대기)
+- 진행 중 브랜치·PR: 화면 PR(https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1)은 11-01 머지됨. 리뷰 후속 `fix/ui-review-followups` PR 올림(리뷰·머지 대기)
 - 다음 할 일(우선순위 순):
-  1. 에뮬레이터에서 개발 메뉴 → 각 화면 확인(터치 반응·글자 크기)
+  1. 에뮬레이터에서 개발 메뉴 → 각 화면 확인(터치 반응·글자 크기). **이 Mac(Apple Silicon)은 Pleos 이미지(x86_64 전용)를 못 돌린다** → 에뮬레이터가 있는 팀원 PC에서 확인
   2. 이상준 ViewModel이 나오면 `*Nav.kt`의 임시 상태·`PreviewData`를 ViewModel로 교체
   3. 약관 전문 문구 받으면 `TermsDialog`의 "[약관 전문 준비 중]" 교체(장호연)
   4. 영상용 화면 연출(장호연과)
@@ -28,6 +28,12 @@
 - 확인 방법: 앱 실행 → 개발 메뉴 → 각 S 화면. Android Studio에서는 각 Screen 파일 아래 `@Preview`(가로 1280×720, 차슐랭은 세로 720×1280도). CLI: `./gradlew assembleDebug test`
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-01
+- 한 일: 화면 PR #1 머지 후 리뷰 후속(브랜치 `fix/ui-review-followups`). 실측 평균 kW가 null이면 "-kW" 대신 "측정 중"(`formatKw`, S1·S2·S3·S4). `SelectableButton`에 `role` 파라미터를 두고 S7 차종은 `Role.RadioButton`(크루즈브레이커와 공통 부품 같이 수정). Robolectric 렌더로 확인: S7 가로 시작 버튼 문구 한 줄, S4 가로 별점·태그 6개·버튼이 720dp 안에 스크롤 없이 들어감. `assembleDebug`·`test` 통과.
+- 결정한 것과 이유: S3 큰 숫자 칸은 값이 없으면 단위 "kW"도 빼고 "측정 중"만 보여 준다(숫자 없는 단위는 읽기 어색함)
+- 바꾼 파일: `ui/components/Formats.kt`, `ui/components/CarComponents.kt`, `ui/stations/`, `ui/charging/ChargingScreen.kt`, `ui/review/ReviewScreen.kt`, `ui/onboarding/OnboardingScreen.kt`, `docs/handoff/gil-minjong.md`
+
 
 ### 2026-10-31
 - 한 일(2): 와이어프레임대로 코드 구현(브랜치 `feat/ui-screens`). 공통 테마(`CarColors`·`CarDimens`·글자 크기), 공통 부품(`CarComponents.kt`·`CarIcons.kt`), 차슐랭 S1~S7(가로·세로) 화면, `*Nav.kt` Placeholder 교체. `assembleDebug`·`test` 통과, Robolectric 렌더로 화면 확인(렌더 설정은 커밋 안 함).

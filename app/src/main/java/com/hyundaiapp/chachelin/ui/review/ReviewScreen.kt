@@ -37,7 +37,7 @@ import com.hyundaiapp.chachelin.ui.components.PrimaryButton
 import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.SelectableButton
 import com.hyundaiapp.chachelin.ui.components.StatTile
-import com.hyundaiapp.chachelin.ui.components.formatWhole
+import com.hyundaiapp.chachelin.ui.components.formatKw
 import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
@@ -110,7 +110,7 @@ private fun VerifiedCard(state: ReviewUiState, modifier: Modifier, compact: Bool
         Text("${state.socStart}% → ${state.socEnd}%", style = MaterialTheme.typography.displayMedium)
         if (compact) {
             Text(
-                "${state.durationMin}분 · 실측 평균 ${formatWhole(state.avgKw)}kW",
+                "${state.durationMin}분 · 실측 평균 ${formatKw(state.avgKw)}",
                 style = MaterialTheme.typography.bodyLarge,
                 color = CarColors.OnSurfaceVariant,
             )
@@ -118,7 +118,7 @@ private fun VerifiedCard(state: ReviewUiState, modifier: Modifier, compact: Bool
             Spacer(Modifier.weight(1f))
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 StatTile("충전 시간", "${state.durationMin}분", Modifier.weight(1f), color = CarColors.SurfaceVariant)
-                StatTile("실측 평균", "${formatWhole(state.avgKw)}kW", Modifier.weight(1f), color = CarColors.SurfaceVariant)
+                StatTile("실측 평균", formatKw(state.avgKw), Modifier.weight(1f), color = CarColors.SurfaceVariant)
             }
         }
     }
