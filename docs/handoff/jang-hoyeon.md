@@ -17,13 +17,13 @@
 - 진행 중 브랜치·PR:
   - 길민종 `feat/ui-screens` — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/1 — **11-01 머지 완료**(Claude 리뷰 `✅ 머지 가능` 후 장호연 지시로 merge commit). 후속은 리뷰 코멘트의 "다음에 챙길 것"
   - 길민종 `fix/ui-review-followups` (리뷰 후속, PR 2번) — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/2 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/2 — **11-01 머지 완료**(자동 리뷰 `✅ 머지 가능` 후 장호연 지시). 남은 것: 에뮬레이터 확인(길민종 Mac 불가 → 에뮬레이터 PC 필요), 이상준 질문 4개, 이민하 합의 3개(S4 자동 기록 토글·안내 거리·차속 없음)
-  - 장호연 `feat/demo-scripts`(두 저장소, 10-30) — **PR 아직 없음**. 코드라 PR로 올려야 main에 들어감
+  - 장호연 `feat/demo-scripts`(두 저장소, 10-30) — **PR 아직 없음**. 코드라 PR로 올려야 main에 들어감. main보다 13커밋 뒤처짐, main을 merge하면 이 문서에서 충돌(11-01 확인) → 충돌을 직접 해결한 뒤 PR
   - 기타: 기획서(`docs/proposal.md`, `docs/submission/`)는 팀장 결정으로 `main`에 바로 push
 - 리뷰·머지: PR 리뷰는 Claude(정기 작업 "삼각고래 PR 리뷰", 매일 09~23시 매시), 머지는 장호연만(`docs/pr-review-guide.md`)
 - 다음 할 일(우선순위 순):
   1. 기획서 7번 칸의 【제출 전 기입】 2곳(GitHub 저장소 주소, 시연 영상 링크) 채우고 재생성. Organization은 만들지 않기로 함(10-30) → 개인 계정 링크가 양식의 "계정정보 노출 금지"에 걸리는지 주최 측 답변 확인
   2. 01 참가신청서·04 서명 칸을 손으로 채우고 5명 서명 수집
-  3. 주최 측 문의 메일 발송 — **초안 `docs/organizer-inquiry-email.md` 완성(10-31)**, 팀원 CC 넣고 대표자 메일로 발송(9절 1~7번 — 10-31에 1번을 "FGS·부팅 자동 시작 심사 허용"으로 바꾸고 7번 "실차 시동 off 시 완전 종료/절전" 추가)
+  3. 주최 측 문의 메일 발송 — **초안 `docs/organizer-inquiry-email.md` 11문항(10-31 작성, 11-01 11번 `TTS_SERVICE` 권한 추가)**, 팀원 CC 넣고 대표자 메일로 발송(팀 문서 9절 1~8번)
   4. Pleos Playground 프로젝트 생성·팀원 추가
   5. 황준용에게 core 초안 검토·인계 요청
   6. 시연 스크립트: `tools/vconsole.sh` 기반으로 PRD 7절 성공·실패 시나리오 자동화
@@ -38,6 +38,14 @@
 - 확인 방법: `./gradlew assembleDebug test` / 에뮬레이터 실행 → 개발 메뉴 → 신호 모니터
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-01 저녁 — 공통 문서 정정·주최 측 문의 추가
+- 한 일(Claude 에이전트 호공이와 함께, 장호연 지시):
+  - 팀 문서(`docs/team-collaboration-plan.md`, 공통 원본) 4절 1번 "Organization으로 이전(황준용, 11-01까지)"을 10-30 결정(만들지 않음, 개인 계정 유지 — 심사용 계정 권한은 주최 측 문의 4번 답변 후 결정)으로 정정, 2절·8절 Organization 문구도 맞춤. 2절 이민하 담당을 판정 규칙 v2(정체 필터 없앰)에 맞춤. 9절 8번(`TTS_SERVICE` 권한 승인 여부, 이민하 요청) 추가. 크루즈브레이커에도 같은 내용으로 복사
+  - `docs/organizer-inquiry-email.md` 11번 추가(두 저장소 같은 내용)
+  - `feat/demo-scripts`: main을 merge해 보니(`git merge-tree`) 이 문서에서 충돌 → 멈춤, push·PR 안 함
+  - 조사(읽기만): 이 저장소에 이상준·황준용의 원격 브랜치·커밋·PR 없음. 커밋 작성자는 장호연·길민종(giljong)뿐. `core/`·`tools/`·공통 문서는 크루즈브레이커와 같음(파일 해시 비교)
+- 바꾼 파일: `docs/team-collaboration-plan.md`, `docs/organizer-inquiry-email.md`, 이 문서. 크루즈브레이커에서 한 일(PR #3~#6 머지, 이슈 #7~#9, PRD·기획서 v2 반영)은 크루즈브레이커 `docs/handoff/jang-hoyeon.md`
 
 ### 2026-11-01 — 팀원 작업 확인·길민종 PR 2번 머지
 - 한 일(Claude 에이전트와 함께): 두 저장소 fetch. 새 작업은 길민종 `fix/ui-review-followups`(PR 2번)뿐. 이상준·이민하·황준용은 원격 브랜치·커밋 없음, 인수인계 문서도 10-30 이후 변경 없음
