@@ -34,7 +34,7 @@ import com.hyundaiapp.chachelin.ui.components.ScreenHeader
 import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.formatKm
 import com.hyundaiapp.chachelin.ui.components.formatOneDecimal
-import com.hyundaiapp.chachelin.ui.components.formatWhole
+import com.hyundaiapp.chachelin.ui.components.formatKw
 import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
@@ -150,7 +150,7 @@ private fun NameBlock(row: StationRowUi, modifier: Modifier) {
 private fun Stats(row: StationRowUi, modifier: Modifier, alignEnd: Boolean) {
     Row(modifier, horizontalArrangement = Arrangement.SpaceBetween) {
         Stat("인증 충전", "${row.verifiedCharges}회", CarColors.OnSurface, alignEnd)
-        Stat("실측 평균", "${formatWhole(row.avgKw)}kW", CarColors.OnSurface, alignEnd)
+        Stat("실측 평균", formatKw(row.avgKw), CarColors.OnSurface, alignEnd)
         Stat(
             "7일 실패",
             "${row.recentFailures7d}회",

@@ -17,3 +17,6 @@ fun formatDuration(sec: Long): String {
     val min = sec / 60
     return if (min < 60) "${min}분" else "${min / 60}시간 ${min % 60}분"
 }
+
+/** 실측 평균 kW. 아직 계산 전(null)이면 "측정 중" */
+fun formatKw(kw: Double?): String = kw?.let { "${formatWhole(it)}kW" } ?: "측정 중"

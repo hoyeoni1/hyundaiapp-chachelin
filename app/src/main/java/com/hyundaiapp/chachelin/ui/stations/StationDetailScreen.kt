@@ -43,7 +43,7 @@ import com.hyundaiapp.chachelin.ui.components.StatTile
 import com.hyundaiapp.chachelin.ui.components.formatDateTime
 import com.hyundaiapp.chachelin.ui.components.formatKm
 import com.hyundaiapp.chachelin.ui.components.formatOneDecimal
-import com.hyundaiapp.chachelin.ui.components.formatWhole
+import com.hyundaiapp.chachelin.ui.components.formatKw
 import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
@@ -143,7 +143,7 @@ private fun Summary(station: StationRowUi, onBack: () -> Unit) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatTile("인증 충전", "${station.verifiedCharges}회", Modifier.weight(1f))
-            StatTile("실측 평균", "${formatWhole(station.avgKw)}kW", Modifier.weight(1f))
+            StatTile("실측 평균", formatKw(station.avgKw), Modifier.weight(1f))
             StatTile(
                 "7일 실패", "${station.recentFailures7d}회", Modifier.weight(1f),
                 valueColor = if (station.recentFailures7d > 0) CarColors.Warning else CarColors.OnSurface,

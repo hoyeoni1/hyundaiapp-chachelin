@@ -120,7 +120,7 @@ private fun Side(state: ChargingUiState, modifier: Modifier, vertical: Boolean) 
         }
     }
     val speed: @Composable (Modifier) -> Unit = { m ->
-        StatTile("지금까지 실측 평균", formatWhole(state.avgKw), m, unit = "kW", valueStyle = big, verticalArrangement = centered)
+        StatTile("지금까지 실측 평균", state.avgKw?.let { formatWhole(it) } ?: "측정 중", m, unit = state.avgKw?.let { "kW" }, valueStyle = big, verticalArrangement = centered)
     }
     if (vertical) {
         Column(modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
