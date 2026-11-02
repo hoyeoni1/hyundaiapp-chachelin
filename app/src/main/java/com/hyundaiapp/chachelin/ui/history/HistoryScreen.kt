@@ -27,6 +27,7 @@ import com.hyundaiapp.chachelin.ui.HistoryUiState
 import com.hyundaiapp.chachelin.ui.PreviewData
 import com.hyundaiapp.chachelin.ui.components.PillKind
 import com.hyundaiapp.chachelin.ui.components.ScreenHeader
+import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.StatusPill
 import com.hyundaiapp.chachelin.ui.components.formatDateTime
 import com.hyundaiapp.chachelin.ui.theme.CarColors
@@ -37,14 +38,16 @@ import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
  * S6 내 충전 기록(정차 중). 인증·실패·기록만(충전소 근처가 아니어서 점수에 안 들어간 충전)을 글자로 구분한다.
  */
 @Composable
-fun HistoryScreen(state: HistoryUiState, onBack: () -> Unit) {
+fun HistoryScreen(state: HistoryUiState, onBack: () -> Unit, onWithdrawConsent: () -> Unit = {}) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val portrait = maxWidth < maxHeight
         Column(
             Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            ScreenHeader("내 충전 기록", onBack = onBack)
+            ScreenHeader("내 충전 기록", onBack = onBack) {
+                SecondaryButton("동의 철회", onWithdrawConsent, height = CarDimens.TouchTargetSmall)
+            }
             if (state.items.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
                     Text(
@@ -106,11 +109,11 @@ private val previewState = HistoryUiState(
 @Preview(name = "S6 가로", widthDp = 1280, heightDp = 720)
 @Composable
 private fun HistoryPreview() {
-    ChachelinTheme { Surface { HistoryScreen(previewState) {} } }
+    ChachelinTheme { Surface { HistoryScreen(previewState, onBack = {}) } }
 }
 
 @Preview(name = "S6 세로", widthDp = 720, heightDp = 1280)
 @Composable
 private fun HistoryPortraitPreview() {
-    ChachelinTheme { Surface { HistoryScreen(previewState) {} } }
+    ChachelinTheme { Surface { HistoryScreen(previewState, onBack = {}) } }
 }
