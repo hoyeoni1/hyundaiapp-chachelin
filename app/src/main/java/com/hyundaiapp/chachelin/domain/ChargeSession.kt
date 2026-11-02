@@ -45,6 +45,17 @@ data class ChargeRules(
     val failMinOpenMs: Long = 2 * 60_000L,
     val stationRadiusM: Double = 150.0,
 ) {
+    /**
+     * 끝난 세션 판정. PRD 5.3 표에 없는 경우(충전구만 잠깐 열었음, 1%p만 오름 등)는 충전도 실패도 아니므로 null = 기록하지 않음.
+     * 충전소 밖에서도 SoC가 오르지 않았으면 충전이 아니므로 기록하지 않는다.
+     */
+    fun judge(socGain: Int, durationMs: Long, atStation: Boolean): ChargeResult? = when {
+        !atStation -> if (socGain >= chargingSocGain) ChargeResult.NOT_AT_STATION else null
+        socGain >= successMinSocGain && durationMs >= successMinDurationMs -> ChargeResult.SUCCESS
+        socGain < chargingSocGain && durationMs >= failMinOpenMs -> ChargeResult.FAILED
+        else -> null
+    }
+
     companion object {
         val DEFAULT = ChargeRules()
 

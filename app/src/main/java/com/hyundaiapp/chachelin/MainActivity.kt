@@ -11,6 +11,8 @@ class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         val container = (application as ChachelinApp).container
+        // 동의를 마친 상태면 기록 서비스를 켠다(앞에 있을 때만 포그라운드 서비스를 시작할 수 있음)
+        RecordingService.startIfAllowed(this)
         setContent {
             ChachelinTheme {
                 ChachelinNav(container)
