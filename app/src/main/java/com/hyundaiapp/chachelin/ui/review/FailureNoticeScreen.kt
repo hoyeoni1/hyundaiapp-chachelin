@@ -1,0 +1,80 @@
+package com.hyundaiapp.chachelin.ui.review
+
+import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.material3.Icon
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.dp
+import com.hyundaiapp.chachelin.ui.FailureNoticeUiState
+import com.hyundaiapp.chachelin.ui.PreviewData
+import com.hyundaiapp.chachelin.ui.components.CarCard
+import com.hyundaiapp.chachelin.ui.components.CarIcons
+import com.hyundaiapp.chachelin.ui.components.PrimaryButton
+import com.hyundaiapp.chachelin.ui.components.SecondaryButton
+import com.hyundaiapp.chachelin.ui.theme.CarColors
+import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
+
+/**
+ * S5 실패 기록 알림(정차 중). 운전자가 아무것도 안 해도 실패는 이미 기록됐다는 안내(PRD 3.1 F4).
+ * [실패 아님]은 잘못 잡힌 기록을 취소한다.
+ */
+@Composable
+fun FailureNoticeScreen(
+    state: FailureNoticeUiState,
+    onNotFailure: () -> Unit,
+    onConfirm: () -> Unit,
+) {
+    Box(Modifier.fillMaxSize().background(CarColors.Scrim).padding(32.dp), contentAlignment = Alignment.Center) {
+        CarCard(
+            Modifier.widthIn(max = 760.dp).fillMaxWidth(),
+            contentPadding = PaddingValues(horizontal = 56.dp, vertical = 48.dp),
+            verticalArrangement = Arrangement.spacedBy(24.dp),
+        ) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
+                Box(Modifier.size(96.dp).background(CarColors.Warning, CircleShape), contentAlignment = Alignment.Center) {
+                    Icon(CarIcons.BoltOff, contentDescription = null, tint = CarColors.OnAccent, modifier = Modifier.size(52.dp))
+                }
+                Text("충전 실패를 기록했어요", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+                Text(
+                    "${state.stationName} · 충전구를 열었지만 배터리가 오르지 않았어요.\n다른 운전자에게 '최근 실패'로 보여요.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = CarColors.OnSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+            }
+            Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                SecondaryButton("실패 아님", onNotFailure, Modifier.weight(1f))
+                PrimaryButton("확인", onConfirm, Modifier.weight(1f))
+            }
+        }
+    }
+}
+
+@Preview(name = "S5 실패 알림", widthDp = 1280, heightDp = 720)
+@Composable
+private fun FailureNoticePreview() {
+    ChachelinTheme { Surface { FailureNoticeScreen(PreviewData.failure, {}, {}) } }
+}
+
+@Preview(name = "S5 세로", widthDp = 720, heightDp = 1280)
+@Composable
+private fun FailureNoticePortraitPreview() {
+    ChachelinTheme { Surface { FailureNoticeScreen(PreviewData.failure, {}, {}) } }
+}

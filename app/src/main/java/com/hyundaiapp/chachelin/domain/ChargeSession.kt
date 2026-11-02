@@ -44,11 +44,27 @@ data class ChargeRules(
     val chargingSocGain: Int = 1,
     val failMinOpenMs: Long = 2 * 60_000L,
     val stationRadiusM: Double = 150.0,
+    /**
+     * 시연 배속. 콘솔로 SoC를 15초 만에 올리면 실측 kW가 비현실적으로 나오므로(40→80%가 약 7,000kW)
+     * 화면의 충전 시간과 kW 계산에만 곱한다. 판정 시간 기준에는 쓰지 않는다. 시연 때 배속임을 밝힌다(PRD 7절).
+     */
+    val demoTimeScale: Int = 1,
 ) {
+    /**
+     * 끝난 세션 판정. PRD 5.3 표에 없는 경우(충전구만 잠깐 열었음, 1%p만 오름 등)는 충전도 실패도 아니므로 null = 기록하지 않음.
+     * 충전소 밖에서도 SoC가 오르지 않았으면 충전이 아니므로 기록하지 않는다.
+     */
+    fun judge(socGain: Int, durationMs: Long, atStation: Boolean): ChargeResult? = when {
+        !atStation -> if (socGain >= chargingSocGain) ChargeResult.NOT_AT_STATION else null
+        socGain >= successMinSocGain && durationMs >= successMinDurationMs -> ChargeResult.SUCCESS
+        socGain < chargingSocGain && durationMs >= failMinOpenMs -> ChargeResult.FAILED
+        else -> null
+    }
+
     companion object {
         val DEFAULT = ChargeRules()
 
-        /** 디버그 빌드 시연용(PRD 7절: 실패 시나리오 30초) */
-        val DEMO = ChargeRules(successMinDurationMs = 10_000L, failMinOpenMs = 30_000L)
+        /** 디버그 빌드 시연용(PRD 7절: 실패 시나리오 30초). 1초를 2분으로 보여 준다 */
+        val DEMO = ChargeRules(successMinDurationMs = 10_000L, failMinOpenMs = 30_000L, demoTimeScale = 120)
     }
 }
