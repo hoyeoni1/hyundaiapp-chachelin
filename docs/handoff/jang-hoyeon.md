@@ -14,7 +14,7 @@
     - 재생성: `python tools/build-proposal-docx.py docs/submission/application-form-template.docx docs/proposal.md "<앱명>" docs/submission/chachelin-application.docx`
     - 01 참가신청서의 대표자·구성원 연락처, 참가 단위·부문 체크, 작성일, 04 서명은 아직 빈칸(손으로 기입)
   - 충전 판정·업로드 재시도·S2~S7 ViewModel·기록 서비스·동의 철회(이상준 PR #3)와 core v0.4.0 debug SDK 진단(황준용 PR #4)이 `main`에 들어옴(11-02, main `6bab9d0`). 머지된 main에서 `assembleDebug test` 통과(디버그 테스트 80개, 실패 0), core는 크루즈브레이커와 같음
-  - 아직 없는 것: 서버(황준용 — Supabase 대신 장호연 PC 호스팅 검토 중, 11-02), release 서명, 앱이 뒤에 있을 때 충전 결과 알림, S2 실측 속도 분포
+  - 아직 없는 것: 서버(황준용 — Supabase로 확정(11-02, PC 호스팅 안 함). 황준용이 이미 작업했고 곧 커밋 예정), release 서명, 앱이 뒤에 있을 때 충전 결과 알림, S2 실측 속도 분포
 - 진행 중 브랜치·PR:
   - 열린 PR 없음. GitHub 아이디: 이상준 `wklee316`, 황준용 `Aodlf123`
   - 11-02 머지 때 승인한 것(장호연): `ui/` 2개 파일 수정(이상준, 길민종에게 알려 줄 것), `tools/windows-*.ps1`·`app/build.gradle.kts` 한 줄(황준용). 팀 문서 2절 담당표에 `AppContainer`·`ChachelinApp`·`RecordingService`·매니페스트를 이상준 담당으로 적는 일은 아직
