@@ -2,7 +2,7 @@
 
 담당 경로: `tools/`, `apk/`, `README.md`, `PRD.md`, `docs/`, 릴리스. 총괄로서 전체 기반(초기 core·앱 뼈대)도 만들었음
 
-## 현재 상태 (2026-11-01 기준, 매번 덮어쓰기)
+## 현재 상태 (2026-11-02 기준, 매번 덮어쓰기)
 
 - 한 일 요약:
   - 두 앱 기반 완료, `main`에 반영. 에뮬레이터에서 신호 수신 확인
@@ -13,8 +13,9 @@
   - 기획서 제출본 완성: 원고 `docs/proposal.md` → 접수양식에 채운 `docs/submission/chachelin-application.docx`(9쪽, Word로 열림 확인)
     - 재생성: `python tools/build-proposal-docx.py docs/submission/application-form-template.docx docs/proposal.md "<앱명>" docs/submission/chachelin-application.docx`
     - 01 참가신청서의 대표자·구성원 연락처, 참가 단위·부문 체크, 작성일, 04 서명은 아직 빈칸(손으로 기입)
-  - 아직 없는 것: 판정 로직(TODO), 서버, 포그라운드 서비스, release 서명. 화면은 길민종 PR로 올라옴(아래)
+  - 아직 없는 것: 서버, release 서명. 판정 로직·포그라운드 서비스는 이상준 브랜치에 있음(아래, 아직 main 아님)
 - 진행 중 브랜치·PR:
+  - 이상준 `feat/charge-session-logic`(11-02, 커밋 `7bb7ae1`) — **PR 아직 없음**. 11-02 Claude 리뷰 결과 `🔧 수정 필요`: **커밋 그대로는 컴파일 안 됨**(`HistoryScreen.kt` 112·118행 `@Preview`의 `HistoryScreen(previewState) {}` — 새 기본값 파라미터 `onWithdrawConsent` 때문에 끝 람다가 `onBack`이 아니라 그쪽에 붙음 → `HistoryScreen(previewState, onBack = {})`로 고치면 됨). 담당 경로 밖 수정(`ChachelinNav.kt`, `HistoryScreen.kt`)은 크루즈브레이커 PR #10과 같은 방식이라 장호연 판단. 이상준이 고쳐서 PR 올리면 다시 리뷰
   - 길민종 `feat/ui-screens` — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/1 — **11-01 머지 완료**(Claude 리뷰 `✅ 머지 가능` 후 장호연 지시로 merge commit). 후속은 리뷰 코멘트의 "다음에 챙길 것"
   - 길민종 `fix/ui-review-followups` (리뷰 후속, PR 2번) — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/2 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/2 — **11-01 머지 완료**(자동 리뷰 `✅ 머지 가능` 후 장호연 지시). 남은 것: 에뮬레이터 확인(길민종 Mac 불가 → 에뮬레이터 PC 필요), 이상준 질문 4개, 이민하 합의 3개(S4 자동 기록 토글·안내 거리·차속 없음)
   - 장호연 `feat/demo-scripts`(두 저장소, 10-30) — **PR 아직 없음**. 코드라 PR로 올려야 main에 들어감. main보다 13커밋 뒤처짐, main을 merge하면 이 문서에서 충돌(11-01 확인) → 충돌을 직접 해결한 뒤 PR
@@ -38,6 +39,12 @@
 - 확인 방법: `./gradlew assembleDebug test` / 에뮬레이터 실행 → 개발 메뉴 → 신호 모니터
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-02 — 이상준 `feat/charge-session-logic` 리뷰(PR 전)
+- 한 일(Claude 에이전트와 함께, 장호연 지시): PR이 없어 브랜치를 임시 작업 폴더에 받아 `assembleDebug test :app:lintDebug` 실행 + 코드 리뷰. 결과는 장호연에게 채팅으로 보고(PR 코멘트 없음)
+- 결과: `🔧 수정 필요` — 컴파일 오류 1건(위 "진행 중"). 그 한 줄만 임시로 고치면 `assembleDebug test :app:lintDebug` 통과(디버그 단위 테스트 55개 실패 0, lint 통과). 판정 규칙은 PRD 5.3과 맞음, 서버로 좌표 안 감, 퍼미션 이유는 커밋 메시지에 있음, 비밀값 없음, 인수인계 문서 갱신됨
+- 서버 구현 때 챙길 것(황준용): 동의 철회의 `deleteMine`이 한 번만 시도하고 실패를 삼킴, 철회 때 진행 중 업로드를 기다리지 않고 삭제를 보냄(늦게 도착한 업로드가 남을 수 있음)
+- 바꾼 파일: 이 문서
 
 ### 2026-11-01 저녁 — 공통 문서 정정·주최 측 문의 추가
 - 한 일(Claude 에이전트 호공이와 함께, 장호연 지시):
