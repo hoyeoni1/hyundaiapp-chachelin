@@ -13,10 +13,12 @@
   - 기획서 제출본 완성: 원고 `docs/proposal.md` → 접수양식에 채운 `docs/submission/chachelin-application.docx`(9쪽, Word로 열림 확인)
     - 재생성: `python tools/build-proposal-docx.py docs/submission/application-form-template.docx docs/proposal.md "<앱명>" docs/submission/chachelin-application.docx`
     - 01 참가신청서의 대표자·구성원 연락처, 참가 단위·부문 체크, 작성일, 04 서명은 아직 빈칸(손으로 기입)
-  - 아직 없는 것: 서버, release 서명. 판정 로직·포그라운드 서비스는 이상준 브랜치에 있음(아래, 아직 main 아님)
+  - 충전 판정·업로드 재시도·S2~S7 ViewModel·기록 서비스·동의 철회(이상준 PR #3)와 core v0.4.0 debug SDK 진단(황준용 PR #4)이 `main`에 들어옴(11-02, main `6bab9d0`). 머지된 main에서 `assembleDebug test` 통과(디버그 테스트 80개, 실패 0), core는 크루즈브레이커와 같음
+  - 아직 없는 것: 서버(황준용 — Supabase 대신 장호연 PC 호스팅 검토 중, 11-02), release 서명, 앱이 뒤에 있을 때 충전 결과 알림, S2 실측 속도 분포
 - 진행 중 브랜치·PR:
-  - 이상준(GitHub `wklee316`) `feat/charge-session-logic` → https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/3 — 컴파일 오류는 `5b6f85d`에서 고침, 에뮬레이터 시연 흐름까지 확인. 자동 리뷰 `❓ 장호연 판단 필요`(head `737fb38`, 빌드·테스트 63개 통과): ① `ui/` 2개 파일 수정에 길민종 확인 ② `AppContainer`·`ChachelinApp`·`RecordingService`·매니페스트를 이상준 담당으로 팀 문서 2절에 넣을지. 시연 배속 ×120(디버그만)은 PT에서 밝혀야 함
-  - 황준용(GitHub `Aodlf123`) `codex/integrate-sdk-20261102` core v0.4.0(debug 전용 SDK 진단 + Windows 테스트 도구) → 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/4 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/14 — 자동 리뷰 `❓`: `tools/*.ps1`(장호연 경로)·`app/build.gradle.kts` 한 줄 승인 여부, 크루즈브레이커 #14의 `docs/chachelin-pr-3-review.md`는 빼 달라고 할지. **머지 순서: 차슐랭 #4 → 크루즈브레이커 #14**(core 원본 먼저). #3과 #4는 함께 머지해도 충돌 없음(`git merge-tree`, 11-02). 서버는 아직 미구현
+  - 열린 PR 없음. GitHub 아이디: 이상준 `wklee316`, 황준용 `Aodlf123`
+  - 11-02 머지 때 승인한 것(장호연): `ui/` 2개 파일 수정(이상준, 길민종에게 알려 줄 것), `tools/windows-*.ps1`·`app/build.gradle.kts` 한 줄(황준용). 팀 문서 2절 담당표에 `AppContainer`·`ChachelinApp`·`RecordingService`·매니페스트를 이상준 담당으로 적는 일은 아직
+  - 시연 배속 ×120(디버그 빌드만)·SoC 주입은 PT에서 밝혀야 함 → PRD 7절에 적기
   - 길민종 `feat/ui-screens` — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/1 — **11-01 머지 완료**(Claude 리뷰 `✅ 머지 가능` 후 장호연 지시로 merge commit). 후속은 리뷰 코멘트의 "다음에 챙길 것"
   - 길민종 `fix/ui-review-followups` (리뷰 후속, PR 2번) — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/2 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/2 — **11-01 머지 완료**(자동 리뷰 `✅ 머지 가능` 후 장호연 지시). 남은 것: 에뮬레이터 확인(길민종 Mac 불가 → 에뮬레이터 PC 필요), 이상준 질문 4개, 이민하 합의 3개(S4 자동 기록 토글·안내 거리·차속 없음)
   - 장호연 `feat/demo-scripts`(두 저장소, 10-30) — **PR 아직 없음**. 코드라 PR로 올려야 main에 들어감. main보다 13커밋 뒤처짐, main을 merge하면 이 문서에서 충돌(11-01 확인) → 충돌을 직접 해결한 뒤 PR
@@ -40,6 +42,12 @@
 - 확인 방법: `./gradlew assembleDebug test` / 에뮬레이터 실행 → 개발 메뉴 → 신호 모니터
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-02 오후 — PR #4·#3 머지(크루즈브레이커 #14 포함)
+- 한 일(Claude 에이전트와 함께, 장호연 지시 "merge all"): head가 리뷰한 커밋과 같은지 확인(`--match-head-commit`) 후 merge commit으로 머지. 순서: 차슐랭 #4(`5dc8362`) → 크루즈브레이커 #14(`bdc8f88`) → 차슐랭 #3(`6bab9d0`)
+- 확인: 머지된 두 저장소 main에서 `assembleDebug test` 통과(차슐랭 디버그 테스트 80개, 크루즈브레이커 61개, 실패 0). `core/` 두 저장소 동일
+- 결정: 자동 리뷰 `❓` 항목(담당 경로 밖 수정)은 모두 승인으로 보고 머지. 크루즈브레이커의 `docs/chachelin-pr-3-review.md`도 그대로 들어감
+- 바꾼 파일: 이 문서(코드는 PR 머지만)
 
 ### 2026-11-02 — 이상준 `feat/charge-session-logic` 리뷰(PR 전)
 - 한 일(Claude 에이전트와 함께, 장호연 지시): PR이 없어 브랜치를 임시 작업 폴더에 받아 `assembleDebug test :app:lintDebug` 실행 + 코드 리뷰. 결과는 장호연에게 채팅으로 보고(PR 코멘트 없음)
