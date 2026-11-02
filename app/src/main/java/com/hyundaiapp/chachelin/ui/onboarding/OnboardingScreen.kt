@@ -23,7 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyundaiapp.chachelin.ui.OnboardingUiState
 import com.hyundaiapp.chachelin.ui.components.ConsentRow
-import com.hyundaiapp.chachelin.ui.components.PrimaryButton
+import com.hyundaiapp.chachelin.ui.components.OnboardingStartAction
 import com.hyundaiapp.chachelin.ui.components.SelectableButton
 import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.CarDimens
@@ -47,9 +47,9 @@ fun OnboardingScreen(
     onRequestNotifications: () -> Unit = {},
 ) {
     val canStart = state.locationAgreed && state.privacyAgreed && state.selectedPreset != null
-    val startLabel = when {
+    val startHint = when {
         canStart -> "시작하기"
-        !state.locationAgreed || !state.privacyAgreed -> "필수 항목에 동의하면 시작할 수 있어요"
+        !state.locationAgreed || !state.privacyAgreed -> "필수 항목에 동의해 주세요"
         else -> "내 차를 골라 주세요"
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -65,7 +65,7 @@ fun OnboardingScreen(
                     NotificationConsent(notificationsGranted, onRequestNotifications)
                     Presets(state, onSelectPreset)
                 }
-                PrimaryButton(startLabel, onStart, Modifier.fillMaxWidth(), enabled = canStart)
+                OnboardingStartAction(canStart, startHint, onStart)
             }
         } else {
             Row(
@@ -79,7 +79,7 @@ fun OnboardingScreen(
                 }
                 Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Presets(state, onSelectPreset)
-                    PrimaryButton(startLabel, onStart, Modifier.fillMaxWidth(), enabled = canStart)
+                    OnboardingStartAction(canStart, startHint, onStart)
                 }
             }
         }
@@ -99,7 +99,7 @@ private fun NotificationConsent(granted: Boolean, onRequest: () -> Unit) {
 private fun Intro() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("차슐랭", style = MaterialTheme.typography.bodyLarge, color = CarColors.Primary, fontWeight = FontWeight.Medium)
-        Text("실제로 충전한 사람만 평가하는\n충전소 가이드", style = MaterialTheme.typography.headlineMedium)
+        Text("실제로 충전한 사람만\n평가하는 충전소 가이드", style = MaterialTheme.typography.headlineMedium)
     }
 }
 
