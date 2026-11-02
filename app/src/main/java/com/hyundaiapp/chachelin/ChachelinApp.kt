@@ -5,10 +5,6 @@ import android.app.Application
 class ChachelinApp : Application() {
     val container by lazy { AppContainer(this) }
 
-    override fun onCreate() {
-        super.onCreate()
-        // 차량 신호는 앱 프로세스가 살아 있는 동안 계속 받는다(충전 중 기록 누락 방지)
-        container.signals.start()
-        container.chargeTracker.start(container.appScope)
-    }
+    // 차량·위치 신호 수신과 충전 기록은 동의 후 RecordingService(AppContainer.startRecording)가 시작한다.
+    // 디버그 빌드의 신호 모니터는 화면에 들어갈 때 따로 시작한다
 }
