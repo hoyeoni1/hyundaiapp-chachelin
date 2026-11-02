@@ -15,7 +15,8 @@
     - 01 참가신청서의 대표자·구성원 연락처, 참가 단위·부문 체크, 작성일, 04 서명은 아직 빈칸(손으로 기입)
   - 아직 없는 것: 서버, release 서명. 판정 로직·포그라운드 서비스는 이상준 브랜치에 있음(아래, 아직 main 아님)
 - 진행 중 브랜치·PR:
-  - 이상준 `feat/charge-session-logic`(11-02, 커밋 `7bb7ae1`) — **PR 아직 없음**. 11-02 Claude 리뷰 결과 `🔧 수정 필요`: **커밋 그대로는 컴파일 안 됨**(`HistoryScreen.kt` 112·118행 `@Preview`의 `HistoryScreen(previewState) {}` — 새 기본값 파라미터 `onWithdrawConsent` 때문에 끝 람다가 `onBack`이 아니라 그쪽에 붙음 → `HistoryScreen(previewState, onBack = {})`로 고치면 됨). 담당 경로 밖 수정(`ChachelinNav.kt`, `HistoryScreen.kt`)은 크루즈브레이커 PR #10과 같은 방식이라 장호연 판단. 이상준이 고쳐서 PR 올리면 다시 리뷰
+  - 이상준(GitHub `wklee316`) `feat/charge-session-logic` → https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/3 — 컴파일 오류는 `5b6f85d`에서 고침, 에뮬레이터 시연 흐름까지 확인. 자동 리뷰 `❓ 장호연 판단 필요`(head `737fb38`, 빌드·테스트 63개 통과): ① `ui/` 2개 파일 수정에 길민종 확인 ② `AppContainer`·`ChachelinApp`·`RecordingService`·매니페스트를 이상준 담당으로 팀 문서 2절에 넣을지. 시연 배속 ×120(디버그만)은 PT에서 밝혀야 함
+  - 황준용(GitHub `Aodlf123`) `codex/integrate-sdk-20261102` core v0.4.0(debug 전용 SDK 진단 + Windows 테스트 도구) → 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/4 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/14 — 자동 리뷰 `❓`: `tools/*.ps1`(장호연 경로)·`app/build.gradle.kts` 한 줄 승인 여부, 크루즈브레이커 #14의 `docs/chachelin-pr-3-review.md`는 빼 달라고 할지. **머지 순서: 차슐랭 #4 → 크루즈브레이커 #14**(core 원본 먼저). #3과 #4는 함께 머지해도 충돌 없음(`git merge-tree`, 11-02). 서버는 아직 미구현
   - 길민종 `feat/ui-screens` — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/1 — **11-01 머지 완료**(Claude 리뷰 `✅ 머지 가능` 후 장호연 지시로 merge commit). 후속은 리뷰 코멘트의 "다음에 챙길 것"
   - 길민종 `fix/ui-review-followups` (리뷰 후속, PR 2번) — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/2 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/2 — **11-01 머지 완료**(자동 리뷰 `✅ 머지 가능` 후 장호연 지시). 남은 것: 에뮬레이터 확인(길민종 Mac 불가 → 에뮬레이터 PC 필요), 이상준 질문 4개, 이민하 합의 3개(S4 자동 기록 토글·안내 거리·차속 없음)
   - 장호연 `feat/demo-scripts`(두 저장소, 10-30) — **PR 아직 없음**. 코드라 PR로 올려야 main에 들어감. main보다 13커밋 뒤처짐, main을 merge하면 이 문서에서 충돌(11-01 확인) → 충돌을 직접 해결한 뒤 PR
@@ -45,6 +46,7 @@
 - 결과: `🔧 수정 필요` — 컴파일 오류 1건(위 "진행 중"). 그 한 줄만 임시로 고치면 `assembleDebug test :app:lintDebug` 통과(디버그 단위 테스트 55개 실패 0, lint 통과). 판정 규칙은 PRD 5.3과 맞음, 서버로 좌표 안 감, 퍼미션 이유는 커밋 메시지에 있음, 비밀값 없음, 인수인계 문서 갱신됨
 - 서버 구현 때 챙길 것(황준용): 동의 철회의 `deleteMine`이 한 번만 시도하고 실패를 삼킴, 철회 때 진행 중 업로드를 기다리지 않고 삭제를 보냄(늦게 도착한 업로드가 남을 수 있음)
 - 바꾼 파일: 이 문서
+- 이후(같은 날): 이상준이 오류를 고치고 PR #3을 올림. 황준용 core v0.4.0 PR(차슐랭 #4, 크루즈브레이커 #14)도 올라옴. 정기 리뷰 작업이 세 PR 모두에 코멘트를 남김(정상 동작 확인). 위 "진행 중"에 반영
 
 ### 2026-11-01 저녁 — 공통 문서 정정·주최 측 문의 추가
 - 한 일(Claude 에이전트 호공이와 함께, 장호연 지시):
