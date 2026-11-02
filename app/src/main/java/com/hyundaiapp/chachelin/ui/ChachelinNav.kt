@@ -99,6 +99,8 @@ fun ChachelinNav(container: AppContainer) {
             Screen.DEV_MENU -> DevMenu(go)
             Screen.STATIONS -> {
                 val vm = viewModel { StationListViewModel(container.signals, container.stations) }
+                // 화면에 들어올 때마다 새로 조회한다(방금 끝난 충전이 반영되게)
+                LaunchedEffect(Unit) { vm.refresh() }
                 val state by vm.state.collectAsState()
                 StationListScreen(
                     state,
@@ -119,6 +121,7 @@ fun ChachelinNav(container: AppContainer) {
                 // 개발 메뉴에서 바로 들어오면 고른 충전소가 없다 → 시드 첫 충전소
                 val id = stationId ?: PreviewData.stationRow.id
                 val vm = viewModel(key = id) { StationDetailViewModel(id, container.signals, container.signals, container.stations) }
+                LaunchedEffect(Unit) { vm.refresh() }
                 val state by vm.state.collectAsState()
                 StationDetailScreen(
                     state,
@@ -129,13 +132,13 @@ fun ChachelinNav(container: AppContainer) {
                 )
             }
             Screen.CHARGING -> {
-                val vm = viewModel { ChargingViewModel(container.chargeTracker.live, container.stations) }
+                val vm = viewModel { ChargingViewModel(container.chargeTracker.live, container.stations, container.chargeRules.demoTimeScale) }
                 val state by vm.state.collectAsState()
                 // 세션 없이 들어오는 경우는 개발 메뉴뿐이다 → 미리보기로 그린다
                 (state ?: PreviewData.charging.takeIf { BuildConfig.DEBUG })?.let { ChargingScreen(it) }
             }
             Screen.REVIEW -> {
-                val vm = viewModel { ReviewViewModel(container.chargeRecorder, container.stations) }
+                val vm = viewModel { ReviewViewModel(container.chargeRecorder, container.stations, container.chargeRules.demoTimeScale) }
                 val state by vm.state.collectAsState()
                 val current = state
                 if (current != null) {

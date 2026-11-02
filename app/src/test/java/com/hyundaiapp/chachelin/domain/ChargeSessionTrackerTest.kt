@@ -244,6 +244,25 @@ class ChargeSessionTrackerTest {
     }
 
     @Test
+    fun `시연 배속은 kW에만 곱하고 기록 시각은 그대로 둔다`() = runTest(UnconfinedTestDispatcher()) {
+        fake.setEv { copy(capacityKwh = null, chargePortOpen = false, socPercent = 40) }
+        val tracker = ChargeSessionTracker(fake, FakeStationRepository(), ChargeRules.DEMO, { 77.4f }, clock = { now })
+        val done = mutableListOf<ChargeSessionRecord>()
+        backgroundScope.launch { tracker.completed.toList(done) }
+        tracker.start(backgroundScope)
+        runCurrent()
+        ev(open = true)
+        now += 15_000L
+        ev(open = false, soc = 80)
+
+        val record = done.single()
+        assertEquals(ChargeResult.SUCCESS, record.result)
+        assertEquals(15_000L, record.endedAtMs - record.startedAtMs)
+        // 15초 × 120 = 30분: 0.4 × 77.4 ÷ 0.5h
+        assertEquals(61.92, record.avgKw!!, 0.01)
+    }
+
+    @Test
     fun `기록을 멈추면 끝나지 않은 세션을 버린다`() = run { h ->
         ev(open = false, soc = 40)
         ev(open = true)

@@ -144,6 +144,16 @@ class ViewModelsTest {
         assertNull(vm.state.value)
     }
 
+    @Test
+    fun `충전 중 화면은 시연 배속만큼 경과 시간을 곱한다`() = runTest {
+        val live = MutableStateFlow<LiveCharge?>(LiveCharge(null, now, 40, 50, null))
+        val vm = ChargingViewModel(live, stations, timeScale = 120, clock = { now })
+        backgroundScope.launch { vm.state.collect {} }
+        now += 15_000L
+        advanceTimeBy(1_001L)
+        assertEquals(30 * 60L, vm.state.value?.elapsedSec)
+    }
+
     // S4
 
     @Test
@@ -201,6 +211,14 @@ class ViewModelsTest {
         assertNull(vm.state.value)
     }
 
+    @Test
+    fun `리뷰 화면은 시연 배속만큼 충전 시간을 곱한다`() = runTest {
+        val recorder = recorder()
+        val vm = ReviewViewModel(recorder, stations, timeScale = 2)
+        session(socEnd = 80)
+        assertEquals(64, vm.state.value?.durationMin)
+    }
+
     // S5
 
     @Test
@@ -244,6 +262,60 @@ class ViewModelsTest {
         assertTrue(b.failed && !b.verified)
         assertNull(c.stationName)
         assertFalse(c.verified || c.failed)
+    }
+
+    // 시연 5·6단계: 내 기록이 충전소 점수에 바로 반영된다
+
+    @Test
+    fun `인증 충전과 리뷰가 S1 S2 숫자에 더해진다`() = runTest {
+        val linked = FakeStationRepository(records = records)
+        val before = linked.get("st-003")!!.score
+        val beforeRatings = linked.detail("st-003")!!.ratingCounts
+        records.upload(record("a", "st-003", ChargeResult.SUCCESS), "v")
+        records.submitReview("a", 5, setOf(ReviewTag.CLEAN))
+
+        val after = linked.get("st-003")!!.score
+        assertEquals(before.verifiedCharges + 1, after.verifiedCharges)
+        assertEquals(before.reviewCount + 1, after.reviewCount)
+        assertTrue(after.chachelinScore!! > before.chachelinScore!!)
+        val detail = linked.detail("st-003")!!
+        assertEquals(beforeRatings[4] + 1, detail.ratingCounts[4])
+        assertEquals(ReviewTag.CLEAN, detail.topTags.first())
+    }
+
+    @Test
+    fun `리뷰 없이 인증 충전만 있어도 점수는 그대로 인증 수만 는다`() = runTest {
+        val linked = FakeStationRepository(records = records)
+        val before = linked.get("st-001")!!.score
+        records.upload(record("a", "st-001", ChargeResult.SUCCESS), "v")
+        val after = linked.get("st-001")!!.score
+        assertEquals(before.verifiedCharges + 1, after.verifiedCharges)
+        assertEquals(before.chachelinScore!!, after.chachelinScore!!, 1e-9)
+    }
+
+    @Test
+    fun `실패가 최근 실패 수에 더해지고 실패 아님이면 되돌아간다`() = runTest {
+        val clockNow = 10_000_000_000L
+        val linked = FakeStationRepository(records = records, clock = { clockNow })
+        val failed = ChargeSessionRecord("f", "st-001", clockNow - 60_000L, clockNow - 1_000L, 40, 40, null, ChargeResult.FAILED)
+        records.upload(failed, "v")
+        assertEquals(1, linked.get("st-001")!!.score.recentFailures7d)
+        assertEquals(listOf(clockNow - 1_000L), linked.detail("st-001")!!.recentFailureTimesMs)
+
+        records.retract("f")
+        assertEquals(0, linked.get("st-001")!!.score.recentFailures7d)
+        assertTrue(linked.detail("st-001")!!.recentFailureTimesMs.isEmpty())
+    }
+
+    @Test
+    fun `평가 중인 충전소도 리뷰가 5개가 되면 점수가 생긴다`() = runTest {
+        val linked = FakeStationRepository(records = records)
+        assertNull(linked.get("st-004")!!.score.chachelinScore)
+        listOf("a", "b").forEach {
+            records.upload(record(it, "st-004", ChargeResult.SUCCESS), "v")
+            records.submitReview(it, 5, emptySet())
+        }
+        assertNotNull(linked.get("st-004")!!.score.chachelinScore)
     }
 
     private fun record(id: String, stationId: String?, result: ChargeResult) =

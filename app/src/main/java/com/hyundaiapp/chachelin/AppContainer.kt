@@ -32,16 +32,20 @@ class AppContainer(context: Context) {
     // 매니페스트 퍼미션과 맞출 것: CAR_ENERGY → EV_BATTERY, NAVI_ROUTE → NAVI
     val signals = PleosVehicleSignals(context, setOf(CoreFeature.EV_BATTERY, CoreFeature.NAVI))
 
-    val stations: StationRepository = FakeStationRepository()
-    val records: ChargeRecordRepository = FakeChargeRecordRepository()
+    // 내 기록이 바로 점수에 반영되게 Fake 둘을 묶는다(PRD 7절 시연 5·6단계)
+    private val fakeRecords = FakeChargeRecordRepository()
+    val records: ChargeRecordRepository = fakeRecords
+    val stations: StationRepository = FakeStationRepository(records = fakeRecords)
 
     /** S7 동의·차종 */
     val vehicleProfile: VehicleProfileStore = SharedPrefsVehicleProfileStore(context)
 
+    val chargeRules = if (BuildConfig.DEBUG) ChargeRules.DEMO else ChargeRules.DEFAULT
+
     val chargeTracker = ChargeSessionTracker(
         signals = signals,
         stations = stations,
-        rules = if (BuildConfig.DEBUG) ChargeRules.DEMO else ChargeRules.DEFAULT,
+        rules = chargeRules,
         presetCapacityKwh = { vehicleProfile.capacityKwh },
     )
     val chargeRecorder = ChargeSessionRecorder(chargeTracker, records, vehicleProfile::vehicleId)

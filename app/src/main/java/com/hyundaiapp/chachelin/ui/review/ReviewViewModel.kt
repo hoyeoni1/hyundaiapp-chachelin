@@ -24,6 +24,8 @@ import kotlin.math.roundToInt
 class ReviewViewModel(
     private val recorder: ChargeSessionRecorder,
     private val stations: StationRepository,
+    /** [com.hyundaiapp.chachelin.domain.ChargeRules.demoTimeScale] */
+    private val timeScale: Int = 1,
 ) : ViewModel() {
     private val _state = MutableStateFlow<ReviewUiState?>(null)
     val state: StateFlow<ReviewUiState?> = _state.asStateFlow()
@@ -57,7 +59,7 @@ class ReviewViewModel(
         stationName = stationId?.let { stations.stationName(it) } ?: "충전소",
         socStart = socStart,
         socEnd = socEnd,
-        durationMin = ((endedAtMs - startedAtMs) / 60_000.0).roundToInt(),
+        durationMin = ((endedAtMs - startedAtMs) * timeScale / 60_000.0).roundToInt(),
         avgKw = avgKw,
     )
 }

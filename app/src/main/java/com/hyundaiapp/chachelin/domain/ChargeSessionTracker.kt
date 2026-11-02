@@ -133,7 +133,7 @@ class ChargeSessionTracker(
 
     private fun averageKw(socStart: Int, socEnd: Int, durationMs: Long): Double? {
         val capacity = signals.evBattery.value.capacityKwh?.takeIf { it > 0f } ?: presetCapacityKwh() ?: return null
-        return ChargeMath.averageKw(socStart, socEnd, capacity, durationMs)
+        return ChargeMath.averageKw(socStart, socEnd, capacity, durationMs * rules.demoTimeScale)
     }
 
     /** 위치를 아직 못 받았으면 받을 때까지 기다린다. 조회가 실패하면 충전소를 모르는 것으로 본다(null) */

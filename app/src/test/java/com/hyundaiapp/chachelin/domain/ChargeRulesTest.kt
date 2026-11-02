@@ -50,4 +50,9 @@ class ChargeRulesTest {
         assertEquals(ChargeResult.SUCCESS, ChargeRules.DEMO.judge(2, 10_000L, atStation = true))
         assertEquals(ChargeResult.FAILED, ChargeRules.DEMO.judge(0, 30_000L, atStation = true))
     }
+
+    @Test
+    fun `실사용 기준값은 시연 배속을 쓰지 않는다`() {
+        assertEquals(1, ChargeRules.DEFAULT.demoTimeScale)
+    }
 }

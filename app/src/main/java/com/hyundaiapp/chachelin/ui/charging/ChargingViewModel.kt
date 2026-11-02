@@ -20,6 +20,8 @@ import kotlinx.coroutines.flow.stateIn
 class ChargingViewModel(
     live: StateFlow<LiveCharge?>,
     stations: StationRepository,
+    /** [com.hyundaiapp.chachelin.domain.ChargeRules.demoTimeScale] */
+    private val timeScale: Int = 1,
     private val clock: () -> Long = System::currentTimeMillis,
 ) : ViewModel() {
     private val stationName: Flow<String?> = live.map { it?.stationId }.distinctUntilChanged()
@@ -38,7 +40,7 @@ class ChargingViewModel(
                 stationName = name,
                 socStart = it.socStart,
                 socNow = it.socNow,
-                elapsedSec = ((clock() - it.startedAtMs) / 1_000L).coerceAtLeast(0L),
+                elapsedSec = ((clock() - it.startedAtMs) / 1_000L).coerceAtLeast(0L) * timeScale,
                 avgKw = it.avgKw,
             )
         }

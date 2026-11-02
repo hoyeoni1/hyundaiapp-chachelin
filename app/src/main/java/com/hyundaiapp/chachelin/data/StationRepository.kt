@@ -1,5 +1,6 @@
 package com.hyundaiapp.chachelin.data
 
+import com.hyundaiapp.chachelin.domain.ChargeResult
 import com.hyundaiapp.core.GeoMath
 import com.hyundaiapp.core.GeoPoint
 
@@ -52,21 +53,65 @@ suspend fun StationRepository.stationName(stationId: String): String? =
 class FakeStationRepository(
     private val data: List<StationWithScore> = SEED,
     private val clock: () -> Long = System::currentTimeMillis,
+    /** 있으면 이 차의 기록을 점수에 바로 더한다(서버의 집계 뷰 대신. PRD 7절 시연 5·6단계) */
+    private val records: FakeChargeRecordRepository? = null,
 ) : StationRepository {
     override suspend fun nearby(center: GeoPoint, radiusM: Double) =
         data.filter { GeoMath.distanceM(center, it.station.point) <= radiusM }
+            .map { withMine(it) }
             .sortedByDescending { it.score.chachelinScore ?: -1.0 }
 
-    override suspend fun get(stationId: String) = data.firstOrNull { it.station.id == stationId }
+    override suspend fun get(stationId: String) = data.firstOrNull { it.station.id == stationId }?.let { withMine(it) }
 
     override suspend fun detail(stationId: String): StationDetail? {
-        val base = get(stationId) ?: return null
+        val base = data.firstOrNull { it.station.id == stationId } ?: return null
+        val seedFailures = List(base.score.recentFailures7d) { clock() - (it + 1) * FAILURE_SPACING_MS }
+        val myTags = myReviews(stationId).flatMap { it.second }.distinct()
         return StationDetail(
-            ratingCounts = SEED_RATINGS[stationId] ?: List(5) { 0 },
-            topTags = SEED_TAGS[stationId].orEmpty(),
-            recentFailureTimesMs = List(base.score.recentFailures7d) { clock() - (it + 1) * FAILURE_SPACING_MS },
+            ratingCounts = ratingCounts(stationId),
+            topTags = (myTags + SEED_TAGS[stationId].orEmpty()).distinct().take(MAX_TOP_TAGS),
+            recentFailureTimesMs = (myRecentFailures(stationId).map { it.endedAtMs } + seedFailures).sortedDescending(),
         )
     }
+
+    private fun withMine(base: StationWithScore): StationWithScore {
+        val id = base.station.id
+        val verified = records?.sessionsAt(id).orEmpty().filter { it.result == ChargeResult.SUCCESS }
+        val failures = myRecentFailures(id).size
+        val reviews = myReviews(id).size
+        if (verified.isEmpty() && failures == 0) return base
+        val kwSamples = verified.mapNotNull { it.avgKw }
+        val seedKwSum = (base.score.avgKw ?: 0.0) * base.score.verifiedCharges
+        val seedAverage = average(SEED_RATINGS[id].orEmpty())
+        val average = average(ratingCounts(id))
+        val reviewCount = base.score.reviewCount + reviews
+        return base.copy(
+            score = base.score.copy(
+                // 시드 점수에 평균 별점 변화만큼 더한다. 리뷰 5개 미만이면 "평가 중"
+                chachelinScore = if (reviewCount < MIN_REVIEWS) null else (base.score.chachelinScore ?: seedAverage) + average - seedAverage,
+                avgRating = average,
+                reviewCount = reviewCount,
+                verifiedCharges = base.score.verifiedCharges + verified.size,
+                avgKw = (seedKwSum + kwSamples.sum()) / (base.score.verifiedCharges + kwSamples.size).coerceAtLeast(1),
+                recentFailures7d = base.score.recentFailures7d + failures,
+            ),
+        )
+    }
+
+    private fun myReviews(stationId: String) =
+        records?.sessionsAt(stationId).orEmpty().mapNotNull { records?.reviews?.get(it.id) }
+
+    private fun myRecentFailures(stationId: String) = records?.sessionsAt(stationId).orEmpty()
+        .filter { it.result == ChargeResult.FAILED && it.endedAtMs >= clock() - FAILURE_WINDOW_MS }
+
+    private fun ratingCounts(stationId: String): List<Int> {
+        val counts = (SEED_RATINGS[stationId] ?: List(5) { 0 }).toMutableList()
+        myReviews(stationId).forEach { (rating, _) -> counts[rating - 1]++ }
+        return counts
+    }
+
+    private fun average(counts: List<Int>): Double =
+        counts.withIndex().sumOf { (i, n) -> (i + 1) * n }.toDouble() / counts.sum().coerceAtLeast(1)
 
     override suspend fun nearest(point: GeoPoint, radiusM: Double) =
         data.map { it.station }
@@ -98,6 +143,9 @@ class FakeStationRepository(
 
         /** 실패 4건까지 7일 안에 들어가는 간격(36시간) */
         private const val FAILURE_SPACING_MS = 36 * 3_600_000L
+        private const val FAILURE_WINDOW_MS = 7 * 24 * 3_600_000L
+        private const val MIN_REVIEWS = 5
+        private const val MAX_TOP_TAGS = 3
 
         private fun seed(
             id: String, name: String, op: String, lat: Double, lon: Double, maxKw: Int,

@@ -54,4 +54,7 @@ class FakeChargeRecordRepository : ChargeRecordRepository {
     }
 
     override fun myRecords(): Flow<List<ChargeSessionRecord>> = records.asStateFlow()
+
+    /** [FakeStationRepository]가 점수에 더할 이 충전소의 기록 */
+    fun sessionsAt(stationId: String) = records.value.filter { it.stationId == stationId }
 }

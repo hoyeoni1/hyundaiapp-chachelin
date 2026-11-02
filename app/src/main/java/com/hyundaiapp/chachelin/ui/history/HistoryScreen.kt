@@ -109,11 +109,11 @@ private val previewState = HistoryUiState(
 @Preview(name = "S6 가로", widthDp = 1280, heightDp = 720)
 @Composable
 private fun HistoryPreview() {
-    ChachelinTheme { Surface { HistoryScreen(previewState) {} } }
+    ChachelinTheme { Surface { HistoryScreen(previewState, onBack = {}) } }
 }
 
 @Preview(name = "S6 세로", widthDp = 720, heightDp = 1280)
 @Composable
 private fun HistoryPortraitPreview() {
-    ChachelinTheme { Surface { HistoryScreen(previewState) {} } }
+    ChachelinTheme { Surface { HistoryScreen(previewState, onBack = {}) } }
 }
