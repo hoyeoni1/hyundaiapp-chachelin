@@ -2,7 +2,9 @@
 
 대상 프로젝트: **pleos-apps-dev**, ref `qbdikckaqroxbpacvtqo`.
 
-사용자가 대시보드에서 직접 실행한다. Chrome 제어 도구 접근이 거부되어 에이전트는 원격 SQL을 실행하지 않았다. 아래 파일은 로컬 PostgreSQL(PGlite 0.5.14)에서 적용·의미 테스트 15개를 통과했다. Supabase Auth/JWT·PostgREST 및 동시 다중 연결은 아직 원격에서 검증하지 않았다.
+최초 적용은 사용자가 대시보드에서 실행했다. **2026-11-02 CLI로 원격 버전·시드·RLS·함수 권한 및 함수 내용 일치를 확인하고, 표준 migration 이력 2건을 applied로 정합했다. dry-run은 Remote database is up to date.** 아래 최초 설치 절차를 이미 적용된 프로젝트에서 다시 실행하지 않는다. 후속 변경은 [CLI](cli-setup.md)로 진행한다.
+
+로컬 PostgreSQL(PGlite 0.5.14) 의미 테스트 15개도 통과했다. Supabase 실제 익명 인증/JWT·PostgREST 및 동시 다중 연결은 미검증이다. 익명 로그인은 아직 비활성 상태다.
 
 ## 실행 순서
 
@@ -10,7 +12,7 @@
 2. `supabase/preflight.sql` 전체를 붙여넣고 **Run**. 신규 프로젝트라면 app_tables와 app_rpcs가 빈 배열이고 auth_table은 auth.users여야 한다. 앱 테이블·함수가 이미 있으면 결과를 공유하고 initial SQL 실행을 멈춘다.
 3. 새 쿼리에 `supabase/migrations/20261102000100_initial_schema.sql` 전체를 붙여넣고 **Run**. 성공 시 schema·제약조건·인덱스·RLS·인증된 RPC가 생성된다. 원본 테이블은 `pleos_private`, 외부 API 함수는 `public.pleos_*`다.
 4. 새 쿼리에 `supabase/migrations/20261102000200_demo_data.sql` 전체를 붙여넣고 **Run**. 개발/시연 프로젝트에만 적용한다. 모든 가상 설치는 SEED로 표시되며 사용자 인증 계정은 만들지 않는다.
-5. 새 쿼리에 `supabase/verify.sql` 전체를 붙여넣고 **Run**. 아래 기대 결과와 비교한다. 여러 SELECT 결과는 대시보드 결과 탭을 각각 확인하거나 문장별 선택 실행한다.
+5. 새 쿼리에 `supabase/verify.sql` 전체를 붙여넣고 **Run**. 아래 기대 결과와 비교한다. 현재 파일은 단일 SELECT로 모든 결과를 verification JSON에 묶으므로 마지막 SELECT만 보이는 문제가 없다.
 
 ## 기대 결과
 

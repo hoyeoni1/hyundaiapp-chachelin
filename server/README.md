@@ -2,7 +2,9 @@
 
 차슐랭과 크루즈브레이커가 사용하는 서버의 원본은 이 디렉터리다. 담당은 황준용. SDK 진단 PR과 분리한 `codex/supabase-foundation-20261102`에서 작업한다.
 
-스키마 및 전체 서비스 흐름: [schema-design.md](schema-design.md). 실행 가능한 migration 2개와 로컬 PostgreSQL 검증 15개를 준비했다. **원격 DB에는 아직 적용하지 않았으며 사용자가 SQL Editor에서 직접 실행하기로 했다.** [적용 순서와 기대 결과](deploy.md).
+스키마 및 전체 서비스 흐름: [schema-design.md](schema-design.md). **2026-11-02 원격 적용·CLI 연결·migration 이력 정합 확인 완료.** 로컬 PostgreSQL 테스트 15개 통과. [적용 방법 및 검증 상태](deploy.md).
+
+원격 확인: 두 버전, 시드 10/300/400/2000, 테이블 9개 RLS, RPC 11개 권한 정상. 함수 fingerprint는 로컬과 일치(f0b69344326a5769b916cafeb7698bbe). 사용자 수동 적용을 검증한 뒤 CLI 표준 이력에 두 버전을 applied 등록했고 db push --dry-run은 upToDate=true·대기 migration 없음. SQL 본문·시드 재실행은 하지 않았다. [CLI 사용법](cli-setup.md).
 
 ## 프로젝트 연결 확인 (2026-11-02)
 
@@ -11,9 +13,9 @@
 - `/auth/v1/health`, `/auth/v1/settings`: HTTP 200.
 - Publishable key를 사용한 `GET /rest/v1/stations?select=id&limit=1`: HTTP 404/PGRST205. 아직 `public.stations`가 schema cache에 없다.
 - REST 루트 문서 조회의 HTTP 401은 `Secret API key required` 응답이다. 일반 테이블 API의 공개 키 오류로 해석하지 않는다.
-- Auth 설정의 `external.anonymous_users`: false. Anonymous Sign-In 활성화가 필요하다. 확인 중에는 가입 요청이나 테스트 계정을 생성하지 않았다.
+- Auth 설정의 `external.anonymous_users`: false(2026-11-02 CLI 연결 후 재확인). Anonymous Sign-In 활성화가 필요하다. 확인 중에는 가입 요청이나 테스트 계정을 생성하지 않았다.
 - 관리자 Secret key는 저장·사용하지 않았다. 채팅에 제공된 키는 대시보드에서 폐기 후 재발급해야 한다. 새 Secret key는 채팅이나 앱에 넣지 않는다.
-- 원격 SQL 실행·테이블 생성·함수 배포·Auth 설정 변경은 아직 하지 않았다.
+- 테이블·함수·시드는 사용자가 SQL Editor에서 적용했고 에이전트가 CLI로 읽기 검증 및 표준 migration 이력 정합을 완료했다. Auth 설정 변경이나 실제 사용자 데이터 쓰기는 하지 않았다.
 
 ## 인증·데이터 계약 방향
 
@@ -27,9 +29,8 @@
 
 ## 다음 작업
 
-1. 사용자 SQL Editor 실행: 사전 확인 → initial schema → demo data → verify. Publishable key는 schema 변경 권한이 없다.
-2. 원격 적용 결과 확인 및 Supabase 실제 인증·API·동시 실행 검증.
-3. 앱에 인증·HTTP 저장소와 영속 재전송/삭제 작업 연결. 기존 Fake와 선택 가능하게 구성하고 두 에뮬레이터 공유 확인.
+1. 사용자 Anonymous Sign-In 활성화 후 Supabase 실제 인증·API·동시 실행 검증.
+2. 앱에 인증·HTTP 저장소와 영속 재전송/삭제 작업 연결. 기존 Fake와 선택 가능하게 구성하고 두 에뮬레이터 공유 확인.
 
 작성 완료: private 테이블 9개(앱 7 + 처리 영수증/버전 관리 2), 제약·인덱스·RLS, 인증 RPC 11개, 시연 충전소 10곳·충전 세션 300건·해제 400건·통과 2,000건. 실패 감점 없이 별점 평균과 실패 횟수를 각각 제공한다.
 
