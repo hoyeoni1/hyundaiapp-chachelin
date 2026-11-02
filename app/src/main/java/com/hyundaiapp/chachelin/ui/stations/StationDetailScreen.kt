@@ -39,6 +39,7 @@ import com.hyundaiapp.chachelin.ui.components.CarIcons
 import com.hyundaiapp.chachelin.ui.components.MeterBar
 import com.hyundaiapp.chachelin.ui.components.PrimaryButton
 import com.hyundaiapp.chachelin.ui.components.ScreenHeader
+import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.StatTile
 import com.hyundaiapp.chachelin.ui.components.formatDateTime
 import com.hyundaiapp.chachelin.ui.components.formatKm
@@ -59,6 +60,7 @@ fun StationDetailScreen(
     onRouteClick: () -> Unit,
     onConfirmRoute: () -> Unit,
     onDismissRoute: () -> Unit,
+    onRetry: () -> Unit = {},
 ) {
     val station = state.station
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -66,8 +68,18 @@ fun StationDetailScreen(
         if (station == null) {
             Column(Modifier.fillMaxSize().padding(CarDimens.ScreenPadding)) {
                 ScreenHeader("충전소", onBack = onBack)
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("충전소 정보를 불러오는 중이에요", style = MaterialTheme.typography.titleLarge, color = CarColors.OnSurfaceVariant)
+                Column(
+                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                    verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                ) {
+                    Text(
+                        state.error ?: if (state.loading) "충전소 정보를 불러오는 중이에요" else "충전소 정보를 찾을 수 없어요",
+                        style = MaterialTheme.typography.titleLarge,
+                        color = CarColors.OnSurfaceVariant,
+                        textAlign = TextAlign.Center,
+                    )
+                    if (!state.loading) SecondaryButton("다시 시도", onRetry)
                 }
             }
         } else if (portrait) {

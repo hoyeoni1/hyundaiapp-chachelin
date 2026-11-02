@@ -126,7 +126,7 @@ fun ChachelinNav(container: AppContainer) {
                 // 개발 메뉴에서 바로 들어오면 고른 충전소가 없다 → 시드 첫 충전소
                 val id = stationId ?: PreviewData.stationRow.id
                 val vm = viewModel(key = id) { StationDetailViewModel(id, container.signals, container.signals, container.stations) }
-                LaunchedEffect(Unit) { vm.refresh() }
+                LaunchedEffect(vm) { vm.refresh() }
                 val state by vm.state.collectAsState()
                 StationDetailScreen(
                     state,
@@ -134,6 +134,7 @@ fun ChachelinNav(container: AppContainer) {
                     onRouteClick = vm::onRouteClick,
                     onConfirmRoute = vm::onConfirmRoute,
                     onDismissRoute = vm::onDismissRoute,
+                    onRetry = vm::refresh,
                 )
             }
             Screen.CHARGING -> {

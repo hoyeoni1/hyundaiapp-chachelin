@@ -6,20 +6,26 @@
 
 - 한 일 요약: 열린 담당 이슈 없음. PR #2·#3 리뷰와 이상준 handoff의 UI 요청 확인 후 S7 선택 알림 권한 요청 추가. Android 13+에서 설명 카드의 [알림 허용] 버튼으로만 요청하며 거부해도 필수 동의·차종 선택 후 시작 가능. 가로·세로 내용은 스크롤 가능.
   - PR #3의 `ChachelinNav` ViewModel 연결·S6 철회 버튼 확인. S2~S7 ViewModel 연결은 이미 완료되어 임시 상태 교체 작업은 끝남. S4 [나중에]는 세션 기록을 남기고 리뷰 없이 닫는 기존 동작 사용.
+  - S2 추가 후속: 이상준 handoff의 제안대로 `StationDetailUiState.loading/error`와 재시도 UI·콜백을 함께 추가. 충전소 없음·조회 예외·10초 응답 지연을 오류로 끝내며 재시도 가능. 재조회 때 이전 요청은 취소하고 취소 예외를 삼키지 않음. 조회 시작은 Nav 진입 효과 한 곳으로 모아 init과의 중복 조회 제거.
   - 동의 철회 확인 창: CarColors 및 64dp 확인/취소 버튼 적용. PR #2 선택 제안대로 S1·S2의 평균 kW 집계가 없으면 "기록 없음", 충전 중/완료 화면의 기존 표시는 유지.
-- 진행 중 브랜치·PR: `fix/onboarding-notifications` (이번 PR로 리뷰 요청, 머지 대기). 이전 UI PR #1·#2는 머지 완료.
+- 진행 중 브랜치·PR: `fix/onboarding-notifications` — https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/6 (리뷰·머지 대기). 이전 UI PR #1·#2는 머지 완료.
 - 다음 할 일:
   1. x86_64 Pleos PC에서 S7 알림 허용/거부, 가로·세로 터치와 S6 철회·재동의 확인.
   2. 장호연이 약관 전문 확정 후 `TermsDialog`의 준비 중 문구 교체.
-  3. 결과 알림·S2 조회 실패 상태·실측 속도 분포는 이상준/황준용과 별도 진행. 이번 변경은 기록 중 알림 권한 요청만 연결.
-- 막힌 점·질문: S2 불러오기 실패의 error 상태 계약은 아직 없음(이상준 handoff의 제안). 서버 속도 분포 계약도 미정. Mac Apple Silicon에서 Pleos x86_64 에뮬레이터 실행 불가.
-- 주의: `ui/theme/Theme.kt`, `ui/components/CarComponents.kt`, `CarIcons.kt`는 공통 부품이며 수정하지 않음. 새 알림 권한 helper는 두 앱에서 패키지만 다름. `core/`·로직 경로 수정 없음. 머지는 장호연 담당.
+  3. 결과 알림·실측 속도 분포는 이상준/황준용과 별도 진행. 이번 알림 변경은 기록 중 알림 권한 요청만 연결.
+- 막힌 점·질문: 서버 속도 분포 계약은 미정. Mac Apple Silicon에서 Pleos x86_64 에뮬레이터 실행 불가.
+- 주의: `StationDetailViewModel` 수정은 이상준이 handoff에서 제안한 오류 상태 계약·재시도 연결에 한정(서버/data/domain 변경 없음). `ui/theme/Theme.kt`, `ui/components/CarComponents.kt`, `CarIcons.kt`는 공통 부품이며 수정하지 않음. 새 알림 권한 helper는 두 앱에서 패키지만 다름. `core/`·로직 경로 수정 없음. 머지는 장호연 담당.
 - 확인 방법: JDK 17로 `bash ./gradlew assembleDebug test :app:lintDebug`. `gradlew` 실행 비트가 없어 bash 사용. 렌더/화면 확인은 작업 기록 참조.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
 
+### 2026-11-03 — 추가 요청 재점검
+- 한 일: 사용자 "더 없어?"에 따라 초기 UI PR #1·현재 PR·인라인 댓글까지 재점검. 이상준 handoff의 S2 무한 로딩 요청을 추가 반영. UiState 오류 필드와 ViewModel 결과 투영·Screen 재시도 버튼을 같은 PR에 구현.
+- 검증: 빌드·전체 테스트·앱 lint 통과. 회귀 테스트 4개 추가(충전소 없음/단일 조회, 실패→재시도 복구, 10초 시간 초과, 겹친 재조회 취소). UI는 오류 안내·재시도·뒤로 콜백과 로딩 중 재시도 없음도 임시 Robolectric으로 확인.
+- 바꾼 파일: `ui/{UiStates,ChachelinNav}.kt`, `ui/stations/{StationDetailScreen,StationDetailViewModel}.kt`, `ViewModelsTest`, `StationDetailViewModelTest`, 본 문서.
+
 ### 2026-11-03
-- 검증: `assembleDebug test :app:lintDebug` 통과. 앱 단위 테스트 63개(debug/release 각각), core debug 17개/release 3개. 앱 lint 오류 0(기존 경고 9개). 임시 Gradle init+Robolectric 2개 통과: 1280×720에서 알림 거부 상태로 시작 가능·알림 버튼 콜백, 720×1280에서 비동의 시작 비활성·알림 카드 접근 가능. 두 PNG를 직접 확인. 임시 테스트/의존성은 커밋하지 않음. Pleos 에뮬레이터 실행은 하지 않음.
+- 검증: `assembleDebug test :app:lintDebug` 통과. 앱 단위 테스트 67개(debug/release 각각), core debug 17개/release 3개. 앱 lint 오류 0(기존 경고 9개). 임시 Gradle init+Robolectric 2개 통과: 1280×720에서 알림 거부 상태로 시작 가능·알림 버튼 콜백, 720×1280에서 비동의 시작 비활성·알림 카드 접근 가능. 두 PNG를 직접 확인. 임시 테스트/의존성은 커밋하지 않음. Pleos 에뮬레이터 실행은 하지 않음.
 - 한 일: 두 저장소의 열린 PR·이슈와 차슐랭 PR #2·#3 리뷰 확인. 이상준의 S7 알림 권한 요청을 UI에서 연결. S6 철회 버튼과 Nav ViewModel 연결 확인, 철회 확인 창의 대비·터치 영역 보완. S1·S2 평균 집계 없음은 "기록 없음"으로 표시.
 - 결정: 알림 권한은 선택(거부해도 충전 기록 서비스는 동작), 요청은 S7 설명 뒤 버튼에서만. 알림 허용 여부는 앱 복귀 때 시스템 설정으로 다시 확인. 화면은 상태·콜백만 받음.
 - 바꾼 파일: `ui/ChachelinNav.kt`, `ui/components/NotificationPermission.kt`, `ui/onboarding/OnboardingScreen.kt`, `ui/stations/{StationListScreen,StationDetailScreen}.kt`, 본 문서.
