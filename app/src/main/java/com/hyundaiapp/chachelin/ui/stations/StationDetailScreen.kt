@@ -143,7 +143,7 @@ private fun Summary(station: StationRowUi, onBack: () -> Unit) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatTile("인증 충전", "${station.verifiedCharges}회", Modifier.weight(1f))
-            StatTile("실측 평균", formatKw(station.avgKw), Modifier.weight(1f))
+            StatTile("실측 평균", station.avgKw?.let { formatKw(it) } ?: "기록 없음", Modifier.weight(1f))
             StatTile(
                 "7일 실패", "${station.recentFailures7d}회", Modifier.weight(1f),
                 valueColor = if (station.recentFailures7d > 0) CarColors.Warning else CarColors.OnSurface,

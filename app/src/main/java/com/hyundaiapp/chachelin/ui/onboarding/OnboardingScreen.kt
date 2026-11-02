@@ -43,6 +43,8 @@ fun OnboardingScreen(
     onSelectPreset: (Int) -> Unit,
     onShowTerms: (Terms) -> Unit,
     onStart: () -> Unit,
+    notificationsGranted: Boolean = false,
+    onRequestNotifications: () -> Unit = {},
 ) {
     val canStart = state.locationAgreed && state.privacyAgreed && state.selectedPreset != null
     val startLabel = when {
@@ -60,6 +62,7 @@ fun OnboardingScreen(
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     Intro()
                     Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
+                    NotificationConsent(notificationsGranted, onRequestNotifications)
                     Presets(state, onSelectPreset)
                 }
                 PrimaryButton(startLabel, onStart, Modifier.fillMaxWidth(), enabled = canStart)
@@ -69,19 +72,27 @@ fun OnboardingScreen(
                 Modifier.fillMaxSize().padding(horizontal = CarDimens.ScreenPadding, vertical = 40.dp),
                 horizontalArrangement = Arrangement.spacedBy(40.dp),
             ) {
-                Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Intro()
-                    Spacer(Modifier.weight(1f))
                     Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
+                    NotificationConsent(notificationsGranted, onRequestNotifications)
                 }
-                Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Presets(state, onSelectPreset)
-                    Spacer(Modifier.weight(1f))
                     PrimaryButton(startLabel, onStart, Modifier.fillMaxWidth(), enabled = canStart)
                 }
             }
         }
     }
+}
+
+@Composable
+private fun NotificationConsent(granted: Boolean, onRequest: () -> Unit) {
+    ConsentRow(
+        "충전 기록 알림 (선택)", granted, onRequest,
+        description = "충전 기록 중 알림을 표시해요.\n허용하지 않아도 충전 기록은 계속돼요.",
+        agreeLabel = "알림 허용", agreedLabel = "허용됨",
+    )
 }
 
 @Composable
