@@ -9,13 +9,18 @@
 - Supabase 두 migration 및 CLI 이력 정합 완료. 이번 최종 검사는 읽기/드라이런만 실행: RLS 9개, authenticated 전용 RPC 11개, 시드 10/300/400/2000, 함수 fingerprint 일치. 대기 migration 없음. SQL/시드는 다시 적용하지 않았다.
 - core v0.5.1: HTTPS 익명 인증·갱신, Keystore AES-GCM/noBackup 영속 상태, FIFO outbox, 세대별 철회 재시도와 서버 ACK 대기를 제공한다. CAR_INFO 미선언 getter 제거(#9), 선택적 내비 요청/취소는 런타임 권한 확인 후 실행한다. 두 core는 동일하다.
 - 두 앱 실제 저장소 연결: 공개 URL/키 설정 시 Supabase, 설정 없으면 Fake. debug는 DEMO, release는 LIVE. deleteMine은 서버 삭제 ACK 후에만 성공하여 PendingDeletions를 지우게 했다. 새 회귀 테스트로 오프라인 삭제 대기·실패 재시도·ACK 완료를 검증한다.
-- 최종 통합 검증: debug/release 앱 빌드 및 앱 테스트 각78, core debug29/release15(backend12) 통과. app lint 오류0/경고14, core lint 오류0/경고3. 로컬 DB 테스트15 통과. 공통 파일 일치 검사 통과.
+- 최종 통합 검증: debug/release 앱 빌드 및 앱 테스트 각81, core debug29/release15(backend12) 통과. app lint 오류0/경고14, core lint 오류0/경고3. 로컬 DB 테스트15 통과. 공통 파일 일치 검사 통과.
 - PR: [차슐랭 #10](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/10) / [크루즈 #22](https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/22). 최종 문서·검증 결과 포함, 원격 main은 직접 머지하지 않는다.
 - 상세 서버 설명은 `docs/server-overview.md`: 구조·테이블·11 RPC·인증/RLS·재전송/철회·시드·운영/검증·남은 한계. `server/README.md`와 연결/설계 문서, docs/README 및 이 인수인계를 최신화했다.
 - 실제 JWT HTTP 통합 검사와 양쪽 Pleos debug fixture(HTTPS·Keystore 복원·영속 outbox·철회 ACK)는 이전 연결 단계에서 통과했다. 이번 최신 main 통합 후 전체 SDK 주입/UI 시연은 재검사 전이다.
 - 남은 일: 전체 제품 시연, WorkManager, 철회 대기 UI, 영속 읽기 캐시, 환경부 API 캐시, 약관/보관 정책 확정. 원격 main 머지와 최종 배포는 팀장 장호연이 한다.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-03 — 서버 PR 피드백 1·2 반영
+- 차슐랭 신규 충전소 밖 충전을 서버 outbox 대신 암호화/noBackup 로컬 저장소로 분기. 재실행/오프라인 내 기록 병합, 중복 방지, 철회 즉시 삭제·늦은 저장 차단을 구현했다. 이전 서버/outbox 기록은 소급 이전하지 않는다.
+- 시드 날짜 갱신 SQL·상태 조회·운영 절차 추가. 고정 SEED 소유자/건수를 확인하고 한국 날짜를 기준으로 원래 행만 갱신한다. 같은 날 재실행 가능, 변형 시드 중단, LIVE/SIMULATED 보존. 원격 실행과 무료 플랜 운영 대책은 이번 범위 밖이다.
+- 차슐랭 앱 debug/release 테스트 각81, 빌드·lint 오류0/경고14. DB15 테스트에 60일 노후 시드 복구·반복 실행·앱 데이터 보존을 추가 검증했다. 공통 core 변경 없음. 기존 PR #10/#22에 반영.
 
 ### 2026-11-03 — 팀원 서버 연결 안내 보강
 - 공통 서버 설명서에 PR 적용·공개 URL/키 설정·debug 재빌드·동의·현재 Android 사용자별 연결 검사·문제 해결 순서를 추가했다. 앱 개발과 관리자 CLI 작업의 준비물을 구분했다. 문서 변경만 있으며 기존 PR에 반영한다.

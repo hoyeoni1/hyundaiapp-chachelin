@@ -214,6 +214,33 @@ test('seed migration is replayable: exactly 10 demo stations, 300 sessions, 400 
     assert.ok(detail.recent_failure_hour_ms.every(t=>t%3600000===0));
     const risk=(await seeded.query(`select public.pleos_nearby_risk(37.4127,127.0947,10000,true) data`)).rows[0].data;
     assert.equal(risk.length,4);assert.ok(risk.some(r=>r.is_risk));
+    await seeded.exec(`update pleos_private.charge_sessions set started_at=started_at-interval '60 days', ended_at=ended_at-interval '60 days';
+      update pleos_private.cruise_events set occurred_hour=occurred_hour-interval '60 days';
+      update pleos_private.cruise_passes set pass_date=pass_date-60;`);
+    const refresh=await readFile(new URL('../supabase/refresh-demo-dates.sql',import.meta.url),'utf8');
+    // Client SIMULATED history must not move when the synthetic seed is refreshed.
+    await seeded.exec(`insert into pleos_private.app_installations(id,owner_user_id,app,vehicle_hash,data_source,consent_version)
+      values('${V}','${A}','CHACHELIN',repeat('a',64),'SIMULATED','test');
+      insert into pleos_private.charge_sessions(installation_id,id,station_id,started_at,ended_at,soc_start,soc_end,result)
+      values('${V}','${S}','st-001','2026-01-01T00:00Z','2026-01-01T00:30Z',20,40,'SUCCESS');`);
+    const before=(await seeded.query(`select ended_at::text t from pleos_private.charge_sessions where installation_id='${V}'`)).rows[0].t;
+    await seeded.exec(refresh);
+    const refreshed=(await seeded.query(`select public.pleos_nearby_risk(37.4127,127.0947,10000,true) data`)).rows[0].data;
+    assert.deepEqual(refreshed,risk);
+    const failures=(await seeded.query(`select public.pleos_station_detail('st-008',true) data`)).rows[0].data;
+    assert.ok(failures.recent_failure_hour_ms.length>0);
+    const times=(await seeded.query(`select id,ended_at::text from pleos_private.charge_sessions order by installation_id,id`)).rows;
+    await seeded.exec(refresh);
+    assert.deepEqual((await seeded.query(`select id,ended_at::text from pleos_private.charge_sessions order by installation_id,id`)).rows,times);
+    assert.equal((await seeded.query(`select ended_at::text t from pleos_private.charge_sessions where installation_id='${V}'`)).rows[0].t,before);
+    for(const [table,count] of [['cruise_events',400],['cruise_passes',2000]])
+      assert.equal((await seeded.query(`select count(*)::int n from pleos_private.${table}`)).rows[0].n,count);
+    const status=(await seeded.query(await readFile(new URL('../supabase/demo-status.sql',import.meta.url),'utf8'))).rows[0].demo_status;
+    assert.equal(status.seed_passes_28d,2000); assert.equal(status.seed_events_28d,400); assert.ok(status.seed_failures_7d>0);
+    // A partial/customized seed fails closed.
+    await seeded.exec(`delete from pleos_private.cruise_events where ctid=(select ctid from pleos_private.cruise_events limit 1)`);
+    await assert.rejects(seeded.exec(refresh),/Demo seed differs/);
+    await seeded.exec('rollback');
     await seeded.exec(await readFile(new URL('../supabase/preflight.sql',import.meta.url),'utf8'));
     await seeded.exec(await readFile(new URL('../supabase/verify.sql',import.meta.url),'utf8'));
   } finally { await seeded.close(); }

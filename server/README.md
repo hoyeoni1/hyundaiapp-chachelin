@@ -8,7 +8,7 @@
 
 원격 확인: 두 버전, 시드 10/300/400/2000, 테이블 9개 RLS, RPC 11개 권한 정상. 함수 fingerprint는 로컬과 일치(f0b69344326a5769b916cafeb7698bbe). 사용자 수동 적용을 검증한 뒤 CLI 표준 이력에 두 버전을 applied 등록했고 db push --dry-run은 upToDate=true·대기 migration 없음. SQL 본문·시드 재실행은 하지 않았다. [CLI 사용법](cli-setup.md).
 
-**2026-11-03 Android 연결 완료:** 두 제품 앱 저장소가 공통 core v0.5.0 backend를 사용하도록 연결했다. 실제 익명 JWT HTTP 테스트와 두 앱의 Pleos/Keystore/영속 outbox 통합 검사를 통과했다. 현재 PC의 debug 빌드는 실제 Supabase 시연 데이터를 사용한다. [설정·검증·남은 범위](android-connection.md).
+**2026-11-03 Android 연결 완료:** 두 제품 앱 저장소가 공통 core v0.5.1 backend를 사용하도록 연결했다. 실제 익명 JWT HTTP 테스트와 두 앱의 Pleos/Keystore/영속 outbox 통합 검사를 통과했다. 현재 PC의 debug 빌드는 실제 Supabase 시연 데이터를 사용한다. [설정·검증·남은 범위](android-connection.md).
 
 ## 프로젝트 연결 확인 (2026-11-02)
 
@@ -25,7 +25,7 @@
 
 앱에서 동의한 뒤 Supabase Anonymous Sign-In으로 이메일 없는 인증 세션을 만든다. 공개 키만으로 개인 기록을 쓰거나 삭제할 수 있게 하지 않는다. 가명 차량 UUID는 기존 앱 계약을 유지하되, 소유권은 서버가 검증한 `auth.uid()`에 연결한다. JWT 자체를 직접 구현하거나 DB 비밀번호를 앱에 넣지 않는다.
 
-- 차슐랭: `stations`, `charge_sessions`, `reviews`, 충전소 집계. 세션 ID 재전송은 한 건으로 유지하고 SUCCESS 세션에만 리뷰를 허용한다. NOT_AT_STATION 결과와 station_id null을 수용한다. 최신 기준은 이상준 PR #3의 저장소 계약이다.
+- 차슐랭: `stations`, `charge_sessions`, `reviews`, 충전소 집계. 세션 ID 재전송은 한 건으로 유지하고 SUCCESS 세션에만 리뷰를 허용한다. 신규 NOT_AT_STATION/충전소 미연결 기록은 기기 암호화 저장소에만 두고 서버 outbox에 넣지 않는다. 기존 SQL의 nullable 계약은 호환성을 위해 유지한다. 최신 기준은 이상준 PR #3의 저장소 계약이다.
 - 크루즈: 해제·통과 기록 및 위험도 집계. 원래 좌표·차속을 저장하지 않는다. geohash 7자리+heading8, 한국 날짜, 같은 방향 9칸의 차량-일 중복 제거, 최근 28일, 해제율 30% 이상·분모 20 이상을 따른다.
 - 개인 원본 데이터와 집계를 분리한다. 개인 데이터는 본인만 읽고 쓰며, 집계 응답에 다른 기기의 차량 ID·인증 ID를 노출하지 않는다.
 - 동의 철회: 기록 중지 후 서버 삭제 완료 또는 영속 삭제 대기 작업 보존까지 기존 인증 세션을 유지한다. 이전 ID를 먼저 지워 삭제를 재시도하지 못하게 하는 흐름은 피한다. 자세한 재동의·인증 정리 절차는 앱 담당자와 맞춘다.
@@ -46,3 +46,5 @@
 3. URL·Publishable key는 이미 받았으므로 다시 보낼 필요가 없다. SQL 배포는 migration이 준비된 뒤 안내한다.
 
 공식 문서: [키 종류](https://supabase.com/docs/guides/getting-started/api-keys), [익명 인증](https://supabase.com/docs/guides/auth/auth-anonymous).
+
+시드 날짜가 오래되면 [시연 날짜 갱신 절차](demo-maintenance.md)를 따른다. 원래 migration은 재실행하지 않는다.

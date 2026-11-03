@@ -79,3 +79,11 @@ adb shell run-as com.hyundaiapp.cruisebreaker --user 10 cat files/backend-check-
 - app lint: 차슐랭 오류0/경고14, 크루즈 오류0/경고19. core lint는 양쪽 오류0/경고3. CAR_INFO 미선언 getter를 제거했고 내비 요청/취소는 런타임 권한을 검사한다.
 - 로컬 DB 테스트15, 공통 파일 일치, release manifest debug 검사 화면 제외 확인. 원격 읽기 검증과 migration dry-run 정상이며 SQL/시드를 다시 실행하지 않았다.
 - 앞의 에뮬레이터 backend 검사는 초기 연결 단계의 결과다. 이번 최신 main 전체 SDK/UI 리허설을 대신하지 않는다.
+
+## PR 피드백 반영: 충전소 밖 기록과 시드 날짜
+
+- 신규 NOT_AT_STATION 또는 stationId 없는 기록은 서버 outbox에 넣지 않고 LocalChargeRecords에 저장한다. 별도 Keystore 암호화/noBackup 파일이며 앱/프로젝트/debug-live namespace 및 동의 세대별 UUID로 구분한다.
+- 내 기록은 기기 기록과 서버 기록을 합쳐 중복 제거·시간순 정렬한다. 기기 기록은 앱 재실행/오프라인에서도 복원하고 리뷰는 허용하지 않는다. 동의 철회는 서버 응답을 기다리기 전에 로컬 기록부터 지우고 늦은 생산자의 재저장을 거절한다.
+- 이전 버전에서 이미 서버에 전송된 기록이나 outbox를 소급 이전·삭제하지 않는다. 이번 변경은 신규 저장 경로이며 원격 기존 기록을 임의로 지우지 않는다.
+- 시드 날짜 갱신은 [운영 절차](demo-maintenance.md)와 supabase/refresh-demo-dates.sql을 사용한다. 이번에는 로컬 검증만 수행했으며 원격 갱신은 실행하지 않았다.
+- 앱 테스트 debug/release 각81(추가3), 양쪽 APK 빌드 및 앱 lint 오류0/경고14. 로컬 DB15 테스트에 노후 시드 복구·재실행·앱 데이터 보존·변형 시드 차단을 추가 검증했다.

@@ -2,6 +2,7 @@ package com.hyundaiapp.chachelin
 
 import android.content.Context
 import android.content.Intent
+import com.hyundaiapp.chachelin.data.LocalChargeRecords
 import com.hyundaiapp.chachelin.data.ChargeRecordRepository
 import com.hyundaiapp.chachelin.data.FakeChargeRecordRepository
 import com.hyundaiapp.chachelin.data.FakeStationRepository
@@ -48,8 +49,11 @@ class AppContainer(context: Context) {
         val config = BackendConfig(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, "CHACHELIN", BuildConfig.SUPABASE_SIMULATED)
         SupabaseBackend(config, EncryptedBackendStore(context, config.storageNamespace), HttpsBackendTransport(config), appScope)
     } else null
+    private val localRecords = backend?.let {
+        LocalChargeRecords(EncryptedBackendStore(context, it.config.storageNamespace + "-local-charges"))
+    }
     val records: ChargeRecordRepository = backend?.let {
-        SupabaseChargeRecordRepository(it, vehicleProfile::vehicleId) { vehicleProfile.onboarded.value }
+        SupabaseChargeRecordRepository(it, vehicleProfile::vehicleId, requireNotNull(localRecords)) { vehicleProfile.onboarded.value }
     } ?: fakeRecords
     val stations: StationRepository = backend?.let {
         SupabaseStationRepository(it, vehicleProfile::vehicleId) { vehicleProfile.onboarded.value }
@@ -105,7 +109,9 @@ class AppContainer(context: Context) {
         val vehicleId = vehicleProfile.vehicleId()
         appContext.stopService(Intent(appContext, RecordingService::class.java))
         stopRecording()
-        try { backend?.withdraw(vehicleId) } finally { vehicleProfile.clear() }
+        try { backend?.withdraw(vehicleId) } finally {
+            try { localRecords?.clear(vehicleId) } finally { vehicleProfile.clear() }
+        }
         appScope.launch { runCatching { records.deleteMine(vehicleId) } }
     }
 }

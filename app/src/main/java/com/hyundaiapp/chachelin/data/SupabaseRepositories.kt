@@ -6,6 +6,7 @@ import com.hyundaiapp.core.GeoMath
 import com.hyundaiapp.core.GeoPoint
 import com.hyundaiapp.core.backend.SupabaseBackend
 import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.mapLatest
@@ -62,12 +63,18 @@ class SupabaseStationRepository(
 class SupabaseChargeRecordRepository(
     private val backend: SupabaseBackend,
     private val vehicleId: () -> String,
+    private val local: LocalChargeRecords,
     private val consented: () -> Boolean,
 ) : ChargeRecordRepository {
     private var cachedOwner: String? = null
     private var cachedRecords = emptyList<ChargeSessionRecord>()
 
     override suspend fun upload(record: ChargeSessionRecord, vehicleId: String) {
+        if (record.stationId == null || record.result == ChargeResult.NOT_AT_STATION) {
+            check(consented() && this.vehicleId() == vehicleId) { "Explicit current consent required" }
+            local.put(vehicleId, record)
+            return
+        }
         backend.enqueue(vehicleId, "pleos_upload_charge", "charge:${record.id}", JSONObject()
             .put("p_id", record.id).put("p_station_id", record.stationId ?: JSONObject.NULL)
             .put("p_started_at", Instant.ofEpochMilli(record.startedAtMs).toString())
@@ -77,19 +84,28 @@ class SupabaseChargeRecordRepository(
             .put("p_time_scale", if (backend.config.simulated) 120 else 1))
     }
     override suspend fun submitReview(sessionId: String, rating: Int, tags: Set<ReviewTag>) {
+        require(!local.contains(vehicleId(), sessionId)) { "Local-only sessions cannot be reviewed" }
         backend.enqueue(vehicleId(), "pleos_submit_review", "review:$sessionId", JSONObject()
             .put("p_session_id", sessionId).put("p_rating", rating).put("p_tags", JSONArray(tags.map { it.name }.sorted())))
     }
     override suspend fun retract(sessionId: String) {
+        if (local.retract(vehicleId(), sessionId)) return
         backend.enqueue(vehicleId(), "pleos_retract_failure", "retract:$sessionId", JSONObject().put("p_session_id", sessionId))
     }
     override suspend fun deleteMine(vehicleId: String) {
+        local.clear(vehicleId)
         backend.withdraw(vehicleId)
         backend.awaitWithdrawal(vehicleId)
     }
 
+    override fun myRecords(): Flow<List<ChargeSessionRecord>> = combine(remoteRecords(), local.revision) { remote, _ ->
+        if (!consented()) emptyList()
+        else (local.list(vehicleId()) + remote).distinctBy { it.id }
+            .sortedWith(compareByDescending<ChargeSessionRecord> { it.endedAtMs }.thenByDescending { it.id })
+    }.distinctUntilChanged()
+
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
-    override fun myRecords(): Flow<List<ChargeSessionRecord>> = backend.revision.mapLatest {
+    private fun remoteRecords(): Flow<List<ChargeSessionRecord>> = backend.revision.mapLatest {
         if (!consented()) { cachedOwner = null; cachedRecords = emptyList() }
         else {
             val owner = vehicleId()
