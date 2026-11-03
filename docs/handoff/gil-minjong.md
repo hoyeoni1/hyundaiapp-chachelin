@@ -4,24 +4,71 @@
 
 ## 현재 상태 (2026-11-03 기준, 매번 덮어쓰기)
 
-- 한 일 요약: 열린 담당 이슈 없음. PR #2·#3 리뷰와 이상준 handoff의 UI 요청 확인 후 S7 선택 알림 권한 요청 추가. Android 13+에서 설명 카드의 [알림 허용] 버튼으로만 요청하며 거부해도 필수 동의·차종 선택 후 시작 가능. 가로·세로 내용은 스크롤 가능.
-  - PR #3의 `ChachelinNav` ViewModel 연결·S6 철회 버튼 확인. S2~S7 ViewModel 연결은 이미 완료되어 임시 상태 교체 작업은 끝남. S4 [나중에]는 세션 기록을 남기고 리뷰 없이 닫는 기존 동작 사용.
-  - S2 추가 후속: 이상준 handoff의 제안대로 `StationDetailUiState.loading/error`와 재시도 UI·콜백을 함께 추가. 충전소 없음·조회 예외·10초 응답 지연을 오류로 끝내며 재시도 가능. 재방문 갱신 중에는 기존 상세·길안내 확인 상태를 유지하고, 실패하면 이전 정보 안내와 재시도를 표시. 재조회 때 이전 요청은 취소하고 취소 예외를 삼키지 않음. 조회 시작은 Nav 진입 효과 한 곳으로 모아 init과의 중복 조회 제거.
-  - 동의 철회 확인 창: CarColors 및 64dp 확인/취소 버튼 적용. PR #2 선택 제안대로 S1·S2의 평균 kW 집계가 없으면 "기록 없음", 충전 중/완료 화면의 기존 표시는 유지.
-  - 줄바꿈 정리: 공통 제목·본문에 한국어 로캘과 문단 줄바꿈 적용. 좁은 동의 카드에서는 버튼을 아래로 옮겨 본문 폭 확보. 시작 버튼은 한 줄 "시작하기"로 통일하고 비활성 사유는 별도 안내. 실패 안내는 충전소명·실패 원인·공유 안내를 분리, S7 소개 문구를 의미 단위 두 줄로 정리.
-  - 선택 리뷰 후속: 알림 권한 선택 결과를 확인한 이력을 별도 UI 설정에 보관하고 rationale을 확인. 첫 창을 선택 없이 닫으면 이력을 확정하지 않고, 요청 중 버튼 라벨은 유지. 재요청 불가 시 [알림 설정]으로 시스템 설정 진입, 돌아오면 허용 상태 갱신. 앱 알림 설정이 없는 경우 앱 상세 설정으로 대체. 자동으로 설정 화면을 열지 않음.
-- 진행 중 브랜치·PR: `fix/notification-permission-recovery` — https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/7 (설정 복귀 선택 리뷰 후속). 이전 UI PR #6는 2026-11-03 머지 완료: https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/6
-  - 최종 선택 리뷰: UI 권한 이력이 없는 상태에서 시스템이 알림 요청을 즉시 거부해도 버튼이 계속 무반응인 상태로 남지 않도록, 허용·rationale 없는 결과가 연속 2회면 [알림 설정]으로 전환. 첫 미선택 닫기는 재요청 가능. 횟수는 UI prefs에 저장하고 허용·rationale이 확인되면 초기화. 두 번 창을 닫아도 설정 경로로 바뀌는 보수적 fallback이며, 창 닫기와 즉시 거부를 시간으로 추정하지 않음. 설정은 다음 명시적 탭에서만 열림.
-  - 설정 복귀 후속: ON_RESUME·명시적 새로고침에서 알림 허용을 확인하면 미확인 횟수를 메모리와 UI prefs에서 0으로 초기화. 요청 결과 콜백 외의 허용도 반영하며, 기존 실제 거부 선택 이력(`notifications_requested`)은 유지.
-- 다음 할 일:
-  1. x86_64 Pleos PC에서 S7 알림 허용/거부, 가로·세로 터치와 S6 철회·재동의 확인.
-  2. 장호연이 약관 전문 확정 후 `TermsDialog`의 준비 중 문구 교체.
-  3. 결과 알림·실측 속도 분포는 이상준/황준용과 별도 진행. 이번 알림 변경은 기록 중 알림 권한 요청만 연결.
-- 막힌 점·질문: 서버 속도 분포 계약은 미정. Mac Apple Silicon에서 Pleos x86_64 에뮬레이터 실행 불가.
-- 주의: `StationDetailViewModel` 수정은 이상준이 handoff에서 제안한 오류 상태 계약·재시도 연결에 한정(서버/data/domain 변경 없음). `ui/theme/Theme.kt`·`ui/components/CarComponents.kt`는 두 앱에 동일하게 수정했으며 `CarIcons.kt`는 변경하지 않음. 새 알림 권한 helper는 두 앱에서 패키지만 다름. `core/`·로직 경로 수정 없음. 머지는 장호연 담당.
-- 확인 방법: JDK 17로 `bash ./gradlew assembleDebug test :app:lintDebug`. `gradlew` 실행 비트가 없어 bash 사용. 렌더/화면 확인은 작업 기록 참조.
+- 한 일 요약: 리뷰 본문 스크롤·하단 전송/건너뛰기 고정, 별점 폭·선택값, 충전/미처리 결과 Back·기존 target 재진입, 상세 헤더·오류·길안내 모달, 완료 null/단위·계산 근거·실패 기록 범위, 동의·차종·철회 표현 정리.
+- 진행 중 브랜치: `fix/ui-audit-followups` (최신 origin/main 기반, 새 PR로 검토. 머지는 장호연). 기존 알림 PR은 머지 완료.
+- 다음 할 일: PR 검토 후 x86 Pleos에서 실제 차속 권한·시스템 Back/Home·내비 왕복·주행 제한 및 화면 배치를 확인.
+- 담당 계약/내용 대기: 이상준: S1 위치 대기 기한·최신 위치/요청 우선(F04). 이상준/황준용: 길안내 요청별 대기·실패·성공 계약(F11). 장호연: 태그 배타 규칙(D02)·약관 전문(B01).
+- 검증: 두 앱 일반 `assembleDebug test :app:lintDebug`, 별도 임시 Robolectric UI 28검사(차슐랭 debug10/release3, 크루즈 debug15). 수정 전 main과 동일 조건 6쌍 캡처. 임시 QA 의존성·코드는 제품에 추가하지 않음.
+- 자료: `/Users/gilminjong/Dev/output/hyundai-ui-fixes-2026-11-03/`의 CHECKLIST·OWNER-CONTRACTS·REPORT·before/after·qa. 기존 dirty handoff는 before 백업과 이전 작업 기록으로 보존.
+- 경계: Screen/Nav/공통 UI만 수정. core·ViewModel·data/domain·집계·서비스·서버 PR은 수정/머지하지 않음. STOP 복귀 개선을 프로세스 종료/재부팅 복원으로 주장하지 않음.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-03 — UI 감사 후속 구현과 전후 검증
+- 구현: 리뷰 본문 스크롤·하단 전송/건너뛰기 고정, 별점 폭·선택값, 충전/미처리 결과 Back·기존 target 재진입, 상세 헤더·오류·길안내 모달, 완료 null/단위·계산 근거·실패 기록 범위, 동의·차종·철회 표현 정리.
+- 결정: 기존 콜백의 의미를 유지하며 Back은 보류/재진입, 평가 건너뛰기는 결과 소비로 구분. 서버 삭제는 요청·통신 지연을 설명하고 완료를 보장하지 않음. 동의 전문은 작성하지 않음.
+- 검증: 일반 빌드·단위 테스트·app lint, 추가 UI 28검사 및 6개 동일 조건 main 전후 캡처. 실제 Pleos/실차 검증은 아님.
+- 잔여: 이상준: S1 위치 대기 기한·최신 위치/요청 우선(F04). 이상준/황준용: 길안내 요청별 대기·실패·성공 계약(F11). 장호연: 태그 배타 규칙(D02)·약관 전문(B01).
+- 이전 감사의 관찰 PASS와 이번 수정 인수 검사를 구분. 이전 작업 기록·증거·작업 전 handoff 백업을 보존.
+
+
+### 2026-11-03 — UI 통합 경계 보충 3조건 점검 종료(구현 없음)
+- 기존 임시 VM/Robolectric 환경으로 3검사 수행, failures/errors0. 새 native surface·의존성·제품 코드·설계 계약·PR/merge 변경 없음. 기존 근거와 handoff 기록 유지.
+- 새 AppContainer 같은 컨텍스트: 이전 Fake 세션1/리뷰1, 새 인스턴스0/0. 온보딩 true·77.4kWh·vehicleId 유지, 이전 인스턴스 기록1도 유지. 팀 handoff에 이미 명시된 Fake 메모리·서버 미연결 데모 한계다. 실제 OS process death/재부팅 실증으로 해석하지 않음. 인증 충전 완료 UI를 영속 서버 저장 완료와 혼동하지 않도록 경계 기록.
+- 크루즈 위치 null: 판교37.4127/127.0947·10km로 저장소 호출, 거리 모두null/화면 '-'. 제목은 근처 위험 구간, 시연용 시드 데이터 고지는 있음. 현재 위치 미확인·판교 기준 설명은 없음. 현재 시연 범위와 조회 기준 안내의 공백으로 구분, 실차 오표시 사고로 일반화하지 않음.
+- 목록 refresh A 느림/B 빠름: B→A 순 완료 시 최종 목록 A. 현재 즉시 Fake의 실사용 서버 장애가 아니라 비동기 저장소 연동 전 최신 요청 반영 위험으로 분류. 이번 S1 검사이며 이미 고친 S2 상세 요청 취소를 반복 수정한 것이 아님.
+- 남은 주야간 판독·진동/도달성·OEM Back/Home/내비 왕복·실제 신호/권한/네트워크·서버 보존·프로세스 종료/재부팅/suspend는 결함 수와 분리해 NOT RUN/BLOCKED 체크리스트로 기록.
+- 결과: `/Users/gilminjong/Dev/output/ui-integration-gap-audit-2026-11-03/REPORT.md`, manifest/qa/exports 보존. 세 조건에서 범위 종료. 본인 handoff 기록만 추가, 커밋·푸시 없음.
+
+### 2026-11-03 — UI 상태 공백 8조건 추가 점검 종료(구현 없음)
+- 범위 고정: 외부 차속 권한 변경, 리뷰 A→B, 동의만 한 뒤 재생성, 길안내 결과, 큰 글자·100%·65분, 모순 태그 조합, 완료 null 전력, 예전 A 위치 뒤 새 B. 이번 범위 이후 추가 탐색 없음.
+- 재현: 외부 허용/회수 후 ON_RESUME에서 실제 차속 권한과 S5 표시 불일치(알림 helper는 갱신). 길안내 성공/실패/대기 Fake 모두 확인창 종료·대기/결과 UI 없음·두 확인에 두 요청. S4 avgKw=null은 완료 후에도 '측정 중'. 실제 Navi SDK/차량에서 이 경로 발생을 실증한 것은 아님.
+- 기각: 동일 ReviewViewModel에서 A rating4/FAST 뒤 B를 보내면 B 입력은 rating=null/tags=[]로 초기화. 이전 입력 잔존 가설은 해당 조건에서 기각.
+- 결정 필요: 두 명시 동의만 저장해도 Robolectric 테스트 Activity recreate 후 S2, UI onStart 0회. 실제 생산 Activity/서비스는 실행하지 않고 생산 코드의 동의 guard와 같은 테스트 호스트가 시작 가능 1회 기록. 동의 우회로 분류하지 않음. FAST+SLOW+NO_WAIT+WAIT 동시 선택 가능하나 상호 배제 계약 없음. receivedAtMs=1·navi FAILED인 A로 조회 후 fresh B만으로 갱신 안 됨, VM refresh는 B 사용. SDK의 실제 stale 유지와 허용 위치 나이는 미검증/합의 대상.
+- 큰 글자: 1280×720dp·720×1280dp, Compose fontScale1.3/1.5, 대표 화면6종24장. 주요 버튼 표시·64dp 이상 영역과 100%·1시간5분 표시 PASS. 세로 경고 말줄임 및 세로 요약1.5 보조 설명 높이41/필요75px 잘림은 기존 반응형/보조 카드 문제의 조건 확장으로 중복 집계하지 않음. 완료 null 화면 1장 추가.
+- 검사: 상태 관찰 8개 실패0, 렌더25장 완료. 관찰 검사 PASS를 제품 결함 해결로 해석하지 않음. summary caption의 추가 측정은 같은 조건에 한정. 원본 XML·로그·임시 코드·렌더·manifest 보존.
+- 수정 경계: 권한 UI 재조회·완료 null 문구는 UI에서 최소 수정 가능. 요청 결과 계약은 이상준/황준용, 시작 단계는 장호연/이민하, 태그는 장호연/이상준, 위치 freshness는 이상준 합의 필요. core/SDK·제품 로직·PR·merge 수정 없음.
+- 결과: `/Users/gilminjong/Dev/output/ui-state-gap-audit-2026-11-03/REPORT.md`. 실제 설정 앱 조작·Pleos/Navi SDK·기록 서비스·프로세스 종료/재부팅·실차 stale 위치·완료 null 발생·낭독/운전자 판독은 NOT RUN/BLOCKED. 기존 증거와 기존 handoff 기록 보존, 이번 기록은 커밋·푸시하지 않음.
+
+### 2026-11-03 — 차량 환경의 화면 이동·복귀·상태 전환 감사(구현 없음)
+- 전체 제품 화면 12개의 진입·화면 내 뒤로/닫기 위치·콜백 목적지·Android Back을 Nav/ScreenPolicy와 대조. 디버그 개발 메뉴를 실제 제품 동선으로 오인하지 않음. 각 앱 최신 app/PRD와 현재 head 사이 변경 없음.
+- 임시 검사 21개 PASS(차슐랭 release Nav 7, 크루즈 실제 Nav debug=false 주입 경로 14). 차슐랭은 실제 AppContainer의 location/live/pending 상태만 합성 주입했고 차량 SDK는 시작하지 않음. 실제 차량 충전 재현이 아님.
+- NAV01: 크루즈 Activity가 STOP(CREATED)인 동안 D→P가 모두 지나가면 복귀 시 S2 유지, 자동 S3 없음. Nav 재생성 시에도 P만 알면 이전 D 기억이 없음. D를 UI에서 먼저 본 뒤 STOP→P→복귀하면 요약이 뜨는 대조 조건도 확인. 이민하와 주행 종료/미확인 요약 상태를 UI 밖에서 관리하는 계약 합의 제안.
+- NAV02: 차슐랭 S3 클릭 요소 0개·화면 내 뒤로 없음. 시스템 Back으로 원래 화면에 나가도 live는 유지되며 S1에 충전 화면 재진입 경로가 없음. S4도 Back은 pending을 남기고 pop하므로 앱 내 재개 경로가 없고 Nav 재생성 때 재등장. 정차 전용 명시적 복귀 + 활성/미처리 세션 진입점 제안(이상준 합의).
+- NAV03: 크루즈 S4 동의 내용→S5에는 뒤로/닫기 없음. [시작하기]는 서비스 시작 콜백을 호출한 뒤 S4로 돌아가고, 시스템 Back은 호출 없이 S4 복귀. 초기 동의와 재열람 모드 분리 제안.
+- NAV04: 크루즈 수동 S3의 Back은 S2, D→P 자동 S3는 root reset이라 Back이 Activity 종료. 실제 UI 검사로 확인. 정차 요약의 논리적 부모를 일관되게 정의할 것을 제안. 주행 중 내부 pop 금지·터치 요소 없음은 유지.
+- 정상/예외: S2·S6 헤더 Back, 차슐랭 결과 명시적 완료/나중에의 원래 상세 복귀, STOP 중 충전 완료 후 S4 복귀, 약관창 Back=창 닫기, 철회창 Back=취소, 미동의 D→P=동의 화면, UX 미확인=터치0/허용 후 이전 설정 회복 확인. 목록 root·첫 동의 root·DO 화면에 뒤로 아이콘이 없다는 이유만으로 결함 판정하지 않음.
+- 기획 합의: 크루즈 설정에서 출발해 완전한 D→P를 거치면 요약 후 목록으로 reset되어 이전 설정 맥락이 사라짐. 자동 요약 자체는 PRD 요구이므로 확정 결함과 구분. 같은 Activity의 단순 정지/복귀는 설정을 유지하지만 remember stack의 Nav 재생성 복원은 별도 계약 필요.
+- 실제 Pleos 시스템 Back/Home·차량 내비 왕복·실제 UXR 단절·프로세스 종료/시동 suspend/재부팅은 NOT RUN/BLOCKED. Android Back dispatcher와 ActivityScenario 결과를 실제 차량 조작 증거로 주장하지 않음.
+- 자료: `/Users/gilminjong/Dev/output/vehicle-navigation-audit-2026-11-03/`의 navigation-matrix.json, manifest.json, exports/, qa/. 제품 코드·타 담당 파일·PR·merge 변경 없음. 본인 handoff 기록만 추가(커밋·푸시 없음).
+
+### 2026-11-03 — 시각 통일성·디자인 마감 재감사(구현 없음)
+- 사용자 정정에 따라 기능 오류 목록을 반복하지 않고 두 앱 전체 화면을 나란히 비교. 최신 app/PRD는 origin/main과 같으며 기존 PR 후속 head 유지.
+- 실제 코드 Robolectric 렌더 검사 31개 완료(차슐랭 21+모달 1, 크루즈 7+모달 2), 사용 가능한 화면/모달 PNG 32개 보존. Activity 창과 별도인 AlertDialog는 해당 창을 직접 캡처해 비교. 실제 Pleos 화면은 아님.
+- 선정 1: 차슐랭 S1/S2 모두 데이터 없는 오류인데 S1은 흰 28sp 제목+파란 Primary 재시도, S2는 회색 28sp 안내+Secondary 재시도이며 세로 배치도 다름. 공통 EmptyState(제목28/설명20/간격16/Primary76)를 제안. 캐시 상세의 갱신 재시도는 Secondary 예외 유지. 최소 범위: 두 Screen과 공통 부품, VM 변경 없음.
+- 선정 2: 길안내 모달 취소는 22sp Regular·49dp, 확인은 24sp Bold·52dp. 철회 모달은 취소/확인 모두 24sp Bold·64dp. 약관 닫기는 24sp Bold·52dp이며 배경도 SurfaceVariant로 다름(길안내/철회는 Surface). 공통 모달 frame과 액션64, 주 행동24 Bold/보조22 Regular 규칙 제안. 파괴 확인 Warning 색, 내용 길이에 따른 너비 차이는 유지.
+- 선정 3: 차슐랭 S6 철회는 흰 일반 Secondary 헤더 버튼, 크루즈 S4는 Warning 제목+결과 설명 카드. 위치는 각 정보 구조에 맞게 유지하되 파괴 행동의 색·설명 문법을 공통화 제안. 최소 범위: HistoryScreen·SettingsScreen·공통 위험 액션 표현, 철회 로직 변경 없음.
+- 공통 토큰(Theme/CarComponents/CarIcons)은 패키지·테마명·주석 제외 실제 코드 동일. 여백32/40, 카드 안쪽20/24/32, 상태 pill/별점 색, 주행 경고 크기 차이는 역할을 구분해 결함 수에 넣지 않음. 화면 frame/카드/버튼 variant를 명명하는 작업은 재발 방지 제안으로 구분.
+- 첫 수정 제안: 동일 역할이 가장 명확하고 UI만으로 가능한 S1/S2 빈 오류 화면부터 맞추기 → 공통 모달 → 철회 진입 표현. 구현·merge·PR 변경은 하지 않음. 이 기록만 본인 handoff에 추가(커밋·푸시 없음).
+- 결과: `/Users/gilminjong/Dev/output/ui-consistency-audit-2026-11-03/`의 앱별 contact sheet, `role-comparison.png`, `dialog-comparison.png`, exports/qa/manifest. 기존 기능 감사·렌더 파일은 보존.
+
+### 2026-11-03 — 사용자 과업 기준 UI/UX 감사·수정 계획(구현 없음)
+- 범위: 최신 PRD·UiState·담당표·본인 handoff·실제 UI/VM/서비스 코드 대조. 현재 app/PRD는 origin/main과 같고, PR #7/#18 후속 head도 보존. 코드·운영 설정·PR·merge 작업 없음. 문서는 본인 handoff에만 기록(커밋·푸시 없음).
+- 실행: 임시 Robolectric SDK34/mdpi 화면 16개 렌더, 기존 권한/동의/화면 흐름 UI 검사 19개 PASS. 관찰 검사 2개 PASS로 결함 재현(차슐랭 위치 미수신 60초 뒤에도 loading, 크루즈 IOException 뒤 빈 목록). 추가 사용자 인수 검사 3개 FAIL로 재현([나중에] 높이 1dp, 1024dp 경고 말줄임, 600dp 위험 구간 통과 수 4줄). 의도한 인수 기준 실패이며 제품 코드 빌드 오류는 아님.
+- 우선 계획: ① 크루즈 경고 배너의 거리·경고 의미 보존(한 줄·현재 테마 배너 최소 56sp 원칙 유지, 아주 좁은 창 축약은 장호연과 문구 합의) ② 이민하와 S2 오류/빈 상태/재시도 계약 합의 ③ 이상준과 S1 위치 대기 기한·오류/재시도 합의 ④ 차슐랭 S4 입력 스크롤+완료/나중에 고정 및 별점 폭 계산 ⑤ 크루즈 S2 좁은 폭 단일 열/선택 상세 재배치. 상태 계약·VM·core는 담당 합의 전 수정하지 않음.
+- 제외: 자동 기록은 현재 S4 설명("꺼도 앱을 열면 기록")과 MainActivity/BootReceiver 동작이 일치하므로 확정 결함으로 보고하지 않음. 기존 알림·S2 상세 재시도·주행/정차 전환 수정도 새 결함으로 반복 보고하지 않음.
+- 한계: 실제 Pleos, 실제 Car 서비스 단절/재연결, 자동 기록 끔/재부팅, 실제 차속 권한 시스템 창, 글자 배율 확대, 실제 서버 통합은 NOT RUN/BLOCKED. Mac Apple Silicon에서 대상 x86 Pleos 실행 불가.
+- 증거: `/Users/gilminjong/Dev/output/ui-ux-audit-2026-11-03/exports/`(PNG·텍스트 배치), `qa/`(검사 결과 XML·로그·임시 감사 코드), `manifest.json`(검증 범위·소스 head). 모든 화면은 실제 앱 코드를 합성 상태로 그린 Robolectric 렌더이며 실제 Pleos 스크린샷이 아님.
 
 ### 2026-11-03 — 설정에서 알림 허용 후 미확인 횟수 초기화
 - PR #7/#18 최신 리뷰의 선택 제안 반영: 설정에서 허용하고 돌아와도 미확인 횟수 2가 남던 동작을 재현(임시 Robolectric 검사에서 기대 0, 실제 2로 실패).

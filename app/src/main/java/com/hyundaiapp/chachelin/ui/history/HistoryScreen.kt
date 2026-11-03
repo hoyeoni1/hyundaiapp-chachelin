@@ -25,9 +25,9 @@ import androidx.compose.ui.unit.dp
 import com.hyundaiapp.chachelin.ui.HistoryRowUi
 import com.hyundaiapp.chachelin.ui.HistoryUiState
 import com.hyundaiapp.chachelin.ui.PreviewData
+import com.hyundaiapp.chachelin.ui.components.DestructiveButton
 import com.hyundaiapp.chachelin.ui.components.PillKind
 import com.hyundaiapp.chachelin.ui.components.ScreenHeader
-import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.StatusPill
 import com.hyundaiapp.chachelin.ui.components.formatDateTime
 import com.hyundaiapp.chachelin.ui.theme.CarColors
@@ -46,7 +46,7 @@ fun HistoryScreen(state: HistoryUiState, onBack: () -> Unit, onWithdrawConsent: 
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
             ScreenHeader("내 충전 기록", onBack = onBack) {
-                SecondaryButton("동의 철회", onWithdrawConsent, height = CarDimens.TouchTargetSmall)
+                DestructiveButton("동의 철회", onWithdrawConsent)
             }
             if (state.items.isEmpty()) {
                 Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -68,7 +68,7 @@ fun HistoryScreen(state: HistoryUiState, onBack: () -> Unit, onWithdrawConsent: 
 
 @Composable
 private fun HistoryRow(row: HistoryRowUi, portrait: Boolean) {
-    val name = row.stationName ?: "충전소 아님 (집 충전 등)"
+    val name = row.stationName ?: "충전소 정보 없음"
     val nameColor = if (row.stationName == null) CarColors.OnSurfaceVariant else CarColors.OnSurface
     Surface(color = CarColors.Surface, shape = RoundedCornerShape(CarDimens.CardRadius), modifier = Modifier.fillMaxWidth()) {
         if (portrait) {
