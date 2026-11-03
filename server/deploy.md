@@ -4,7 +4,7 @@
 
 최초 적용은 사용자가 대시보드에서 실행했다. **2026-11-02 CLI로 원격 버전·시드·RLS·함수 권한 및 함수 내용 일치를 확인하고, 표준 migration 이력 2건을 applied로 정합했다. dry-run은 Remote database is up to date.** 아래 최초 설치 절차를 이미 적용된 프로젝트에서 다시 실행하지 않는다. 후속 변경은 [CLI](cli-setup.md)로 진행한다.
 
-로컬 PostgreSQL(PGlite 0.5.14) 의미 테스트 15개도 통과했다. Supabase 실제 익명 인증/JWT·PostgREST 및 동시 다중 연결은 미검증이다. 익명 로그인은 아직 비활성 상태다.
+로컬 PostgreSQL(PGlite 0.5.14) 의미 테스트 15개도 통과했다. 후속 2026-11-03 사용자 익명 로그인 활성화 후 실제 JWT/PostgREST·두 앱 Android 연결을 확인했다([검증 기록](android-connection.md)). 원격 다중 연결의 철회-업로드 동시성 스트레스 검사는 아직 하지 않았다.
 
 ## 실행 순서
 

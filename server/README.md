@@ -6,6 +6,8 @@
 
 원격 확인: 두 버전, 시드 10/300/400/2000, 테이블 9개 RLS, RPC 11개 권한 정상. 함수 fingerprint는 로컬과 일치(f0b69344326a5769b916cafeb7698bbe). 사용자 수동 적용을 검증한 뒤 CLI 표준 이력에 두 버전을 applied 등록했고 db push --dry-run은 upToDate=true·대기 migration 없음. SQL 본문·시드 재실행은 하지 않았다. [CLI 사용법](cli-setup.md).
 
+**2026-11-03 Android 연결 완료:** 두 제품 앱 저장소가 공통 core v0.5.0 backend를 사용하도록 연결했다. 실제 익명 JWT HTTP 테스트와 두 앱의 Pleos/Keystore/영속 outbox 통합 검사를 통과했다. 현재 PC의 debug 빌드는 실제 Supabase 시연 데이터를 사용한다. [설정·검증·남은 범위](android-connection.md).
+
 ## 프로젝트 연결 확인 (2026-11-02)
 
 - 프로젝트 ref: `qbdikckaqroxbpacvtqo`. 사용자가 선택한 지역은 Asia Pacific이며 구체적인 AWS 리전은 아직 확인하지 않았다.
@@ -13,9 +15,9 @@
 - `/auth/v1/health`, `/auth/v1/settings`: HTTP 200.
 - Publishable key를 사용한 `GET /rest/v1/stations?select=id&limit=1`: HTTP 404/PGRST205. 아직 `public.stations`가 schema cache에 없다.
 - REST 루트 문서 조회의 HTTP 401은 `Secret API key required` 응답이다. 일반 테이블 API의 공개 키 오류로 해석하지 않는다.
-- Auth 설정의 `external.anonymous_users`: false(2026-11-02 CLI 연결 후 재확인). Anonymous Sign-In 활성화가 필요하다. 확인 중에는 가입 요청이나 테스트 계정을 생성하지 않았다.
+- Auth 설정의 `external.anonymous_users`: true(사용자 활성화 후 재확인). 실제 익명 사용자 로그인·토큰 갱신·소유권·집계 공유·철회를 테스트했다.
 - 관리자 Secret key는 저장·사용하지 않았다. 채팅에 제공된 키는 대시보드에서 폐기 후 재발급해야 한다. 새 Secret key는 채팅이나 앱에 넣지 않는다.
-- 테이블·함수·시드는 사용자가 SQL Editor에서 적용했고 에이전트가 CLI로 읽기 검증 및 표준 migration 이력 정합을 완료했다. Auth 설정 변경이나 실제 사용자 데이터 쓰기는 하지 않았다.
+- 테이블·함수·시드는 사용자가 SQL Editor에서 적용했고 에이전트가 CLI 검증 및 표준 migration 이력 정합을 완료했다. 후속 통합 테스트에서 임시 익명 계정·시연 기록을 생성해 검증했으며 식별된 테스트 데이터는 정리했다. Auth 설정은 사용자가 변경했다.
 
 ## 인증·데이터 계약 방향
 
@@ -29,8 +31,9 @@
 
 ## 다음 작업
 
-1. 사용자 Anonymous Sign-In 활성화 후 Supabase 실제 인증·API·동시 실행 검증.
-2. 앱에 인증·HTTP 저장소와 영속 재전송/삭제 작업 연결. 기존 Fake와 선택 가능하게 구성하고 두 에뮬레이터 공유 확인.
+1. 실제 제품 화면에서 SDK 값 주입 → 충전/크루즈 기록 → 서버 반영 → 다른 기기 조회까지 시연 리허설.
+2. WorkManager 기반 프로세스 종료 후 재전송, 철회 대기 UI와 영속 읽기 캐시 보완. 현재는 프로세스 생존/다음 앱 실행에서 재시도한다.
+3. 실제 환경부 API 캐시와 약관·보관 정책 확정. 원격 다중 연결의 철회-업로드 경쟁 검사도 후속이다.
 
 작성 완료: private 테이블 9개(앱 7 + 처리 영수증/버전 관리 2), 제약·인덱스·RLS, 인증 RPC 11개, 시연 충전소 10곳·충전 세션 300건·해제 400건·통과 2,000건. 실패 감점 없이 별점 평균과 실패 횟수를 각각 제공한다.
 
