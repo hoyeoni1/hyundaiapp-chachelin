@@ -64,6 +64,8 @@ class SupabaseChargeRecordRepository(
     private val backend: SupabaseBackend,
     private val vehicleId: () -> String,
     private val local: LocalChargeRecords,
+    /** 서버 simulation_time_scale. 앱이 실제로 쓰는 ChargeRules.demoTimeScale과 같아야 한다(debug 120, release 1) */
+    private val timeScale: Int = 1,
     private val consented: () -> Boolean,
 ) : ChargeRecordRepository {
     private var cachedOwner: String? = null
@@ -81,7 +83,7 @@ class SupabaseChargeRecordRepository(
             .put("p_ended_at", Instant.ofEpochMilli(record.endedAtMs).toString())
             .put("p_soc_start", record.socStart).put("p_soc_end", record.socEnd)
             .put("p_avg_kw", record.avgKw ?: JSONObject.NULL).put("p_result", record.result.name)
-            .put("p_time_scale", if (backend.config.simulated) 120 else 1))
+            .put("p_time_scale", timeScale))
     }
     override suspend fun submitReview(sessionId: String, rating: Int, tags: Set<ReviewTag>) {
         require(!local.contains(vehicleId(), sessionId)) { "Local-only sessions cannot be reviewed" }
