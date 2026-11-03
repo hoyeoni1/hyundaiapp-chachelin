@@ -11,8 +11,17 @@
 - 검증: 두 앱 일반 `assembleDebug test :app:lintDebug`, 별도 임시 Robolectric UI 28검사(차슐랭 debug10/release3, 크루즈 debug15). 수정 전 main과 동일 조건 6쌍 캡처. 임시 QA 의존성·코드는 제품에 추가하지 않음.
 - 자료: `/Users/gilminjong/Dev/output/hyundai-ui-fixes-2026-11-03/`의 CHECKLIST·OWNER-CONTRACTS·REPORT·before/after·qa. 기존 dirty handoff는 before 백업과 이전 작업 기록으로 보존.
 - 경계: Screen/Nav/공통 UI만 수정. core·ViewModel·data/domain·집계·서비스·서버 PR은 수정/머지하지 않음. STOP 복귀 개선을 프로세스 종료/재부팅 복원으로 주장하지 않음.
+- 실제 인계 이슈: [F04 #12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 이상준, [F11 #13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 황준용·이상준, [정책/약관 #14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 장호연.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-03 — 감사 잔여의 실제 담당 인계·수용 기준 연결
+- 로컬 owner_contract만 남기지 않고 담당자 배정 GitHub 이슈5건으로 연결. 최신 서버/업로드 PR에는 남은 VM·주행 요약·요청 결과 계약이 없음을 대조.
+- 실제 인계 이슈: [F04 #12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 이상준, [F11 #13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 황준용·이상준, [정책/약관 #14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 장호연.
+- 현재 head의 별도 인수 기준5개를 실행해 미완료를 재현(차슐랭3, 크루즈2 실패). 이 실패를 일반 빌드나 이미 통과한 UI28검사의 실패로 섞지 않음.
+- D01은 기존 PRD의 명시 동의 저장 정책을 유지하는 최소안과 근거를 제시. D02 배타 규칙은 아직 미정. 약관 전문은 작성하지 않음.
+- 전체 수정은 미완료. 소유자 계약 수신 후 UI 연결·같은 인수 기준 재검수 예정. 자료: `output/hyundai-ui-fixes-2026-11-03/followups/`.
+
 
 ### 2026-11-03 — UI 감사 후속 구현과 전후 검증
 - 구현: 리뷰 본문 스크롤·하단 전송/건너뛰기 고정, 별점 폭·선택값, 충전/미처리 결과 Back·기존 target 재진입, 상세 헤더·오류·길안내 모달, 완료 null/단위·계산 근거·실패 기록 범위, 동의·차종·철회 표현 정리.
