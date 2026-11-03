@@ -5,7 +5,7 @@
 ## 현재 상태 (2026-11-03 기준, 매번 덮어쓰기)
 
 - 한 일 요약: UI PR #11, 미구현 검토 제안 PR #15는 main 머지 완료. #14 D01은 각 명시 동의 즉시 저장·필수 두 개로 첫 실행 완료 정책 유지로 확정돼 코드 변경 없음. D02는 #17의 반대 태그 쌍별 최대 1개로 확정됨.
-- 진행 중 브랜치·PR: 추가 제품 코드 PR 없음. `docs/tag-ui-verification`에서 #17 UI 검증 및 이 인수인계만 갱신. 문서 직접 main 반영은 자동 승인 검토에서 거절돼 검토용 문서 PR로 남김. 크루즈브레이커 #29는 PR #30으로 머지·종료, S5 보조 안내는 별도 저장소 PR #31 검토 대기.
+- 진행 중 브랜치·PR: 추가 제품 코드 PR 없음. [문서 PR #18](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/18) / `docs/tag-ui-verification`에서 #17 UI 검증 및 이 인수인계만 갱신. 문서 직접 main 반영은 자동 승인 검토에서 거절돼 검토용 문서 PR로 남김. 크루즈브레이커 #29는 PR #30으로 머지·종료, S5 보조 안내는 별도 저장소 PR #31 검토 대기.
 - #17 UI 검증: S4는 selectedTags를 그대로 표시하고 클릭한 태그 하나를 onToggleTag로 한 번 전달하며 자체 선택 규칙을 두지 않는다. 외부 상태 스냅샷의 반대 태그 교체·해제·독립 태그 복수 선택, 1280×720dp 및 600×1024dp/fontScale1.5 조건, 76dp 이상 행동 영역·하단 전송/건너뛰기를 임시 Robolectric 4검사로 확인(PASS).
 - 다음 할 일: 이상준의 #17 ReviewViewModel.onToggleTag 구현 및 단위 테스트가 올라오면 실제 VM→Nav→S4 연결로 같은 선택 흐름을 다시 인수한다. 현재 main fbc708c는 여전히 단순 집합 토글이므로 반대 태그를 동시에 고를 수 있다. UI 표시 검사 통과를 #17 전체 구현 완료로 보고하지 않는다.
 - 막힌 점·질문: 이상준 [#12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 위치 대기/최신 조회, 황준용·이상준 [#13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 길안내 결과 계약, 이상준 [#17](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/17) 태그 VM 구현, 장호연 [#14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 실제 약관 전문(B01) 대기. D01/D02 정책 자체는 더 기다리지 않음.
