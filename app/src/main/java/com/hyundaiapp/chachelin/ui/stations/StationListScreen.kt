@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -22,19 +22,19 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyundaiapp.chachelin.ui.PreviewData
 import com.hyundaiapp.chachelin.ui.StationListUiState
 import com.hyundaiapp.chachelin.ui.StationRowUi
-import com.hyundaiapp.chachelin.ui.components.PrimaryButton
+import com.hyundaiapp.chachelin.ui.components.CarIcons
+import com.hyundaiapp.chachelin.ui.components.EmptyState
 import com.hyundaiapp.chachelin.ui.components.ScreenHeader
 import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.formatKm
-import com.hyundaiapp.chachelin.ui.components.formatOneDecimal
 import com.hyundaiapp.chachelin.ui.components.formatKw
+import com.hyundaiapp.chachelin.ui.components.formatOneDecimal
 import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
@@ -51,7 +51,7 @@ fun StationListScreen(
     onRetry: () -> Unit = {},
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val portrait = maxWidth < maxHeight
+        val portrait = maxWidth < 1000.dp
         Column(
             Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
@@ -60,15 +60,9 @@ fun StationListScreen(
                 SecondaryButton(if (portrait) "내 기록" else "내 충전 기록", onHistoryClick, height = CarDimens.TouchTargetSmall)
             }
             when {
-                state.loading -> Centered { CircularProgressIndicator(Modifier.size(64.dp)) }
-                state.error != null -> Centered {
-                    Text("충전소를 불러오지 못했어요", style = MaterialTheme.typography.titleLarge)
-                    Text(state.error, style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant, textAlign = TextAlign.Center)
-                    PrimaryButton("다시 시도", onRetry)
-                }
-                state.items.isEmpty() -> Centered {
-                    Text("근처 3km 안에 충전소가 없어요", style = MaterialTheme.typography.titleLarge, color = CarColors.OnSurfaceVariant)
-                }
+                state.loading -> EmptyState("충전소를 불러오는 중이에요", loading = true, modifier = Modifier.weight(1f))
+                state.error != null -> EmptyState("충전소를 불러오지 못했어요", state.error, onRetry = onRetry, modifier = Modifier.weight(1f))
+                state.items.isEmpty() -> EmptyState("근처 3km 안에 충전소가 없어요", onRetry = onRetry, modifier = Modifier.weight(1f))
                 else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.items, key = { it.id }) { row ->
                         StationCard(row, portrait) { onStationClick(row.id) }
@@ -99,6 +93,7 @@ private fun StationCard(row: StationRowUi, portrait: Boolean, onClick: () -> Uni
                 Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
                     Score(row.score, Modifier.width(128.dp))
                     NameBlock(row, Modifier.weight(1f))
+                    Icon(CarIcons.ChevronRight, contentDescription = "충전소 상세", modifier = Modifier.size(28.dp), tint = CarColors.OnSurfaceVariant)
                 }
                 Row(Modifier.fillMaxWidth()) { Stats(row, Modifier.weight(1f), alignEnd = false) }
             }
@@ -111,6 +106,7 @@ private fun StationCard(row: StationRowUi, portrait: Boolean, onClick: () -> Uni
                 Score(row.score, Modifier.width(112.dp))
                 NameBlock(row, Modifier.weight(1f))
                 Stats(row, Modifier.width(IntrinsicStatsWidth), alignEnd = true)
+                Icon(CarIcons.ChevronRight, contentDescription = "충전소 상세", modifier = Modifier.size(28.dp), tint = CarColors.OnSurfaceVariant)
             }
         }
     }
@@ -150,7 +146,7 @@ private fun NameBlock(row: StationRowUi, modifier: Modifier) {
 private fun Stats(row: StationRowUi, modifier: Modifier, alignEnd: Boolean) {
     Row(modifier, horizontalArrangement = Arrangement.SpaceBetween) {
         Stat("인증 충전", "${row.verifiedCharges}회", CarColors.OnSurface, alignEnd)
-        Stat("실측 평균", row.avgKw?.let { formatKw(it) } ?: "기록 없음", CarColors.OnSurface, alignEnd)
+        Stat("계산 평균", row.avgKw?.let { formatKw(it) } ?: "기록 없음", CarColors.OnSurface, alignEnd)
         Stat(
             "7일 실패",
             "${row.recentFailures7d}회",

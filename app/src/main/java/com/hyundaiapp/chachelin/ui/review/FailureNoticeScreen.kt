@@ -8,10 +8,13 @@ import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -44,11 +47,11 @@ fun FailureNoticeScreen(
 ) {
     Box(Modifier.fillMaxSize().background(CarColors.Scrim).padding(32.dp), contentAlignment = Alignment.Center) {
         CarCard(
-            Modifier.widthIn(max = 760.dp).fillMaxWidth(),
-            contentPadding = PaddingValues(horizontal = 56.dp, vertical = 48.dp),
+            Modifier.widthIn(max = 760.dp).fillMaxWidth().heightIn(max = 900.dp),
+            contentPadding = PaddingValues(24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            Column(Modifier.fillMaxWidth().weight(1f, fill = false).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Box(Modifier.size(96.dp).background(CarColors.Warning, CircleShape), contentAlignment = Alignment.Center) {
                     Icon(CarIcons.BoltOff, contentDescription = null, tint = CarColors.OnAccent, modifier = Modifier.size(52.dp))
                 }
@@ -67,15 +70,15 @@ fun FailureNoticeScreen(
                     textAlign = TextAlign.Center,
                 )
                 Text(
-                    "다른 운전자에게 '최근 실패'로 보여요.",
+                    "서버에 반영되면 다른 운전자에게 최근 실패로 보여요.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = CarColors.OnSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
             }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                SecondaryButton("실패 아님", onNotFailure, Modifier.weight(1f))
-                PrimaryButton("확인", onConfirm, Modifier.weight(1f))
+                SecondaryButton("실패 기록 취소", onNotFailure, Modifier.weight(1f))
+                PrimaryButton("닫기", onConfirm, Modifier.weight(1f))
             }
         }
     }

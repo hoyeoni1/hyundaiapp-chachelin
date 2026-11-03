@@ -12,9 +12,7 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
@@ -25,14 +23,13 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hyundaiapp.chachelin.ui.ChargingUiState
 import com.hyundaiapp.chachelin.ui.PreviewData
 import com.hyundaiapp.chachelin.ui.components.CarCard
-import com.hyundaiapp.chachelin.ui.components.CarIcons
+import com.hyundaiapp.chachelin.ui.components.ScreenHeader
 import com.hyundaiapp.chachelin.ui.components.StatTile
 import com.hyundaiapp.chachelin.ui.components.formatDuration
 import com.hyundaiapp.chachelin.ui.components.formatWhole
@@ -45,34 +42,27 @@ private val StartSegment = Color(0xFF2B7EA3)
 
 /**
  * S3 충전 중(정차 중). SoC를 크게, 경과 시간·지금까지 실측 평균을 옆에.
- * 사용자 조작은 없다. 충전구를 닫으면 ViewModel이 S4/S5로 넘긴다.
+ * 뒤로 가도 기록은 이어진다. 충전구를 닫으면 ViewModel이 S4/S5로 넘긴다.
  */
 @Composable
-fun ChargingScreen(state: ChargingUiState) {
+fun ChargingScreen(state: ChargingUiState, onBack: (() -> Unit)? = null) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val portrait = maxWidth < maxHeight
         Column(
             Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 40.dp),
             verticalArrangement = Arrangement.spacedBy(32.dp),
         ) {
-            Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Icon(CarIcons.Bolt, contentDescription = null, tint = CarColors.Primary, modifier = Modifier.size(36.dp))
-                Text("충전 기록 중", style = MaterialTheme.typography.headlineMedium, modifier = Modifier.weight(1f))
-                if (!portrait && state.stationName != null) {
-                    Text(state.stationName, style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant, maxLines = 1, overflow = TextOverflow.Ellipsis)
-                }
-            }
+            ScreenHeader("충전 기록 중", subtitle = state.stationName, onBack = onBack)
             if (portrait) {
-                state.stationName?.let { Text(it, style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant) }
                 SocCard(state, Modifier.fillMaxWidth().weight(1f))
-                Side(state, Modifier.fillMaxWidth().height(220.dp), vertical = false)
+                Side(state, Modifier.fillMaxWidth().height(260.dp), vertical = false)
             } else {
                 Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                     SocCard(state, Modifier.weight(3f).fillMaxHeight())
                     Side(state, Modifier.weight(2f).fillMaxHeight(), vertical = true)
                 }
             }
-            Text("충전구를 닫으면 자동으로 기록하고 평가 화면을 띄워요", style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant)
+            Text("충전구를 닫으면 기록하고 평가 화면을 띄워요. 뒤로 가도 기록은 계속돼요.", style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant)
         }
     }
 }
@@ -85,8 +75,8 @@ private fun SocCard(state: ChargingUiState, modifier: Modifier) {
         contentPadding = PaddingValues(40.dp),
         verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
     ) {
-        Row(verticalAlignment = Alignment.Bottom, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-            Text("${state.socNow}%", style = MaterialTheme.typography.displayLarge.copy(fontSize = 140.sp, lineHeight = 140.sp))
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Text("${state.socNow}%", style = MaterialTheme.typography.displayLarge.copy(fontSize = 112.sp, lineHeight = 120.sp))
             Text(
                 "시작 ${state.socStart}%에서 ${if (gained >= 0) "+" else ""}${gained}%p",
                 style = MaterialTheme.typography.titleMedium,
@@ -116,11 +106,11 @@ private fun Side(state: ChargingUiState, modifier: Modifier, vertical: Boolean) 
         if (minutes < 60) {
             StatTile("경과 시간", "$minutes", m, unit = "분", valueStyle = big, verticalArrangement = centered)
         } else {
-            StatTile("경과 시간", formatDuration(state.elapsedSec), m, valueStyle = big, verticalArrangement = centered)
+            StatTile("경과 시간", formatDuration(state.elapsedSec), m, valueStyle = MaterialTheme.typography.displaySmall, valueMaxLines = 2, verticalArrangement = centered)
         }
     }
     val speed: @Composable (Modifier) -> Unit = { m ->
-        StatTile("지금까지 실측 평균", state.avgKw?.let { formatWhole(it) } ?: "측정 중", m, unit = state.avgKw?.let { "kW" }, valueStyle = big, verticalArrangement = centered)
+        StatTile("지금까지 계산 평균", state.avgKw?.let { formatWhole(it) } ?: "측정 중", m, unit = state.avgKw?.let { "kW" }, valueStyle = big, verticalArrangement = centered)
     }
     if (vertical) {
         Column(modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
