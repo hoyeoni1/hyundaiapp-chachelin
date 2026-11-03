@@ -1,10 +1,10 @@
 # Android 앱의 Supabase 연결 (2026-11-03)
 
-현재 두 저장소의 로컬 브랜치 `codex/supabase-foundation-20261102`에서 **제품 앱 저장소를 실제 Supabase에 연결했다.** 기존 SDK raw probe와 다른 작업이며, 제품 core의 `backend` 패키지는 release에도 포함되는 공통 인증·전송 구현이다. core 버전은 0.5.0이다. 서버 작업의 원격 push/새 PR은 아직 하지 않았다.
+현재 두 저장소의 `codex/supabase-foundation-20261102`에서 **제품 앱 저장소를 실제 Supabase에 연결했다.** 제품 core의 backend 패키지는 release에도 포함되는 공통 인증·전송 구현이다. 최신 원격을 통합한 버전은 core v0.5.1이다. 최종 PR 링크·검증 상태는 각 저장소 docs/handoff/hwang-junyong.md를 따른다.
 
 ## 차슐랭 의존성
 
-차슐랭 main에는 아직 충전 서비스·기록기 연결이 없으므로 이상준의 `origin/feat/charge-session-logic`(737fb38)을 이 로컬 브랜치에 merge했다. 원격 PR #3이나 main은 머지하지 않았다. 새 서버 PR을 제출할 때 이 의존성과 타인의 구현 범위를 명시해야 한다. 그 PR의 Fake 중복 문제는 이번 실제 서버 전환과 별개이며 Fake 원본은 고치지 않았다.
+초기 연결 당시 이상준의 origin/feat/charge-session-logic(737fb38)을 로컬에 통합했다. 이후 장호연이 PR #3과 SDK PR #4를 원격 main에 머지했고, 이번 최종 정리에서 최신 main을 통합했다. 따라서 현재 서버 PR은 판정 로직·화면을 새로 구현한 것이 아니라 최신 main 위의 서버 연결 변경분이다. Fake 원본의 중복 문제는 이번 실제 서버 전환과 별개다.
 
 ## 이 PC의 빌드 설정
 
@@ -39,7 +39,7 @@ supabase.publishableKey=sb_publishable_REPLACE_ME
 - 크루즈: SupabaseCruiseServer가 기존 CruiseEventRepository와 SegmentRiskRepository를 구현한다. 현재 앱 판정·방향/거리 안내·TTS는 유지하고 업로드와 위험도 조회만 서버로 교체한다.
 - 두 앱 AppContainer가 동일 제품 backend를 생성한다. 실제 SDK 판정 로직·UI 테마를 새로 작성한 것은 아니다.
 
-## 확인한 결과
+## 초기 연결 때 확인한 결과
 
 - 실제 익명 로그인 활성화 확인.
 - 원격 HTTP 통합: 두 독립 익명 사용자 로그인, 세션 중복 방지, 후기, 타 사용자 집계 반영, 타인 원본 접근 거절, 크루즈 통과/해제, 토큰 갱신, 철회/늦은 업로드 거절 통과. 테스트용 Auth 계정과 업무 기록은 해당 run UUID로 한정해 정리했다.
@@ -47,6 +47,8 @@ supabase.publishableKey=sb_publishable_REPLACE_ME
 - Pleos API 34 emulator-5554, user 10에서 **두 앱 모두** production backend/HTTPS/Keystore/AtomicFile을 사용해 익명 인증·조회·암호화 세션 재로드·영속 outbox 쓰기·철회 ACK와 로컬 인증 제거 통과.
 - 위 Android 검사는 별도 debug 전용 BackendConnectionCheckActivity에서 수행했다. 제품 동의 상태·개인 기록을 바꾸지 않는 독립 테스트 저장소를 사용한다. shell의 DUMP 권한이 있어야 실행 가능하고 release에는 없다.
 - APK 업데이트로 INTERNET 권한을 처음 추가했을 때 첫 실행이 EPERM을 반환했다. 앱 force-stop 후 재실행해서 네트워크 정상 수신을 확인했다.
+
+최신 main 통합 이후 결과는 인수인계 문서와 PR 본문에 기록한다. 새 크루즈 PendingDeletions와의 계약은 deleteMine이 awaitWithdrawal을 통해 서버 ACK까지 기다린 뒤 완료되는 것으로 맞췄다. APK 테스트는 원격 업무 데이터와 별도인 시연 fixture를 사용한다.
 
 ## Android 연결 재검사
 
@@ -60,7 +62,7 @@ adb shell am start --user 10 -n com.hyundaiapp.cruisebreaker/.BackendConnectionC
 adb shell run-as com.hyundaiapp.cruisebreaker --user 10 cat files/backend-check-result.json
 ```
 
-완료 결과는 ok=true와 네 가지 checks다. 실제 익명 테스트 사용자/설치를 만들므로 무한 반복하지 않는다. 정상 검사에서는 업무 기록 삭제와 로컬 토큰 제거까지 수행하며, 서버의 최소 REVOKED 설치/Auth 정리는 별도 관리 작업이다. 이 턴에서 식별된 테스트 설치는 CLI로 정리했고, 실패한 검사에서 식별되지 않은 최소 차단 정보가 남아 있을 수 있다. 이는 시드/점수/위험도에는 포함되지 않는다.
+완료 결과는 ok=true와 네 가지 checks다. 실제 익명 테스트 사용자/설치를 만들므로 무한 반복하지 않는다. 정상 검사에서는 업무 기록 삭제와 로컬 토큰 제거까지 수행하며, 서버의 최소 REVOKED 설치/Auth 정리는 별도 관리 작업이다. 초기 Android 연결 검사에서 식별된 테스트 설치는 CLI로 정리했고, 실패한 검사에서 식별되지 않은 최소 차단 정보가 남아 있을 수 있다. 이는 시드/점수/위험도에는 포함되지 않는다.
 
 ## 남은 범위
 

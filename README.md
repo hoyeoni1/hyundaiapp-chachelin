@@ -3,6 +3,7 @@
 차량이 직접 확인한 충전 기록으로 충전소를 평가하는 Pleos Connect 앱. 팀 삼각고래 · 일반 부문.
 
 - 기획: [PRD.md](PRD.md)
+- 서버·인증·데이터 흐름·운영: [공통 서버 설명서](docs/server-overview.md)
 - 핵심 신호: Vehicle SDK EV 배터리(SoC·충전 상태·충전구), NaviHelper 위치·충전 사업자·길안내
 - 실측 메모: [docs/vehicle-data-findings.md](docs/vehicle-data-findings.md) (에뮬레이터에서 SoC는 자동으로 오르지 않음, 콘솔로 주입)
 
@@ -24,7 +25,7 @@ app/src/main/java/com/hyundaiapp/chachelin/
 │  ├─ ChargeSessionTracker.kt   F1~F4 충전 세션 상태 기계  ← TODO
 │  ├─ ChargeSession.kt          세션·결과 모델, ChargeRules(PRD 5.3 기준값)
 │  └─ ChargeMath.kt             실측 평균 kW 계산(예시 테스트 있음)
-├─ data/                저장소 인터페이스 + Fake(시드 데이터). 서버 구현은 황준용
+├─ data/                저장소 인터페이스 + Fake + Supabase 실제 구현(황준용)
 ├─ ui/                  화면 (길민종) — 화면은 UiState만 보고 그린다
 │  ├─ UiStates.kt       S1~S7 화면 상태 계약 (이상준 ↔ 길민종 합의)
 │  ├─ PreviewData.kt    미리보기 샘플

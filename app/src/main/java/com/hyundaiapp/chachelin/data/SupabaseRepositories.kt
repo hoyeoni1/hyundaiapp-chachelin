@@ -83,7 +83,10 @@ class SupabaseChargeRecordRepository(
     override suspend fun retract(sessionId: String) {
         backend.enqueue(vehicleId(), "pleos_retract_failure", "retract:$sessionId", JSONObject().put("p_session_id", sessionId))
     }
-    override suspend fun deleteMine(vehicleId: String) { backend.withdraw(vehicleId) }
+    override suspend fun deleteMine(vehicleId: String) {
+        backend.withdraw(vehicleId)
+        backend.awaitWithdrawal(vehicleId)
+    }
 
     @OptIn(kotlinx.coroutines.ExperimentalCoroutinesApi::class)
     override fun myRecords(): Flow<List<ChargeSessionRecord>> = backend.revision.mapLatest {

@@ -2,6 +2,8 @@
 
 차슐랭과 크루즈브레이커가 사용하는 서버의 원본은 이 디렉터리다. 담당은 황준용. SDK 진단 PR과 분리한 `codex/supabase-foundation-20261102`에서 작업한다.
 
+**처음 읽는 팀원:** [두 앱 공통 서버 설명서](../docs/server-overview.md)에서 아키텍처·테이블·RPC·권한·전송·철회·운영과 미완료 범위를 한 번에 확인할 수 있다. 현재 Android 공통 버전은 core v0.5.1이다.
+
 스키마 및 전체 서비스 흐름: [schema-design.md](schema-design.md). **2026-11-02 원격 적용·CLI 연결·migration 이력 정합 확인 완료.** 로컬 PostgreSQL 테스트 15개 통과. [적용 방법 및 검증 상태](deploy.md).
 
 원격 확인: 두 버전, 시드 10/300/400/2000, 테이블 9개 RLS, RPC 11개 권한 정상. 함수 fingerprint는 로컬과 일치(f0b69344326a5769b916cafeb7698bbe). 사용자 수동 적용을 검증한 뒤 CLI 표준 이력에 두 버전을 applied 등록했고 db push --dry-run은 upToDate=true·대기 migration 없음. SQL 본문·시드 재실행은 하지 않았다. [CLI 사용법](cli-setup.md).
@@ -11,9 +13,9 @@
 ## 프로젝트 연결 확인 (2026-11-02)
 
 - 프로젝트 ref: `qbdikckaqroxbpacvtqo`. 사용자가 선택한 지역은 Asia Pacific이며 구체적인 AWS 리전은 아직 확인하지 않았다.
-- 공개 URL·Publishable key·JWKS URL만 git에서 제외한 `.env.local`에 설정했다. 이 파일을 읽는 배포/Android 연동은 아직 구현하지 않았다.
+- 공개 URL·Publishable key·JWKS URL만 git에서 제외한 `.env.local`에 설정했다. 원격 HTTP 테스트가 이 파일을 읽고 Android 빌드는 별도 local.properties의 공개 URL/키를 읽는다.
 - `/auth/v1/health`, `/auth/v1/settings`: HTTP 200.
-- Publishable key를 사용한 `GET /rest/v1/stations?select=id&limit=1`: HTTP 404/PGRST205. 아직 `public.stations`가 schema cache에 없다.
+- 초기 생성 전 `GET /rest/v1/stations?select=id&limit=1`은 HTTP 404/PGRST205였다. 현재 원본은 의도적으로 private 스키마에 있고 조회는 인증된 RPC로만 제공한다.
 - REST 루트 문서 조회의 HTTP 401은 `Secret API key required` 응답이다. 일반 테이블 API의 공개 키 오류로 해석하지 않는다.
 - Auth 설정의 `external.anonymous_users`: true(사용자 활성화 후 재확인). 실제 익명 사용자 로그인·토큰 갱신·소유권·집계 공유·철회를 테스트했다.
 - 관리자 Secret key는 저장·사용하지 않았다. 채팅에 제공된 키는 대시보드에서 폐기 후 재발급해야 한다. 새 Secret key는 채팅이나 앱에 넣지 않는다.
