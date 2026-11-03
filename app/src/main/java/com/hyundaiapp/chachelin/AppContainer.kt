@@ -2,17 +2,24 @@ package com.hyundaiapp.chachelin
 
 import android.content.Context
 import android.content.Intent
+import com.hyundaiapp.chachelin.data.LocalChargeRecords
 import com.hyundaiapp.chachelin.data.ChargeRecordRepository
 import com.hyundaiapp.chachelin.data.FakeChargeRecordRepository
 import com.hyundaiapp.chachelin.data.FakeStationRepository
 import com.hyundaiapp.chachelin.data.SharedPrefsVehicleProfileStore
 import com.hyundaiapp.chachelin.data.StationRepository
+import com.hyundaiapp.chachelin.data.SupabaseStationRepository
+import com.hyundaiapp.chachelin.data.SupabaseChargeRecordRepository
 import com.hyundaiapp.chachelin.data.VehicleProfileStore
 import com.hyundaiapp.chachelin.domain.ChargeRules
 import com.hyundaiapp.chachelin.domain.ChargeSessionRecorder
 import com.hyundaiapp.chachelin.domain.ChargeSessionTracker
 import com.hyundaiapp.core.CoreFeature
 import com.hyundaiapp.core.PleosVehicleSignals
+import com.hyundaiapp.core.backend.BackendConfig
+import com.hyundaiapp.core.backend.EncryptedBackendStore
+import com.hyundaiapp.core.backend.HttpsBackendTransport
+import com.hyundaiapp.core.backend.SupabaseBackend
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
@@ -34,11 +41,31 @@ class AppContainer(context: Context) {
 
     // 내 기록이 바로 점수에 반영되게 Fake 둘을 묶는다(PRD 7절 시연 5·6단계)
     private val fakeRecords = FakeChargeRecordRepository()
-    val records: ChargeRecordRepository = fakeRecords
-    val stations: StationRepository = FakeStationRepository(records = fakeRecords)
 
     /** S7 동의·차종 */
     val vehicleProfile: VehicleProfileStore = SharedPrefsVehicleProfileStore(context)
+
+    /** 동의한 약관 판 번호(서버에 남김). 약관 문구를 바꾸면 함께 올린다. 지금은 승인 전 초안 docs/terms-draft.md의 번호 */
+    private val termsVersion = "chachelin-terms-2026-11-v1"
+
+    val backend: SupabaseBackend? = if (BuildConfig.SUPABASE_URL.isNotBlank()) {
+        val config = BackendConfig(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, "CHACHELIN", BuildConfig.SUPABASE_SIMULATED, termsVersion)
+        SupabaseBackend(config, EncryptedBackendStore(context, config.storageNamespace), HttpsBackendTransport(config), appScope)
+    } else null
+    private val localRecords = backend?.let {
+        LocalChargeRecords(EncryptedBackendStore(context, it.config.storageNamespace + "-local-charges"))
+    }
+    val records: ChargeRecordRepository = backend?.let {
+        SupabaseChargeRecordRepository(it, vehicleProfile::vehicleId, requireNotNull(localRecords)) { vehicleProfile.onboarded.value }
+    } ?: fakeRecords
+    val stations: StationRepository = backend?.let {
+        SupabaseStationRepository(it, vehicleProfile::vehicleId) { vehicleProfile.onboarded.value }
+    } ?: FakeStationRepository(records = fakeRecords)
+
+    init {
+        if (vehicleProfile.onboarded.value) backend?.activate(vehicleProfile.vehicleId())
+        backend?.let { b -> appScope.launch { b.status.collect { android.util.Log.i("SupabaseSync", it) } } }
+    }
 
     val chargeRules = if (BuildConfig.DEBUG) ChargeRules.DEMO else ChargeRules.DEFAULT
 
@@ -58,6 +85,7 @@ class AppContainer(context: Context) {
      */
     fun startRecording() {
         if (recordingJob?.isActive == true) return
+        backend?.activate(vehicleProfile.vehicleId())
         val job = SupervisorJob(appScope.coroutineContext[Job])
         recordingJob = job
         val scope = CoroutineScope(appScope.coroutineContext + job)
@@ -84,7 +112,9 @@ class AppContainer(context: Context) {
         val vehicleId = vehicleProfile.vehicleId()
         appContext.stopService(Intent(appContext, RecordingService::class.java))
         stopRecording()
-        vehicleProfile.clear()
+        try { backend?.withdraw(vehicleId) } finally {
+            try { localRecords?.clear(vehicleId) } finally { vehicleProfile.clear() }
+        }
         appScope.launch { runCatching { records.deleteMine(vehicleId) } }
     }
 }

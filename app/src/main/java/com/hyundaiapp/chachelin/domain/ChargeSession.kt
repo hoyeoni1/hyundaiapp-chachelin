@@ -24,7 +24,7 @@ data class LiveCharge(
     val avgKw: Double?,
 )
 
-/** 충전구가 닫혀 끝난 세션 1건. 서버 `charge_sessions` 행과 1:1 */
+/** 충전구가 닫혀 끝난 세션 1건. 충전소 밖 기록은 기기에만, 충전소 기록은 서버에 저장 */
 data class ChargeSessionRecord(
     val id: String,
     val stationId: String?,
