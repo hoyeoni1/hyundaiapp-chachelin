@@ -108,4 +108,46 @@ class StationDetailViewModelTest {
         assertNotNull(vm.state.value.station)
         assertNull(vm.state.value.error)
     }
+    @Test fun `background refresh retains details and route confirmation on failure`() = runTest {
+        var fail = false
+        val repository = object : StationRepository by seed {
+            override suspend fun get(stationId: String): StationWithScore? {
+                if (fail) { delay(1_000L); error("offline") }
+                return seed.get(stationId)
+            }
+        }
+        val vm = StationDetailViewModel("st-001", signals, signals, repository)
+        vm.refresh()
+        val previous = vm.state.value.station
+        vm.onRouteClick()
+        fail = true
+        vm.refresh()
+        assertEquals(previous, vm.state.value.station)
+        assertTrue(vm.state.value.loading)
+        assertTrue(vm.state.value.confirmRoute)
+        advanceTimeBy(1_001L)
+        runCurrent()
+        assertEquals(previous, vm.state.value.station)
+        assertFalse(vm.state.value.loading)
+        assertNotNull(vm.state.value.error)
+        fail = false
+        vm.refresh()
+        assertNull(vm.state.value.error)
+        assertTrue(vm.state.value.confirmRoute)
+    }
+
+    @Test fun `removed station clears cached route destination`() = runTest {
+        var removed = false
+        val repository = object : StationRepository by seed {
+            override suspend fun get(stationId: String) = if (removed) null else seed.get(stationId)
+        }
+        val vm = StationDetailViewModel("st-001", signals, signals, repository)
+        vm.refresh()
+        removed = true
+        vm.refresh()
+        assertNull(vm.state.value.station)
+        vm.onConfirmRoute()
+        assertTrue(signals.requestedRoutes.isEmpty())
+    }
+
 }

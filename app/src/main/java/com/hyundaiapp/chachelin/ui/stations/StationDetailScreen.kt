@@ -63,53 +63,70 @@ fun StationDetailScreen(
     onRetry: () -> Unit = {},
 ) {
     val station = state.station
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val portrait = maxWidth < maxHeight
-        if (station == null) {
-            Column(Modifier.fillMaxSize().padding(CarDimens.ScreenPadding)) {
-                ScreenHeader("충전소", onBack = onBack)
-                Column(
-                    Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                    verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                ) {
-                    Text(
-                        state.error ?: if (state.loading) "충전소 정보를 불러오는 중이에요" else "충전소 정보를 찾을 수 없어요",
-                        style = MaterialTheme.typography.titleLarge,
-                        color = CarColors.OnSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                    if (!state.loading) SecondaryButton("다시 시도", onRetry)
-                }
-            }
-        } else if (portrait) {
-            Column(
-                Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-            ) {
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Summary(station, onBack)
-                    RatingsCard(state, Modifier.fillMaxWidth())
-                    FailuresCard(state.recentFailureTimesMs, Modifier.fillMaxWidth())
-                }
-                RouteButton(onRouteClick)
-            }
-        } else {
+    Column(Modifier.fillMaxSize()) {
+        if (station != null && (state.loading || state.error != null)) {
             Row(
-                Modifier.fillMaxSize().padding(horizontal = CarDimens.ScreenPadding, vertical = 32.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Column(Modifier.weight(4f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Summary(station, onBack)
-                    Spacer(Modifier.weight(1f))
-                    RouteButton(onRouteClick)
-                }
-                RatingsCard(state, Modifier.weight(3f).fillMaxHeight())
-                FailuresCard(state.recentFailureTimesMs, Modifier.weight(3f).fillMaxHeight())
+                Text(
+                    if (state.loading) "최신 정보를 확인하고 있어요" else "갱신하지 못했어요. 이전 정보를 표시해요",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CarColors.OnSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                if (!state.loading) SecondaryButton("다시 시도", onRetry)
             }
         }
-    }
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            val portrait = maxWidth < maxHeight
+            if (station == null) {
+                Column(Modifier.fillMaxSize().padding(CarDimens.ScreenPadding)) {
+                    ScreenHeader("충전소", onBack = onBack)
+                    Column(
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            state.error ?: if (state.loading) "충전소 정보를 불러오는 중이에요" else "충전소 정보를 찾을 수 없어요",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = CarColors.OnSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                        if (!state.loading) SecondaryButton("다시 시도", onRetry)
+                    }
+                }
+            } else if (portrait) {
+                Column(
+                    Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                ) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        Summary(station, onBack)
+                        RatingsCard(state, Modifier.fillMaxWidth())
+                        FailuresCard(state.recentFailureTimesMs, Modifier.fillMaxWidth())
+                    }
+                    RouteButton(onRouteClick)
+                }
+            } else {
+                Row(
+                    Modifier.fillMaxSize().padding(horizontal = CarDimens.ScreenPadding, vertical = 32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    Column(Modifier.weight(4f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        Summary(station, onBack)
+                        Spacer(Modifier.weight(1f))
+                        RouteButton(onRouteClick)
+                    }
+                    RatingsCard(state, Modifier.weight(3f).fillMaxHeight())
+                    FailuresCard(state.recentFailureTimesMs, Modifier.weight(3f).fillMaxHeight())
+                }
+            }
+        }
 
+    }
     if (state.confirmRoute && station != null) {
         AlertDialog(
             onDismissRequest = onDismissRoute,

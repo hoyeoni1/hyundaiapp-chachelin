@@ -85,7 +85,7 @@ fun ChachelinNav(container: AppContainer) {
     var terms by remember { mutableStateOf<Terms?>(null) }
     var confirmWithdraw by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    val (notificationsGranted, requestNotifications) = rememberNotificationPermission()
+    val notifications = rememberNotificationPermission()
 
     // 충전 세션에 따라 S3·S4·S5를 띄우고 닫는다(충전구를 열면 S3, 닫으면 S4/S5)
     val target by container.chargeRecorder.target.collectAsState(ChargeScreenTarget.NONE)
@@ -180,8 +180,9 @@ fun ChachelinNav(container: AppContainer) {
                     onAgreePrivacy = vm::onAgreePrivacy,
                     onSelectPreset = vm::onSelectPreset,
                     onShowTerms = { terms = it },
-                    notificationsGranted = notificationsGranted,
-                    onRequestNotifications = requestNotifications,
+                    notificationsGranted = notifications.granted,
+                    onRequestNotifications = notifications.request,
+                    notificationsNeedSettings = notifications.openSettings,
                     onStart = {
                         if (vm.onStart()) {
                             if (stack.size > 1) back() else stack[0] = Screen.STATIONS

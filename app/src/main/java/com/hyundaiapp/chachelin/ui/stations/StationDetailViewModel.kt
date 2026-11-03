@@ -36,21 +36,22 @@ class StationDetailViewModel(
     /** Nav에서 진입할 때 한 번, 오류 화면에서 재시도할 때 다시 호출한다. */
     fun refresh() {
         refreshJob?.cancel()
-        station = null
-        _state.value = StationDetailUiState()
+        // 다시 들어왔을 때는 기존 내용을 유지하며 갱신한다. 첫 조회만 빈 로딩 화면을 쓴다.
+        _state.update { it.copy(loading = true, error = null) }
         refreshJob = viewModelScope.launch {
             try {
                 val result = withTimeout(10_000L) {
                     stations.get(stationId)?.let { it to stations.detail(stationId) }
                 }
                 if (result == null) {
+                    station = null
                     _state.value = StationDetailUiState(loading = false, error = "충전소 정보를 찾을 수 없어요")
                     return@launch
                 }
                 val (row, detail) = result
                 val (st, sc) = row
                 station = st
-                _state.value = StationDetailUiState(
+                _state.update { it.copy(
                     station = StationRowUi(
                         id = st.id, name = st.name, operator = st.operator,
                         distanceM = signals.location.value?.let { here -> GeoMath.distanceM(here.point, st.point) },
@@ -61,13 +62,14 @@ class StationDetailViewModel(
                     topTags = detail?.topTags.orEmpty(),
                     recentFailureTimesMs = detail?.recentFailureTimesMs.orEmpty(),
                     loading = false,
-                )
+                    error = null,
+                ) }
             } catch (_: TimeoutCancellationException) {
-                _state.value = StationDetailUiState(loading = false, error = "응답이 늦어지고 있어요. 다시 시도해 주세요")
+                _state.update { it.copy(loading = false, error = "응답이 늦어지고 있어요. 다시 시도해 주세요") }
             } catch (e: CancellationException) {
                 throw e
             } catch (_: Exception) {
-                _state.value = StationDetailUiState(loading = false, error = "충전소 정보를 불러오지 못했어요")
+                _state.update { it.copy(loading = false, error = "충전소 정보를 불러오지 못했어요") }
             }
         }
     }

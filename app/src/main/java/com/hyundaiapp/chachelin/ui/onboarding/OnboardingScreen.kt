@@ -45,6 +45,7 @@ fun OnboardingScreen(
     onStart: () -> Unit,
     notificationsGranted: Boolean = false,
     onRequestNotifications: () -> Unit = {},
+    notificationsNeedSettings: Boolean = false,
 ) {
     val canStart = state.locationAgreed && state.privacyAgreed && state.selectedPreset != null
     val startHint = when {
@@ -62,7 +63,7 @@ fun OnboardingScreen(
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     Intro()
                     Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
-                    NotificationConsent(notificationsGranted, onRequestNotifications)
+                    NotificationConsent(notificationsGranted, notificationsNeedSettings, onRequestNotifications)
                     Presets(state, onSelectPreset)
                 }
                 OnboardingStartAction(canStart, startHint, onStart)
@@ -75,7 +76,7 @@ fun OnboardingScreen(
                 Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Intro()
                     Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
-                    NotificationConsent(notificationsGranted, onRequestNotifications)
+                    NotificationConsent(notificationsGranted, notificationsNeedSettings, onRequestNotifications)
                 }
                 Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Presets(state, onSelectPreset)
@@ -87,11 +88,11 @@ fun OnboardingScreen(
 }
 
 @Composable
-private fun NotificationConsent(granted: Boolean, onRequest: () -> Unit) {
+private fun NotificationConsent(granted: Boolean, needsSettings: Boolean, onRequest: () -> Unit) {
     ConsentRow(
         "충전 기록 알림 (선택)", granted, onRequest,
         description = "충전 기록 중 알림을 표시해요.\n허용하지 않아도 충전 기록은 계속돼요.",
-        agreeLabel = "알림 허용", agreedLabel = "허용됨",
+        agreeLabel = if (needsSettings) "알림 설정" else "알림 허용", agreedLabel = "허용됨",
     )
 }
 
