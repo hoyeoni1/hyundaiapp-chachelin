@@ -19,4 +19,4 @@ fun formatDuration(sec: Long): String {
 }
 
 /** 실측 평균 kW. 아직 계산 전(null)이면 "측정 중" */
-fun formatKw(kw: Double?): String = kw?.let { "${formatWhole(it)}kW" } ?: "측정 중"
+fun formatKw(kw: Double?): String = kw?.let { "${formatWhole(it)} kW" } ?: "측정 중"
