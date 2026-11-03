@@ -2,18 +2,17 @@ package com.hyundaiapp.chachelin.ui
 
 import androidx.activity.compose.BackHandler
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
@@ -32,6 +31,8 @@ import com.hyundaiapp.chachelin.RecordingService
 import com.hyundaiapp.chachelin.domain.ChargeScreenTarget
 import com.hyundaiapp.chachelin.ui.charging.ChargingScreen
 import com.hyundaiapp.chachelin.ui.charging.ChargingViewModel
+import com.hyundaiapp.chachelin.ui.components.CarAlertDialog
+import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.rememberNotificationPermission
 import com.hyundaiapp.chachelin.ui.debug.SignalMonitorScreen
 import com.hyundaiapp.chachelin.ui.history.HistoryScreen
@@ -47,8 +48,6 @@ import com.hyundaiapp.chachelin.ui.stations.StationDetailScreen
 import com.hyundaiapp.chachelin.ui.stations.StationDetailViewModel
 import com.hyundaiapp.chachelin.ui.stations.StationListScreen
 import com.hyundaiapp.chachelin.ui.stations.StationListViewModel
-import com.hyundaiapp.chachelin.ui.theme.CarColors
-import com.hyundaiapp.chachelin.ui.theme.CarDimens
 
 /** PRD 5.4 화면 목록. 디버그 빌드는 개발 메뉴에서 시작한다 */
 enum class Screen(val title: String) {
@@ -100,95 +99,109 @@ fun ChachelinNav(container: AppContainer) {
     }
 
     Surface(Modifier.fillMaxSize()) {
-        when (stack.last()) {
-            Screen.DEV_MENU -> DevMenu(go)
-            Screen.STATIONS -> {
-                val vm = viewModel { StationListViewModel(container.signals, container.stations) }
-                // 화면에 들어올 때마다 새로 조회한다(방금 끝난 충전이 반영되게)
-                LaunchedEffect(Unit) { vm.refresh() }
-                val state by vm.state.collectAsState()
-                StationListScreen(
-                    state,
-                    onStationClick = {
-                        stationId = it
-                        go(Screen.STATION_DETAIL)
-                    },
-                    onHistoryClick = { go(Screen.HISTORY) },
-                    onRetry = vm::refresh,
-                )
-            }
-            Screen.SIGNALS -> {
-                // 신호 수신은 동의 후 기록 서비스가 시작한다. 개발 메뉴의 신호 모니터만 들어올 때 따로 켠다
-                LaunchedEffect(Unit) { container.signals.start() }
-                SignalMonitorScreen(container.signals)
-            }
-            Screen.STATION_DETAIL -> {
-                // 개발 메뉴에서 바로 들어오면 고른 충전소가 없다 → 시드 첫 충전소
-                val id = stationId ?: PreviewData.stationRow.id
-                val vm = viewModel(key = id) { StationDetailViewModel(id, container.signals, container.signals, container.stations) }
-                LaunchedEffect(vm) { vm.refresh() }
-                val state by vm.state.collectAsState()
-                StationDetailScreen(
-                    state,
-                    onBack = back,
-                    onRouteClick = vm::onRouteClick,
-                    onConfirmRoute = vm::onConfirmRoute,
-                    onDismissRoute = vm::onDismissRoute,
-                    onRetry = vm::refresh,
-                )
-            }
-            Screen.CHARGING -> {
-                val vm = viewModel { ChargingViewModel(container.chargeTracker.live, container.stations, container.chargeRules.demoTimeScale) }
-                val state by vm.state.collectAsState()
-                // 세션 없이 들어오는 경우는 개발 메뉴뿐이다 → 미리보기로 그린다
-                (state ?: PreviewData.charging.takeIf { BuildConfig.DEBUG })?.let { ChargingScreen(it) }
-            }
-            Screen.REVIEW -> {
-                val vm = viewModel { ReviewViewModel(container.chargeRecorder, container.stations, container.chargeRules.demoTimeScale) }
-                val state by vm.state.collectAsState()
-                val current = state
-                if (current != null) {
-                    ReviewScreen(current, vm::onRate, vm::onToggleTag, vm::onSubmit, vm::onLater)
-                } else if (BuildConfig.DEBUG) {
-                    ReviewScreen(PreviewData.review, onRate = {}, onToggleTag = {}, onSubmit = back, onLater = back)
-                }
-            }
-            Screen.FAILURE -> {
-                val vm = viewModel { FailureNoticeViewModel(container.chargeRecorder, container.stations) }
-                val state by vm.state.collectAsState()
-                val current = state
-                if (current != null) {
-                    FailureNoticeScreen(current, vm::onNotFailure, vm::onConfirm)
-                } else if (BuildConfig.DEBUG) {
-                    FailureNoticeScreen(PreviewData.failure, onNotFailure = back, onConfirm = back)
-                }
-            }
-            Screen.HISTORY -> {
-                val vm = viewModel { HistoryViewModel(container.records, container.stations) }
-                val state by vm.state.collectAsState()
-                HistoryScreen(state, onBack = back, onWithdrawConsent = { confirmWithdraw = true })
-            }
-            Screen.ONBOARDING -> {
-                val vm = viewModel {
-                    OnboardingViewModel(container.vehicleProfile, onStarted = { RecordingService.startIfAllowed(context) })
-                }
-                LaunchedEffect(Unit) { vm.reload() }
-                val state by vm.state.collectAsState()
-                OnboardingScreen(
-                    state,
-                    onAgreeLocation = vm::onAgreeLocation,
-                    onAgreePrivacy = vm::onAgreePrivacy,
-                    onSelectPreset = vm::onSelectPreset,
-                    onShowTerms = { terms = it },
-                    notificationsGranted = notifications.granted,
-                    onRequestNotifications = notifications.request,
-                    notificationsNeedSettings = notifications.openSettings,
-                    onStart = {
-                        if (vm.onStart()) {
-                            if (stack.size > 1) back() else stack[0] = Screen.STATIONS
+        Column(Modifier.fillMaxSize()) {
+            Box(Modifier.weight(1f)) {
+                when (stack.last()) {
+                    Screen.DEV_MENU -> DevMenu(go)
+                    Screen.STATIONS -> {
+                        val vm = viewModel { StationListViewModel(container.signals, container.stations) }
+                        // 화면에 들어올 때마다 새로 조회한다(방금 끝난 충전이 반영되게)
+                        LaunchedEffect(Unit) { vm.refresh() }
+                        val state by vm.state.collectAsState()
+                        StationListScreen(
+                            state,
+                            onStationClick = {
+                                stationId = it
+                                go(Screen.STATION_DETAIL)
+                            },
+                            onHistoryClick = { go(Screen.HISTORY) },
+                            onRetry = vm::refresh,
+                        )
+                    }
+                    Screen.SIGNALS -> {
+                        // 신호 수신은 동의 후 기록 서비스가 시작한다. 개발 메뉴의 신호 모니터만 들어올 때 따로 켠다
+                        LaunchedEffect(Unit) { container.signals.start() }
+                        SignalMonitorScreen(container.signals)
+                    }
+                    Screen.STATION_DETAIL -> {
+                        // 개발 메뉴에서 바로 들어오면 고른 충전소가 없다 → 시드 첫 충전소
+                        val id = stationId ?: PreviewData.stationRow.id
+                        val vm = viewModel(key = id) { StationDetailViewModel(id, container.signals, container.signals, container.stations) }
+                        LaunchedEffect(vm) { vm.refresh() }
+                        val state by vm.state.collectAsState()
+                        StationDetailScreen(
+                            state,
+                            onBack = back,
+                            onRouteClick = vm::onRouteClick,
+                            onConfirmRoute = vm::onConfirmRoute,
+                            onDismissRoute = vm::onDismissRoute,
+                            onRetry = vm::refresh,
+                        )
+                    }
+                    Screen.CHARGING -> {
+                        val vm = viewModel { ChargingViewModel(container.chargeTracker.live, container.stations, container.chargeRules.demoTimeScale) }
+                        val state by vm.state.collectAsState()
+                        // 세션 없이 들어오는 경우는 개발 메뉴뿐이다 → 미리보기로 그린다
+                        (state ?: PreviewData.charging.takeIf { BuildConfig.DEBUG })?.let { ChargingScreen(it, onBack = back) }
+                    }
+                    Screen.REVIEW -> {
+                        val vm = viewModel { ReviewViewModel(container.chargeRecorder, container.stations, container.chargeRules.demoTimeScale) }
+                        val state by vm.state.collectAsState()
+                        val current = state
+                        if (current != null) {
+                            ReviewScreen(current, vm::onRate, vm::onToggleTag, vm::onSubmit, vm::onLater, onBack = back)
+                        } else if (BuildConfig.DEBUG) {
+                            ReviewScreen(PreviewData.review, onRate = {}, onToggleTag = {}, onSubmit = back, onLater = back)
                         }
-                    },
-                )
+                    }
+                    Screen.FAILURE -> {
+                        val vm = viewModel { FailureNoticeViewModel(container.chargeRecorder, container.stations) }
+                        val state by vm.state.collectAsState()
+                        val current = state
+                        if (current != null) {
+                            FailureNoticeScreen(current, vm::onNotFailure, vm::onConfirm)
+                        } else if (BuildConfig.DEBUG) {
+                            FailureNoticeScreen(PreviewData.failure, onNotFailure = back, onConfirm = back)
+                        }
+                    }
+                    Screen.HISTORY -> {
+                        val vm = viewModel { HistoryViewModel(container.records, container.stations) }
+                        val state by vm.state.collectAsState()
+                        HistoryScreen(state, onBack = back, onWithdrawConsent = { confirmWithdraw = true })
+                    }
+                    Screen.ONBOARDING -> {
+                        val vm = viewModel {
+                            OnboardingViewModel(container.vehicleProfile, onStarted = { RecordingService.startIfAllowed(context) })
+                        }
+                        LaunchedEffect(Unit) { vm.reload() }
+                        val state by vm.state.collectAsState()
+                        OnboardingScreen(
+                            state,
+                            onAgreeLocation = vm::onAgreeLocation,
+                            onAgreePrivacy = vm::onAgreePrivacy,
+                            onSelectPreset = vm::onSelectPreset,
+                            onShowTerms = { terms = it },
+                            notificationsGranted = notifications.granted,
+                            onRequestNotifications = notifications.request,
+                            notificationsNeedSettings = notifications.openSettings,
+                            onStart = {
+                                if (vm.onStart()) {
+                                    if (stack.size > 1) back() else stack[0] = Screen.STATIONS
+                                }
+                            },
+                        )
+                    }
+                }
+            }
+            if (target != ChargeScreenTarget.NONE && stack.last() !in CHARGE_FLOW_SCREENS && stack.last() != Screen.ONBOARDING) {
+                SecondaryButton(if (target == ChargeScreenTarget.CHARGING) "충전 화면으로 돌아가기" else "충전 결과 확인하기", {
+                    go(when (target) {
+                        ChargeScreenTarget.CHARGING -> Screen.CHARGING
+                        ChargeScreenTarget.REVIEW -> Screen.REVIEW
+                        ChargeScreenTarget.FAILURE -> Screen.FAILURE
+                        ChargeScreenTarget.NONE -> Screen.STATIONS
+                    })
+                }, Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 12.dp))
             }
         }
     }
@@ -210,27 +223,14 @@ fun ChachelinNav(container: AppContainer) {
 /** 동의 철회 확인. 취소·바깥 누르기는 철회 아님 */
 @Composable
 private fun WithdrawDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        containerColor = CarColors.Surface,
-        titleContentColor = CarColors.OnSurface,
-        textContentColor = CarColors.OnSurface,
-        title = { Text("동의를 철회할까요?") },
-        text = { Text("충전 기록을 멈추고, 내 충전 기록과 이 차에 저장된 동의·차종 정보를 지워요. 다시 쓰려면 동의가 필요해요.") },
-        confirmButton = { TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = CarDimens.TouchTargetSmall)) { Text("철회", color = CarColors.Warning) } },
-        dismissButton = { TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = CarDimens.TouchTargetSmall)) { Text("취소", color = CarColors.Primary) } },
-    )
+    CarAlertDialog("동의를 철회할까요?", "충전 기록을 멈추고 기기의 동의·기록 정보를 지워요. 서버 기록 삭제도 요청하며, 통신 상태에 따라 완료까지 걸릴 수 있어요. 다시 쓰려면 동의가 필요해요.",
+        "철회", onConfirm, onDismiss, dismissLabel = "취소", destructive = true)
 }
 
 /** 약관 전문 자리. 문구는 장호연이 정리하면 바꾼다. 닫기는 동의가 아니다 */
 @Composable
 private fun TermsDialog(terms: Terms, onDismiss: () -> Unit) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(if (terms == Terms.LOCATION) "위치정보 이용" else "개인정보 수집·이용") },
-        text = { Text("[약관 전문 준비 중]") },
-        confirmButton = { TextButton(onClick = onDismiss) { Text("닫기") } },
-    )
+    CarAlertDialog(if (terms == Terms.LOCATION) "위치정보 이용" else "개인정보 수집·이용", "[약관 전문 준비 중]", "닫기", onDismiss, onDismiss)
 }
 
 @Composable

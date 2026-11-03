@@ -24,7 +24,7 @@ app/src/main/java/com/hyundaiapp/chachelin/
 ├─ domain/              판정 로직 (이상준)
 │  ├─ ChargeSessionTracker.kt   F1~F4 충전 세션 상태 기계  ← TODO
 │  ├─ ChargeSession.kt          세션·결과 모델, ChargeRules(PRD 5.3 기준값)
-│  └─ ChargeMath.kt             실측 평균 kW 계산(예시 테스트 있음)
+│  └─ ChargeMath.kt             계산 평균 kW 계산(예시 테스트 있음)
 ├─ data/                저장소 인터페이스 + Fake + Supabase 실제 구현(황준용)
 ├─ ui/                  화면 (길민종) — 화면은 UiState만 보고 그린다
 │  ├─ UiStates.kt       S1~S7 화면 상태 계약 (이상준 ↔ 길민종 합의)

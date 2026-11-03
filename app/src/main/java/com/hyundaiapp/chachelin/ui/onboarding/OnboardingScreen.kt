@@ -5,9 +5,7 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
@@ -26,7 +24,6 @@ import com.hyundaiapp.chachelin.ui.components.ConsentRow
 import com.hyundaiapp.chachelin.ui.components.OnboardingStartAction
 import com.hyundaiapp.chachelin.ui.components.SelectableButton
 import com.hyundaiapp.chachelin.ui.theme.CarColors
-import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
 
 enum class Terms { LOCATION, PRIVACY }
@@ -54,35 +51,22 @@ fun OnboardingScreen(
         else -> "내 차를 골라 주세요"
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
-        val portrait = maxWidth < maxHeight
-        if (portrait) {
-            Column(
-                Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 40.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-            ) {
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Intro()
-                    Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
-                    NotificationConsent(notificationsGranted, notificationsNeedSettings, onRequestNotifications)
-                    Presets(state, onSelectPreset)
-                }
-                OnboardingStartAction(canStart, startHint, onStart)
-            }
-        } else {
-            Row(
-                Modifier.fillMaxSize().padding(horizontal = CarDimens.ScreenPadding, vertical = 40.dp),
-                horizontalArrangement = Arrangement.spacedBy(40.dp),
-            ) {
-                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+        val wide = maxWidth >= 1000.dp
+        Column(Modifier.fillMaxSize().padding(horizontal = if (wide) 48.dp else 32.dp, vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            if (wide) Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Intro()
                     Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
                     NotificationConsent(notificationsGranted, notificationsNeedSettings, onRequestNotifications)
                 }
-                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Presets(state, onSelectPreset)
-                    OnboardingStartAction(canStart, startHint, onStart)
-                }
+                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) { Presets(state, onSelectPreset) }
+            } else Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                Intro()
+                Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
+                NotificationConsent(notificationsGranted, notificationsNeedSettings, onRequestNotifications)
+                Presets(state, onSelectPreset)
             }
+            OnboardingStartAction(canStart, startHint, onStart)
         }
     }
 }
@@ -116,8 +100,9 @@ private fun Consents(state: OnboardingUiState, onAgreeLocation: () -> Unit, onAg
 private fun Presets(state: OnboardingUiState, onSelectPreset: (Int) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("내 차 고르기", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text("실측 충전 속도(kW)를 계산할 배터리 용량이에요", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
+        Text("배터리 잔량 변화로 평균 전력(kW)을 계산할 용량이에요", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
     }
+    Text("목록에 없는 차는 아직 지원하지 않아요. 다른 차종을 대신 고르면 충전 전력이 부정확해요.", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
     state.vehiclePresets.withIndex().chunked(2).forEach { pair ->
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             pair.forEach { (i, preset) ->
@@ -130,7 +115,7 @@ private fun Presets(state: OnboardingUiState, onSelectPreset: (Int) -> Unit) {
                 ) {
                     Column(horizontalAlignment = Alignment.CenterHorizontally) {
                         Text(preset.substringBefore(" ("), style = MaterialTheme.typography.labelLarge.copy(fontSize = MaterialTheme.typography.bodyLarge.fontSize))
-                        Text(preset.substringAfter("(", "").removeSuffix(")"), style = MaterialTheme.typography.bodySmall)
+                        Text(preset.substringAfter("(", "").removeSuffix(")").replace("kWh", " kWh"), style = MaterialTheme.typography.bodyMedium)
                     }
                 }
             }

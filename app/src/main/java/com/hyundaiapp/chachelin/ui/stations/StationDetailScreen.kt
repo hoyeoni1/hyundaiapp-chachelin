@@ -1,15 +1,12 @@
 package com.hyundaiapp.chachelin.ui.stations
 
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ExperimentalLayoutApi
 import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
@@ -18,24 +15,23 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
-import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyundaiapp.chachelin.ui.PreviewData
 import com.hyundaiapp.chachelin.ui.StationDetailUiState
 import com.hyundaiapp.chachelin.ui.StationRowUi
+import com.hyundaiapp.chachelin.ui.components.CarAlertDialog
 import com.hyundaiapp.chachelin.ui.components.CarCard
 import com.hyundaiapp.chachelin.ui.components.CarIcons
+import com.hyundaiapp.chachelin.ui.components.EmptyState
 import com.hyundaiapp.chachelin.ui.components.MeterBar
 import com.hyundaiapp.chachelin.ui.components.PrimaryButton
 import com.hyundaiapp.chachelin.ui.components.ScreenHeader
@@ -43,10 +39,9 @@ import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.StatTile
 import com.hyundaiapp.chachelin.ui.components.formatDateTime
 import com.hyundaiapp.chachelin.ui.components.formatKm
-import com.hyundaiapp.chachelin.ui.components.formatOneDecimal
 import com.hyundaiapp.chachelin.ui.components.formatKw
+import com.hyundaiapp.chachelin.ui.components.formatOneDecimal
 import com.hyundaiapp.chachelin.ui.theme.CarColors
-import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
 
 /**
@@ -63,94 +58,40 @@ fun StationDetailScreen(
     onRetry: () -> Unit = {},
 ) {
     val station = state.station
-    Column(Modifier.fillMaxSize()) {
-        if (station != null && (state.loading || state.error != null)) {
-            Row(
-                Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 8.dp),
-                verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
-            ) {
-                Text(
-                    if (state.loading) "최신 정보를 확인하고 있어요" else "갱신하지 못했어요. 이전 정보를 표시해요",
-                    style = MaterialTheme.typography.bodyMedium,
-                    color = CarColors.OnSurfaceVariant,
-                    modifier = Modifier.weight(1f),
-                )
-                if (!state.loading) SecondaryButton("다시 시도", onRetry)
-            }
-        }
-        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
-            val portrait = maxWidth < maxHeight
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        val wide = maxWidth >= 1000.dp
+        Column(Modifier.fillMaxSize().padding(horizontal = if (maxWidth < maxHeight) 32.dp else 48.dp, vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            ScreenHeader(station?.name ?: "충전소", onBack = onBack)
             if (station == null) {
-                Column(Modifier.fillMaxSize().padding(CarDimens.ScreenPadding)) {
-                    ScreenHeader("충전소", onBack = onBack)
-                    Column(
-                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
-                        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                    ) {
-                        Text(
-                            state.error ?: if (state.loading) "충전소 정보를 불러오는 중이에요" else "충전소 정보를 찾을 수 없어요",
-                            style = MaterialTheme.typography.titleLarge,
-                            color = CarColors.OnSurfaceVariant,
-                            textAlign = TextAlign.Center,
-                        )
-                        if (!state.loading) SecondaryButton("다시 시도", onRetry)
-                    }
+                EmptyState(if (state.loading) "충전소 정보를 불러오는 중이에요" else "충전소를 불러오지 못했어요",
+                    state.error, loading = state.loading, onRetry = if (state.loading) null else onRetry,
+                    modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()))
+            } else {
+                if (state.loading || state.error != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                    Text(if (state.loading) "최신 정보를 확인하고 있어요" else "갱신하지 못했어요. 이전 정보를 표시해요", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant, modifier = Modifier.weight(1f))
+                    if (!state.loading) SecondaryButton("다시 시도", onRetry)
                 }
-            } else if (portrait) {
-                Column(
-                    Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 32.dp),
-                    verticalArrangement = Arrangement.spacedBy(20.dp),
-                ) {
+                if (wide) Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { Summary(station) }
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        Summary(station, onBack)
                         RatingsCard(state, Modifier.fillMaxWidth())
                         FailuresCard(state.recentFailureTimesMs, Modifier.fillMaxWidth())
                     }
-                    RouteButton(onRouteClick)
+                } else Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                    Summary(station)
+                    RatingsCard(state, Modifier.fillMaxWidth())
+                    FailuresCard(state.recentFailureTimesMs, Modifier.fillMaxWidth())
                 }
-            } else {
-                Row(
-                    Modifier.fillMaxSize().padding(horizontal = CarDimens.ScreenPadding, vertical = 32.dp),
-                    horizontalArrangement = Arrangement.spacedBy(24.dp),
-                ) {
-                    Column(Modifier.weight(4f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        Summary(station, onBack)
-                        Spacer(Modifier.weight(1f))
-                        RouteButton(onRouteClick)
-                    }
-                    RatingsCard(state, Modifier.weight(3f).fillMaxHeight())
-                    FailuresCard(state.recentFailureTimesMs, Modifier.weight(3f).fillMaxHeight())
-                }
+                RouteButton(onRouteClick)
             }
         }
-
     }
-    if (state.confirmRoute && station != null) {
-        AlertDialog(
-            onDismissRequest = onDismissRoute,
-            title = { Text("${station.name}(으)로 길안내할까요?") },
-            text = { Text("지금 내비에 설정된 경로가 있으면 이 충전소로 바뀌어요.", style = MaterialTheme.typography.bodyLarge) },
-            confirmButton = {
-                TextButton(onClick = onConfirmRoute, modifier = Modifier.padding(4.dp)) {
-                    Text("길안내 시작", style = MaterialTheme.typography.labelLarge)
-                }
-            },
-            dismissButton = {
-                TextButton(onClick = onDismissRoute, modifier = Modifier.padding(4.dp)) {
-                    Text("취소", style = MaterialTheme.typography.bodyLarge)
-                }
-            },
-            containerColor = CarColors.Surface,
-        )
-    }
+    if (state.confirmRoute && station != null) CarAlertDialog("길안내할까요?", "${station.name}\n지금 내비에 설정된 경로가 있으면 이 충전소로 바뀌어요.", "길안내 시작", onConfirmRoute, onDismissRoute, dismissLabel = "취소")
 }
 
 @Composable
-private fun Summary(station: StationRowUi, onBack: () -> Unit) {
+private fun Summary(station: StationRowUi) {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
-        ScreenHeader(station.name, onBack = onBack)
         Text(
             "${station.operator} · ${formatKm(station.distanceM)}",
             style = MaterialTheme.typography.bodyMedium,
@@ -170,11 +111,11 @@ private fun Summary(station: StationRowUi, onBack: () -> Unit) {
                 modifier = Modifier.padding(bottom = 12.dp),
             )
         }
-        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-            StatTile("인증 충전", "${station.verifiedCharges}회", Modifier.weight(1f))
-            StatTile("실측 평균", station.avgKw?.let { formatKw(it) } ?: "기록 없음", Modifier.weight(1f))
+        Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            StatTile("인증 충전", "${station.verifiedCharges}회", Modifier.fillMaxWidth())
+            StatTile("계산 평균", station.avgKw?.let { formatKw(it) } ?: "기록 없음", Modifier.fillMaxWidth(), caption = "배터리 잔량 변화와 차종 용량으로 계산해요")
             StatTile(
-                "7일 실패", "${station.recentFailures7d}회", Modifier.weight(1f),
+                "7일 실패", "${station.recentFailures7d}회", Modifier.fillMaxWidth(),
                 valueColor = if (station.recentFailures7d > 0) CarColors.Warning else CarColors.OnSurface,
             )
         }
@@ -196,14 +137,14 @@ private fun RatingsCard(state: StationDetailUiState, modifier: Modifier) {
         for (stars in 5 downTo 1) {
             val count = state.ratingCounts.getOrElse(stars - 1) { 0 }
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(12.dp)) {
-                Text("${stars}점", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(40.dp))
+                Text("${stars}점", style = MaterialTheme.typography.bodyMedium, modifier = Modifier.width(56.dp))
                 MeterBar(count.toFloat() / max, CarColors.Primary, Modifier.weight(1f), height = 14.dp)
                 Text(
-                    "$count",
+                    "${count}건",
                     style = MaterialTheme.typography.bodyMedium,
                     color = CarColors.OnSurfaceVariant,
                     textAlign = TextAlign.End,
-                    modifier = Modifier.width(44.dp),
+                    modifier = Modifier.width(72.dp),
                 )
             }
         }
@@ -225,7 +166,7 @@ private fun RatingsCard(state: StationDetailUiState, modifier: Modifier) {
 @Composable
 private fun FailuresCard(times: List<Long>, modifier: Modifier) {
     CarCard(modifier, contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
-        Text("최근 실패 기록", style = MaterialTheme.typography.bodyLarge)
+        Text("최근 실패 기록 (최대 4건)", style = MaterialTheme.typography.bodyLarge)
         if (times.isEmpty()) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Icon(CarIcons.Check, contentDescription = null, tint = CarColors.Primary, modifier = Modifier.size(26.dp))
