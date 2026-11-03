@@ -5,15 +5,37 @@
 ## 현재 상태 (2026-11-03 기준, 매번 덮어쓰기)
 
 - 한 일 요약: 리뷰 본문 스크롤·하단 전송/건너뛰기 고정, 별점 폭·선택값, 충전/미처리 결과 Back·기존 target 재진입, 상세 헤더·오류·길안내 모달, 완료 null/단위·계산 근거·실패 기록 범위, 동의·차종·철회 표현 정리.
-- 진행 중 브랜치: `fix/ui-audit-followups` (최신 origin/main 기반, 새 PR로 검토. 머지는 장호연). 기존 알림 PR은 머지 완료.
+- 진행 중 브랜치·PR: `fix/ui-audit-followups`, [PR #11](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/11). 2026-11-03 리뷰는 머지 가능이며 선택 제안 후속 반영. 머지는 장호연. 기존 알림 PR은 머지 완료.
 - 다음 할 일: PR 검토 후 x86 Pleos에서 실제 차속 권한·시스템 Back/Home·내비 왕복·주행 제한 및 화면 배치를 확인.
 - 담당 계약/내용 대기: 이상준: S1 위치 대기 기한·최신 위치/요청 우선(F04). 이상준/황준용: 길안내 요청별 대기·실패·성공 계약(F11). 장호연: 태그 배타 규칙(D02)·약관 전문(B01).
 - 검증: 두 앱 일반 `assembleDebug test :app:lintDebug`, 별도 임시 Robolectric UI 28검사(차슐랭 debug10/release3, 크루즈 debug15). 수정 전 main과 동일 조건 6쌍 캡처. 임시 QA 의존성·코드는 제품에 추가하지 않음.
-- 자료: `/Users/gilminjong/Dev/output/hyundai-ui-fixes-2026-11-03/`의 CHECKLIST·OWNER-CONTRACTS·REPORT·before/after·qa. 기존 dirty handoff는 before 백업과 이전 작업 기록으로 보존.
+- 팀 공유 근거: 아래 "공유 검증 요약"과 PR 본문의 같은 표를 사용. 길민종 PC 전용 원본·캡처는 `/Users/gilminjong/Dev/output/hyundai-ui-fixes-2026-11-03/`에 있으며 팀 공용 링크가 아니다. 기존 handoff 원문과 작업 기록 보존.
 - 경계: Screen/Nav/공통 UI만 수정. core·ViewModel·data/domain·집계·서비스·서버 PR은 수정/머지하지 않음. STOP 복귀 개선을 프로세스 종료/재부팅 복원으로 주장하지 않음.
 - 실제 인계 이슈: [F04 #12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 이상준, [F11 #13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 황준용·이상준, [정책/약관 #14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 장호연.
 
+## 공유 검증 요약
+
+|재현 조건|확인 결과|
+|---|---|
+|600×1024dp, Compose fontScale1.5, 리뷰 별점 미선택|전송·건너뛰기 버튼 모두 표시, 각76dp 이상; 본문 스크롤 가능|
+|1280×720dp, 리뷰4점·태그 선택|4점 선택 표시, 태그 글자22sp 고정, 전송 활성|
+|상세 정상→로딩→오류|1280dp 뒤로 버튼 bounds 동일, 오류 Primary 재시도 표시|
+|release Nav 충전 중 Back→재진입|live 유지; 하단 복귀 버튼으로 충전 화면 재진입|
+|release Nav 리뷰/실패 Back→재진입→건너뛰기/닫기|보류 결과 유지 후 명시적 행동에서 소비|
+|600dp/fontScale1.5, SoC100%·경과3900초|100%·1시간5분 전체 표시|
+|실제 HistoryViewModel+충전소 이름 조회 예외,1280dp·600dp/fontScale1.5|인증·실패2개는 정보 없음,NOT_AT_STATION1개만 밖 충전 표시; 추가2검사 PASS|
+|길안내 확인창|확인·취소 행동64dp 이상, 공통 간격16dp|
+
+일반 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. UI 인수는 별도 임시 Robolectric SDK34/mdpi에서 차슐랭 debug10/release3 PASS이며 앱의 일반 테스트에 포함되지 않는다. Compose 글자 배율은 Android 비선형 배율을 따른다. 실제 Pleos/실차 검증은 별도다.
+
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-03 — PR 선택 리뷰 후속
+- 두 UI PR 모두 필수 수정 없는 머지 가능 리뷰. 팀원이 열 수 없는 로컬 경로를 공유 근거로 요구하지 않도록 본문·PR에 검증 조건/결과 표를 추가. 원본 경로는 PC 전용으로 명시.
+- 검증: 실제 HistoryViewModel+조회 예외를 가로1280dp·좁은600dp/fontScale1.5에서 렌더한 추가2검사 PASS.
+- S6은 이름 조회 실패와 밖 충전을 구분: SUCCESS/FAILED에서 이름이 없으면 정보 없음, 둘 다 아닌 NOT_AT_STATION 결과는 충전소 밖 충전. 기존 UiState·VM·data/core 계약 변경 없음.
+- 계산 평균·평가 건너뛰기·실패 기록 취소의 PRD/시나리오/영상 용어 통일은 장호연 #14에 구체적으로 요청.
+
 
 ### 2026-11-03 — 감사 잔여의 실제 담당 인계·수용 기준 연결
 - 로컬 owner_contract만 남기지 않고 담당자 배정 GitHub 이슈5건으로 연결. 최신 서버/업로드 PR에는 남은 VM·주행 요약·요청 결과 계약이 없음을 대조.

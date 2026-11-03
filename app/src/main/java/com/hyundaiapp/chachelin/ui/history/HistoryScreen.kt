@@ -68,7 +68,8 @@ fun HistoryScreen(state: HistoryUiState, onBack: () -> Unit, onWithdrawConsent: 
 
 @Composable
 private fun HistoryRow(row: HistoryRowUi, portrait: Boolean) {
-    val name = row.stationName ?: "충전소 정보 없음"
+    // 현재 결과는 SUCCESS/FAILED/NOT_AT_STATION 세 가지다. 이름 조회 실패만으로 밖 충전으로 단정하지 않는다.
+    val name = row.stationName ?: if (row.verified || row.failed) "충전소 정보 없음" else "충전소 밖 충전"
     val nameColor = if (row.stationName == null) CarColors.OnSurfaceVariant else CarColors.OnSurface
     Surface(color = CarColors.Surface, shape = RoundedCornerShape(CarDimens.CardRadius), modifier = Modifier.fillMaxWidth()) {
         if (portrait) {
