@@ -21,7 +21,7 @@
   - 시연 배속 ×120(디버그 빌드만)·SoC 주입은 PT에서 밝혀야 함 → PRD 7절에 적기
   - 길민종 `feat/ui-screens` — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/1 — **11-01 머지 완료**(Claude 리뷰 `✅ 머지 가능` 후 장호연 지시로 merge commit). 후속은 리뷰 코멘트의 "다음에 챙길 것"
   - 길민종 `fix/ui-review-followups` (리뷰 후속, PR 2번) — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/2 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/2 — **11-01 머지 완료**(자동 리뷰 `✅ 머지 가능` 후 장호연 지시). 남은 것: 에뮬레이터 확인(길민종 Mac 불가 → 에뮬레이터 PC 필요), 이상준 질문 4개, 이민하 합의 3개(S4 자동 기록 토글·안내 거리·차속 없음)
-  - 장호연 `feat/demo-scripts`(두 저장소, 10-30) — **PR 아직 없음**. 코드라 PR로 올려야 main에 들어감. main보다 13커밋 뒤처짐, main을 merge하면 이 문서에서 충돌(11-01 확인) → 충돌을 직접 해결한 뒤 PR
+  - 장호연 `feat/demo-scripts`(두 저장소) — 11-02 main merge(인수인계 충돌은 main 쪽으로 해결) + 판정 규칙 v2·현재 앱에 맞게 고쳐 PR. `demo-drive.sh` 기본은 고정 위치 시연(위치 재생 없이 지금 앱으로 동작, 이민하 확인 순서와 같음), `route`는 앱 위치 재생 모드가 생긴 뒤. 가짜 콘솔·가짜 adb로 값 순서만 확인했고 **에뮬레이터 실행은 아직**(이상준이 `demo-charge.sh`는 에뮬레이터에서 확인함)
   - 기타: 기획서(`docs/proposal.md`, `docs/submission/`)는 팀장 결정으로 `main`에 바로 push
 - 리뷰·머지: PR 리뷰는 Claude(정기 작업 "삼각고래 PR 리뷰", 매일 09~23시 매시), 머지는 장호연만(`docs/pr-review-guide.md`)
 - 다음 할 일(우선순위 순):
@@ -30,7 +30,7 @@
   3. 주최 측 문의 메일 발송 — **초안 `docs/organizer-inquiry-email.md` 11문항(10-31 작성, 11-01 11번 `TTS_SERVICE` 권한 추가)**, 팀원 CC 넣고 대표자 메일로 발송(팀 문서 9절 1~8번)
   4. Pleos Playground 프로젝트 생성·팀원 추가
   5. 황준용에게 core 초안 검토·인계 요청
-  6. 시연 스크립트: `tools/vconsole.sh` 기반으로 PRD 7절 성공·실패 시나리오 자동화
+  6. 시연 스크립트 PR 머지 후 에뮬레이터에서 `bash tools/demo-charge.sh all` 리허설(11-05 전)
   7. release 서명 키 생성(키 파일은 저장소에 넣지 않음)
 - 막힌 점·질문: 없음. "크루즈브레이커 DO 차단"은 10-31 재확인 결과 차슐랭 화면을 착각한 것(크루즈브레이커 `docs/background-freeze-experiment.md` "함께 확인한 것"에 기록, 이민하 질문 답변 완료)
 - 주의:
@@ -42,6 +42,12 @@
 - 확인 방법: `./gradlew assembleDebug test` / 에뮬레이터 실행 → 개발 메뉴 → 신호 모니터
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-03 — 시연 스크립트 도착 장면 수정(PR 리뷰 반영)
+- 한 일(Claude 에이전트와 함께, 장호연 지시): Claude PR 리뷰 "수정 필요" 반영. `demo-drive.sh`의 `arrive()`와 `stop`이 100km/h에서 크루즈를 꺼서 도착도 해제로 기록되던 문제 → 차속 0으로 먼저 세운 뒤 해제, 그다음 P
+- `wait_until`의 `date +%s%3N`이 GNU date 전용이라는 주석 추가(선택 제안)
+- 확인: 가짜 콘솔·가짜 adb로 고정 모드·`stop` 순서 확인(정차 → 해제 → P). 에뮬레이터 리허설은 아직
+- 바꾼 파일: `tools/demo-drive.sh`(두 저장소 같은 내용), 이 문서
 
 ### 2026-11-03 — 기획서 md 초안 갱신(DOCX 재생성 전)
 - 한 일(Claude 에이전트와 함께, 장호연 지시): 두 앱 `docs/proposal.md`에 10-30·11-01 이후 결정(11-02 PRD 반영분, 길민종 PR #6·#16 내용)을 넣음. 양식 칸 구조(## 1.~8.)는 그대로
@@ -59,6 +65,18 @@
   4. 동의 철회 → 가명 차량 ID로 서버 삭제 함수 호출, 그 차량 기록 즉시 완전 삭제, 앱은 성공할 때까지 재시도(두 앱 같은 방식, 크루즈브레이커 이슈 #12)
   5. 충전소 밖 충전(`NOT_AT_STATION`)은 서버에 안 올리고 기기에만(S6 표시). 필요한 데이터만 수집, PRD 5.5 스키마와 일치
 - 바꾼 파일: `PRD.md`(5.3·5.4 S7·5.5·7절), 이 문서. 크루즈브레이커 `PRD.md` 5.6·7절도 같은 날 반영
+
+### 2026-11-02 — 시연 스크립트 v2 정리·PR
+- 한 일(Claude 에이전트와 함께, 장호연 지시): `feat/demo-scripts`에 main merge(이 문서 충돌은 main 내용으로), 스크립트를 v2와 현재 앱에 맞춤
+  - `tools/demo-drive.sh`: 기본 = 고정 위치 시연(출발 → 500m 앞 안내 → 100km/h 해제 기록 → 40km/h 해제는 기록 안 함 → 정차 요약). `route` = 경로 재생(1배속). 차속 권한 `pm grant`를 스크립트가 줌
+  - `tools/demo/gyeongbu-north.csv`: 표시만 다시 만듦(안내 500m, 정체 `jam` → 저속 `slow` 300m). 좌표는 그대로. 이 PC에 python이 없어 `make-route.py`를 node로 옮겨 기존 CSV와 똑같이 나오는지 확인한 뒤 생성
+  - `tools/demo-charge.sh`: 전제에 S7 동의 먼저, 시연 배속 ×120 추가(이상준 요청)
+- 결정한 것과 이유:
+  - 정체 장면을 저속 해제로 바꿈: v2에서 정체 필터가 없어지고 "해제 순간 60km/h 이상"만 셈
+  - 경로 재생은 1배속 기본: 안내가 3분에 한 번뿐이라 2배속이면 c 구간 안내가 안 나옴. 안내 장면은 a·c 둘만
+  - 앱 위치 재생 모드(`DEMO_ROUTE` 브로드캐스트)는 아직 없음 → 지금 시연은 고정 위치 모드로
+- 확인: 가짜 콘솔(node)·가짜 adb로 세 모드의 값 순서 확인. 에뮬레이터 실행은 아직
+- 바꾼 파일: `tools/demo-drive.sh`, `tools/demo-charge.sh`, `tools/demo/make-route.py`, `tools/demo/gyeongbu-north.csv`, 이 문서
 
 ### 2026-11-02 오후 — PR #4·#3 머지(크루즈브레이커 #14 포함)
 - 한 일(Claude 에이전트와 함께, 장호연 지시 "merge all"): head가 리뷰한 커밋과 같은지 확인(`--match-head-commit`) 후 merge commit으로 머지. 순서: 차슐랭 #4(`5dc8362`) → 크루즈브레이커 #14(`bdc8f88`) → 차슐랭 #3(`6bab9d0`)
