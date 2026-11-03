@@ -76,7 +76,7 @@ class ViewModelsTest {
 
     @Test
     fun `상세는 충전소 점수와 분포를 보여 준다`() = runTest {
-        val vm = StationDetailViewModel("st-001", fake, fake, stations)
+        val vm = StationDetailViewModel("st-001", fake, fake, stations).also { it.refresh() }
         val state = vm.state.value
         assertEquals("판교 테크노밸리 E-pit", state.station?.name)
         assertEquals(42, state.ratingCounts.sum())
@@ -86,7 +86,7 @@ class ViewModelsTest {
 
     @Test
     fun `시드의 실패 수만큼 최근 7일 안의 실패 시각을 보여 준다`() = runTest {
-        val state = StationDetailViewModel("st-003", fake, fake, stations).state.value
+        val state = StationDetailViewModel("st-003", fake, fake, stations).also { it.refresh() }.state.value
         assertEquals(4, state.recentFailureTimesMs.size)
         val sevenDaysAgo = System.currentTimeMillis() - 7 * 24 * 3_600_000L
         assertTrue(state.recentFailureTimesMs.all { it > sevenDaysAgo })
@@ -94,12 +94,12 @@ class ViewModelsTest {
 
     @Test
     fun `없는 충전소면 station이 null로 남는다`() = runTest {
-        assertNull(StationDetailViewModel("nope", fake, fake, stations).state.value.station)
+        assertNull(StationDetailViewModel("nope", fake, fake, stations).also { it.refresh() }.state.value.station)
     }
 
     @Test
     fun `길안내는 확인한 뒤에만 경로를 요청한다`() = runTest {
-        val vm = StationDetailViewModel("st-001", fake, fake, stations)
+        val vm = StationDetailViewModel("st-001", fake, fake, stations).also { it.refresh() }
         vm.onRouteClick()
         assertTrue(vm.state.value.confirmRoute)
         assertTrue(fake.requestedRoutes.isEmpty())
@@ -112,7 +112,7 @@ class ViewModelsTest {
 
     @Test
     fun `길안내 취소는 경로를 건드리지 않는다`() = runTest {
-        val vm = StationDetailViewModel("st-001", fake, fake, stations)
+        val vm = StationDetailViewModel("st-001", fake, fake, stations).also { it.refresh() }
         vm.onRouteClick()
         vm.onDismissRoute()
         assertFalse(vm.state.value.confirmRoute)

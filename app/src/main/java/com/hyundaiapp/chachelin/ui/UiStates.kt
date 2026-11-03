@@ -38,6 +38,8 @@ data class StationDetailUiState(
     val recentFailureTimesMs: List<Long> = emptyList(),
     /** [길안내] 누르기 전 "현재 경로를 덮어씁니다" 확인 */
     val confirmRoute: Boolean = false,
+    val loading: Boolean = true,
+    val error: String? = null,
 )
 
 /** S3 충전 중 */

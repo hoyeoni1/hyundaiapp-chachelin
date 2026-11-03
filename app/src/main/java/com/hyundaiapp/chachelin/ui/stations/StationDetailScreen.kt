@@ -39,6 +39,7 @@ import com.hyundaiapp.chachelin.ui.components.CarIcons
 import com.hyundaiapp.chachelin.ui.components.MeterBar
 import com.hyundaiapp.chachelin.ui.components.PrimaryButton
 import com.hyundaiapp.chachelin.ui.components.ScreenHeader
+import com.hyundaiapp.chachelin.ui.components.SecondaryButton
 import com.hyundaiapp.chachelin.ui.components.StatTile
 import com.hyundaiapp.chachelin.ui.components.formatDateTime
 import com.hyundaiapp.chachelin.ui.components.formatKm
@@ -59,45 +60,73 @@ fun StationDetailScreen(
     onRouteClick: () -> Unit,
     onConfirmRoute: () -> Unit,
     onDismissRoute: () -> Unit,
+    onRetry: () -> Unit = {},
 ) {
     val station = state.station
-    BoxWithConstraints(Modifier.fillMaxSize()) {
-        val portrait = maxWidth < maxHeight
-        if (station == null) {
-            Column(Modifier.fillMaxSize().padding(CarDimens.ScreenPadding)) {
-                ScreenHeader("충전소", onBack = onBack)
-                Box(Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text("충전소 정보를 불러오는 중이에요", style = MaterialTheme.typography.titleLarge, color = CarColors.OnSurfaceVariant)
-                }
-            }
-        } else if (portrait) {
-            Column(
-                Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.spacedBy(20.dp),
-            ) {
-                Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Summary(station, onBack)
-                    RatingsCard(state, Modifier.fillMaxWidth())
-                    FailuresCard(state.recentFailureTimesMs, Modifier.fillMaxWidth())
-                }
-                RouteButton(onRouteClick)
-            }
-        } else {
+    Column(Modifier.fillMaxSize()) {
+        if (station != null && (state.loading || state.error != null)) {
             Row(
-                Modifier.fillMaxSize().padding(horizontal = CarDimens.ScreenPadding, vertical = 32.dp),
-                horizontalArrangement = Arrangement.spacedBy(24.dp),
+                Modifier.fillMaxWidth().padding(horizontal = 32.dp, vertical = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Column(Modifier.weight(4f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                    Summary(station, onBack)
-                    Spacer(Modifier.weight(1f))
-                    RouteButton(onRouteClick)
-                }
-                RatingsCard(state, Modifier.weight(3f).fillMaxHeight())
-                FailuresCard(state.recentFailureTimesMs, Modifier.weight(3f).fillMaxHeight())
+                Text(
+                    if (state.loading) "최신 정보를 확인하고 있어요" else "갱신하지 못했어요. 이전 정보를 표시해요",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = CarColors.OnSurfaceVariant,
+                    modifier = Modifier.weight(1f),
+                )
+                if (!state.loading) SecondaryButton("다시 시도", onRetry)
             }
         }
-    }
+        BoxWithConstraints(Modifier.weight(1f).fillMaxWidth()) {
+            val portrait = maxWidth < maxHeight
+            if (station == null) {
+                Column(Modifier.fillMaxSize().padding(CarDimens.ScreenPadding)) {
+                    ScreenHeader("충전소", onBack = onBack)
+                    Column(
+                        Modifier.fillMaxSize().verticalScroll(rememberScrollState()),
+                        verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                    ) {
+                        Text(
+                            state.error ?: if (state.loading) "충전소 정보를 불러오는 중이에요" else "충전소 정보를 찾을 수 없어요",
+                            style = MaterialTheme.typography.titleLarge,
+                            color = CarColors.OnSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
+                        if (!state.loading) SecondaryButton("다시 시도", onRetry)
+                    }
+                }
+            } else if (portrait) {
+                Column(
+                    Modifier.fillMaxSize().padding(horizontal = 32.dp, vertical = 32.dp),
+                    verticalArrangement = Arrangement.spacedBy(20.dp),
+                ) {
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        Summary(station, onBack)
+                        RatingsCard(state, Modifier.fillMaxWidth())
+                        FailuresCard(state.recentFailureTimesMs, Modifier.fillMaxWidth())
+                    }
+                    RouteButton(onRouteClick)
+                }
+            } else {
+                Row(
+                    Modifier.fillMaxSize().padding(horizontal = CarDimens.ScreenPadding, vertical = 32.dp),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    Column(Modifier.weight(4f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+                        Summary(station, onBack)
+                        Spacer(Modifier.weight(1f))
+                        RouteButton(onRouteClick)
+                    }
+                    RatingsCard(state, Modifier.weight(3f).fillMaxHeight())
+                    FailuresCard(state.recentFailureTimesMs, Modifier.weight(3f).fillMaxHeight())
+                }
+            }
+        }
 
+    }
     if (state.confirmRoute && station != null) {
         AlertDialog(
             onDismissRequest = onDismissRoute,
@@ -143,7 +172,7 @@ private fun Summary(station: StationRowUi, onBack: () -> Unit) {
         }
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             StatTile("인증 충전", "${station.verifiedCharges}회", Modifier.weight(1f))
-            StatTile("실측 평균", formatKw(station.avgKw), Modifier.weight(1f))
+            StatTile("실측 평균", station.avgKw?.let { formatKw(it) } ?: "기록 없음", Modifier.weight(1f))
             StatTile(
                 "7일 실패", "${station.recentFailures7d}회", Modifier.weight(1f),
                 valueColor = if (station.recentFailures7d > 0) CarColors.Warning else CarColors.OnSurface,

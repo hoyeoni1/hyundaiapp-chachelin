@@ -5,6 +5,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.AlertDialog
@@ -31,6 +32,7 @@ import com.hyundaiapp.chachelin.RecordingService
 import com.hyundaiapp.chachelin.domain.ChargeScreenTarget
 import com.hyundaiapp.chachelin.ui.charging.ChargingScreen
 import com.hyundaiapp.chachelin.ui.charging.ChargingViewModel
+import com.hyundaiapp.chachelin.ui.components.rememberNotificationPermission
 import com.hyundaiapp.chachelin.ui.debug.SignalMonitorScreen
 import com.hyundaiapp.chachelin.ui.history.HistoryScreen
 import com.hyundaiapp.chachelin.ui.history.HistoryViewModel
@@ -45,6 +47,8 @@ import com.hyundaiapp.chachelin.ui.stations.StationDetailScreen
 import com.hyundaiapp.chachelin.ui.stations.StationDetailViewModel
 import com.hyundaiapp.chachelin.ui.stations.StationListScreen
 import com.hyundaiapp.chachelin.ui.stations.StationListViewModel
+import com.hyundaiapp.chachelin.ui.theme.CarColors
+import com.hyundaiapp.chachelin.ui.theme.CarDimens
 
 /** PRD 5.4 화면 목록. 디버그 빌드는 개발 메뉴에서 시작한다 */
 enum class Screen(val title: String) {
@@ -81,6 +85,7 @@ fun ChachelinNav(container: AppContainer) {
     var terms by remember { mutableStateOf<Terms?>(null) }
     var confirmWithdraw by remember { mutableStateOf(false) }
     val context = LocalContext.current
+    val notifications = rememberNotificationPermission()
 
     // 충전 세션에 따라 S3·S4·S5를 띄우고 닫는다(충전구를 열면 S3, 닫으면 S4/S5)
     val target by container.chargeRecorder.target.collectAsState(ChargeScreenTarget.NONE)
@@ -121,7 +126,7 @@ fun ChachelinNav(container: AppContainer) {
                 // 개발 메뉴에서 바로 들어오면 고른 충전소가 없다 → 시드 첫 충전소
                 val id = stationId ?: PreviewData.stationRow.id
                 val vm = viewModel(key = id) { StationDetailViewModel(id, container.signals, container.signals, container.stations) }
-                LaunchedEffect(Unit) { vm.refresh() }
+                LaunchedEffect(vm) { vm.refresh() }
                 val state by vm.state.collectAsState()
                 StationDetailScreen(
                     state,
@@ -129,6 +134,7 @@ fun ChachelinNav(container: AppContainer) {
                     onRouteClick = vm::onRouteClick,
                     onConfirmRoute = vm::onConfirmRoute,
                     onDismissRoute = vm::onDismissRoute,
+                    onRetry = vm::refresh,
                 )
             }
             Screen.CHARGING -> {
@@ -174,6 +180,9 @@ fun ChachelinNav(container: AppContainer) {
                     onAgreePrivacy = vm::onAgreePrivacy,
                     onSelectPreset = vm::onSelectPreset,
                     onShowTerms = { terms = it },
+                    notificationsGranted = notifications.granted,
+                    onRequestNotifications = notifications.request,
+                    notificationsNeedSettings = notifications.openSettings,
                     onStart = {
                         if (vm.onStart()) {
                             if (stack.size > 1) back() else stack[0] = Screen.STATIONS
@@ -203,10 +212,13 @@ fun ChachelinNav(container: AppContainer) {
 private fun WithdrawDialog(onConfirm: () -> Unit, onDismiss: () -> Unit) {
     AlertDialog(
         onDismissRequest = onDismiss,
+        containerColor = CarColors.Surface,
+        titleContentColor = CarColors.OnSurface,
+        textContentColor = CarColors.OnSurface,
         title = { Text("동의를 철회할까요?") },
         text = { Text("충전 기록을 멈추고, 내 충전 기록과 이 차에 저장된 동의·차종 정보를 지워요. 다시 쓰려면 동의가 필요해요.") },
-        confirmButton = { TextButton(onClick = onConfirm) { Text("철회") } },
-        dismissButton = { TextButton(onClick = onDismiss) { Text("취소") } },
+        confirmButton = { TextButton(onClick = onConfirm, modifier = Modifier.heightIn(min = CarDimens.TouchTargetSmall)) { Text("철회", color = CarColors.Warning) } },
+        dismissButton = { TextButton(onClick = onDismiss, modifier = Modifier.heightIn(min = CarDimens.TouchTargetSmall)) { Text("취소", color = CarColors.Primary) } },
     )
 }
 

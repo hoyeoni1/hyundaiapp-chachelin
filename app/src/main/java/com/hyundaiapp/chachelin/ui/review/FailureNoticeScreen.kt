@@ -20,6 +20,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyundaiapp.chachelin.ui.FailureNoticeUiState
@@ -47,13 +48,26 @@ fun FailureNoticeScreen(
             contentPadding = PaddingValues(horizontal = 56.dp, vertical = 48.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(24.dp)) {
+            Column(Modifier.fillMaxWidth(), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
                 Box(Modifier.size(96.dp).background(CarColors.Warning, CircleShape), contentAlignment = Alignment.Center) {
                     Icon(CarIcons.BoltOff, contentDescription = null, tint = CarColors.OnAccent, modifier = Modifier.size(52.dp))
                 }
                 Text("충전 실패를 기록했어요", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
                 Text(
-                    "${state.stationName} · 충전구를 열었지만 배터리가 오르지 않았어요.\n다른 운전자에게 '최근 실패'로 보여요.",
+                    state.stationName,
+                    style = MaterialTheme.typography.bodyLarge,
+                    textAlign = TextAlign.Center,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                )
+                Text(
+                    "충전구를 열었지만\n배터리가 오르지 않았어요.",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = CarColors.OnSurfaceVariant,
+                    textAlign = TextAlign.Center,
+                )
+                Text(
+                    "다른 운전자에게 '최근 실패'로 보여요.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = CarColors.OnSurfaceVariant,
                     textAlign = TextAlign.Center,
