@@ -71,3 +71,11 @@ adb shell run-as com.hyundaiapp.cruisebreaker --user 10 cat files/backend-check-
 - 내 기록은 서버 조회 성공 결과를 메모리에 유지한다. 앱 종료 후 오프라인에서 전체 과거 기록을 다시 보여 주는 영속 읽기 캐시는 아직 없다. 전송 대기 중인 새 기록은 서버 ACK 후 History에 반영된다.
 - 차슐랭 최근접 충전소의 오프라인 fallback은 메모리 캐시뿐이다. 앱을 새로 시작한 오프라인 세션의 충전소 매칭은 기존 PR #3의 NOT_AT_STATION 한계를 유지한다.
 - 조회 시 현재 위치는 반경 RPC로 전달되지만 DB에는 저장하지 않는다. 수집 동의 문구·원본 및 Auth 보관/정리 정책·환경부 API 캐시는 후속으로 확정한다.
+
+## 2026-11-03 최신 main 통합 후 최종 검증
+
+- 양쪽 assembleDebug / assembleRelease / test / :app:lintDebug / :core:lintDebug 통과.
+- 앱 테스트 debug/release: 차슐랭 각78, 크루즈 각68. 공통 core debug29/release15(backend12). 삭제 영수증은 서버 ACK 전 유지·일시 실패 후 완료됨을 추가 검증했다.
+- app lint: 차슐랭 오류0/경고14, 크루즈 오류0/경고19. core lint는 양쪽 오류0/경고3. CAR_INFO 미선언 getter를 제거했고 내비 요청/취소는 런타임 권한을 검사한다.
+- 로컬 DB 테스트15, 공통 파일 일치, release manifest debug 검사 화면 제외 확인. 원격 읽기 검증과 migration dry-run 정상이며 SQL/시드를 다시 실행하지 않았다.
+- 앞의 에뮬레이터 backend 검사는 초기 연결 단계의 결과다. 이번 최신 main 전체 SDK/UI 리허설을 대신하지 않는다.
