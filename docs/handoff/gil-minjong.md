@@ -4,14 +4,12 @@
 
 ## 현재 상태 (2026-11-03 기준, 매번 덮어쓰기)
 
-- 한 일 요약: 리뷰 본문 스크롤·하단 전송/건너뛰기 고정, 별점 폭·선택값, 충전/미처리 결과 Back·기존 target 재진입, 상세 헤더·오류·길안내 모달, 완료 null/단위·계산 근거·실패 기록 범위, 동의·차종·철회 표현 정리.
-- 진행 중 브랜치·PR: `fix/ui-audit-followups`, [PR #11](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/11). 2026-11-03 리뷰는 머지 가능이며 선택 제안 후속 반영. 머지는 장호연. 기존 알림 PR은 머지 완료.
-- 다음 할 일: PR 검토 후 x86 Pleos에서 실제 차속 권한·시스템 Back/Home·내비 왕복·주행 제한 및 화면 배치를 확인.
-- 담당 계약/내용 대기: 이상준: S1 위치 대기 기한·최신 위치/요청 우선(F04). 이상준/황준용: 길안내 요청별 대기·실패·성공 계약(F11). 장호연: 태그 배타 규칙(D02)·약관 전문(B01).
-- 검증: 두 앱 일반 `assembleDebug test :app:lintDebug`, 별도 임시 Robolectric UI 28검사(차슐랭 debug10/release3, 크루즈 debug15). 수정 전 main과 동일 조건 6쌍 캡처. 임시 QA 의존성·코드는 제품에 추가하지 않음.
-- 팀 공유 근거: 아래 "공유 검증 요약"과 PR 본문의 같은 표를 사용. 길민종 PC 전용 원본·캡처는 `/Users/gilminjong/Dev/output/hyundai-ui-fixes-2026-11-03/`에 있으며 팀 공용 링크가 아니다. 기존 handoff 원문과 작업 기록 보존.
-- 경계: Screen/Nav/공통 UI만 수정. core·ViewModel·data/domain·집계·서비스·서버 PR은 수정/머지하지 않음. STOP 복귀 개선을 프로세스 종료/재부팅 복원으로 주장하지 않음.
-- 실제 인계 이슈: [F04 #12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 이상준, [F11 #13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 황준용·이상준, [정책/약관 #14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 장호연.
+- 한 일 요약: UI PR #11은 main 머지 완료. [PR #15](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/15)의 9절은 검토 제안(미구현)이며, 승인된 본문·수식·임계값은 유지. 크루즈브레이커 [#29](https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/issues/29)는 별도 저장소의 [PR #30](https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/30)에서 처리 중이다.
+- 진행 중 브랜치·PR: `docs/observation-based-prd` / [PR #15](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/15). 최신 리뷰는 머지 가능이며, 제안의 최종 채택·머지는 장호연 담당.
+- 다음 할 일: 장호연의 9절 채택 여부 확인 후 담당별 범위를 정한다. x86 Pleos에서 알림 권한·시스템 Back/Home·내비 왕복·충전 결과 복귀·주행 제한을 확인한다.
+- 막힌 점·질문: 이상준 [#12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 위치 대기/최신 조회, 황준용·이상준 [#13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 길안내 결과 계약, 장호연 [#14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 동의 단계/태그/실제 약관 전문은 미완료. 실제 Pleos 검증은 x86 팀 환경이 필요하다.
+- 주의: PR #10 이후 core의 capacityKwh 미제공과 tracker의 차량 보고 값 우선 규칙을 구분한다. 문서의 향후 관측 계획을 실행한 검증으로 보고하지 않는다.
+- 확인 방법: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug`. 문서 PR은 main 대비 app/core/tools diff 0, 제9절 밖 본문 동일·상대 링크·수치 예시·diff check를 확인한다. 기존 임시 UI 결과와 실차 미검증은 아래 요약에 유지.
 
 ## 공유 검증 요약
 
@@ -29,6 +27,27 @@
 일반 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. UI 인수는 별도 임시 Robolectric SDK34/mdpi에서 차슐랭 debug10/release3 PASS이며 앱의 일반 테스트에 포함되지 않는다. Compose 글자 배율은 Android 비선형 배율을 따른다. 실제 Pleos/실차 검증은 별도다.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-03 — PR #15 선택 리뷰 문서 마감
+- 배터리 용량 설명에 PR #10 이후 core가 값을 비워 프리셋을 쓰는 조건을 명시. 9절 숫자 간격과 “3.8 → 4.3. 7일” 문장 경계를 정리.
+- 현재 상태의 다음 할 일·담당별 막힌 점·확인 방법을 복원하고 크루즈브레이커 #29를 명시적 타 저장소 링크로 표기.
+- 코드 변경 없음. 제9절 밖 본문·수식·임계값은 그대로이며 실제 관찰 검증은 향후 계획으로 유지.
+
+
+### 2026-11-03 — PR #15 리뷰의 기획 결정 반영·제안 범위 정리
+- 최신 main을 병합해 UI handoff 충돌을 정리하고 UI 이력과 최초 PRD 제안 이력을 함께 보존. 기존 커밋을 다시 쓰지 않아 강제 푸시가 필요 없음.
+- 본문은 장호연 결정으로 맞추고, 관측/정보 상태/취소·집계/검증·안내 정책 후보는9절 검토 제안(미구현)으로 한정. 새 계약을 현재 구현으로 쓰지 않음.
+- 현행 결과3종과 차량 보고 용량 우선·프리셋 fallback을 제안의 현행 근거로 명시. 본문 판정·점수 규칙과 새 관측/취소 제안의 경계를 유지.
+- 코드 변경 없이 문서 diff·링크·수치·범위 검사. 머지·배포 없음.
+
+### 2026-11-03 — 관측 기반 PRD 개정 제안
+- 사용자 요청: 친구들이 구체적인 PRD 변경을 보고 의견을 줄 수 있도록 두 저장소에 각각 PR 제출.
+- 변경: 충전량 증가 미확인·SoC 기반 계산 평균으로 제품 표현을 수정하고 관측 충분성, 취소 집계, 표본/조회 상태와 검증 기준을 제안했다. 기존 수식과 임계값은 유지한다.
+- 다음 단계: 장호연·이상준·황준용: 관측 충분성 제외와 감점 적용 범위, 취소 반영 계약 검토. 합의 후 API/UiState·앱 문구를 구현 PR로 분리하고 장호연이 제출 원고·DOCX 갱신.
+- 범위: PRD와 본인 handoff. 코드·서버·제출 DOCX는 수정하지 않았다.
+- 검증: 문서 diff·상대 링크·수치 일관성 점검. JDK 17 `bash ./gradlew assembleDebug test` 통과(176 tests, 실패 0, 오류 0; debug/release 합계). 문서 요구사항의 실차 효과는 미검증.
+
+
 
 ### 2026-11-03 — PR 선택 리뷰 후속
 - 두 UI PR 모두 필수 수정 없는 머지 가능 리뷰. 팀원이 열 수 없는 로컬 경로를 공유 근거로 요구하지 않도록 본문·PR에 검증 조건/결과 표를 추가. 원본 경로는 PC 전용으로 명시.
