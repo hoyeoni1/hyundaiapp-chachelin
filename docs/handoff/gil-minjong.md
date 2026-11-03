@@ -4,12 +4,13 @@
 
 ## 현재 상태 (2026-11-03 기준, 매번 덮어쓰기)
 
-- 한 일 요약: UI PR #11은 main 머지 완료. [PR #15](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/15)의 9절은 검토 제안(미구현)이며, 승인된 본문·수식·임계값은 유지. 크루즈브레이커 [#29](https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/issues/29)는 별도 저장소의 [PR #30](https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/30)에서 처리 중이다.
-- 진행 중 브랜치·PR: `docs/observation-based-prd` / [PR #15](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/15). 최신 리뷰는 머지 가능이며, 제안의 최종 채택·머지는 장호연 담당.
-- 다음 할 일: 장호연의 9절 채택 여부 확인 후 담당별 범위를 정한다. x86 Pleos에서 알림 권한·시스템 Back/Home·내비 왕복·충전 결과 복귀·주행 제한을 확인한다.
-- 막힌 점·질문: 이상준 [#12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 위치 대기/최신 조회, 황준용·이상준 [#13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 길안내 결과 계약, 장호연 [#14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 동의 단계/태그/실제 약관 전문은 미완료. 실제 Pleos 검증은 x86 팀 환경이 필요하다.
-- 주의: PR #10 이후 core의 capacityKwh 미제공과 tracker의 차량 보고 값 우선 규칙을 구분한다. 문서의 향후 관측 계획을 실행한 검증으로 보고하지 않는다.
-- 확인 방법: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug`. 문서 PR은 main 대비 app/core/tools diff 0, 제9절 밖 본문 동일·상대 링크·수치 예시·diff check를 확인한다. 기존 임시 UI 결과와 실차 미검증은 아래 요약에 유지.
+- 한 일 요약: UI PR #11, 미구현 검토 제안 PR #15는 main 머지 완료. #14 D01은 각 명시 동의 즉시 저장·필수 두 개로 첫 실행 완료 정책 유지로 확정돼 코드 변경 없음. D02는 #17의 반대 태그 쌍별 최대 1개로 확정됨.
+- 진행 중 브랜치·PR: 추가 제품 코드 PR 없음. [문서 PR #18](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/18) / `docs/tag-ui-verification`에서 #17 UI 검증 및 이 인수인계만 갱신. 문서 직접 main 반영은 자동 승인 검토에서 거절돼 검토용 문서 PR로 남김. 크루즈브레이커 #29는 PR #30으로 머지·종료, S5 보조 안내는 별도 저장소 PR #31 검토 대기.
+- #17 UI 검증: S4는 selectedTags를 그대로 표시하고 클릭한 태그 하나를 onToggleTag로 한 번 전달하며 자체 선택 규칙을 두지 않는다. 외부 상태 스냅샷의 반대 태그 교체·해제·독립 태그 복수 선택, 1280×720dp 및 600×1024dp/fontScale1.5 조건, 76dp 이상 행동 영역·하단 전송/건너뛰기를 임시 Robolectric 4검사로 확인(PASS).
+- 다음 할 일: 이상준의 #17 ReviewViewModel.onToggleTag 구현 및 단위 테스트가 올라오면 실제 VM→Nav→S4 연결로 같은 선택 흐름을 다시 인수한다. 현재 main fbc708c는 여전히 단순 집합 토글이므로 반대 태그를 동시에 고를 수 있다. UI 표시 검사 통과를 #17 전체 구현 완료로 보고하지 않는다.
+- 막힌 점·질문: 이상준 [#12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 위치 대기/최신 조회, 황준용·이상준 [#13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 길안내 결과 계약, 이상준 [#17](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/17) 태그 VM 구현, 장호연 [#14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 실제 약관 전문(B01) 대기. D01/D02 정책 자체는 더 기다리지 않음.
+- 주의: VM/data/domain/core/기존 리뷰·시드는 수정하지 않음. 문서의 미구현 제안을 실행한 검증으로 보고하지 않는다. x86 Pleos에서 권한·Back/Home·내비 왕복·충전 결과 복귀·주행 제한은 팀 환경에서 별도 확인 필요.
+- 확인 방법: 2026-11-03 main fbc708c에서 JDK17 `bash ./gradlew -I /tmp/hyundai-tag-ui-qa/init.gradle :app:testDebugUnitTest --tests com.hyundaiapp.chachelin.ui.ReviewTagUiContractTest` PASS(4/4). 임시 QA 의존성·코드는 제품에 추가하지 않음. 근거·소스·XML·캡처는 로컬 `output/chachelin-tag-ui-2026-11-03/`에 보존. 일반 빌드·테스트·app lint는 이전 PR 검증 이력이며 이번 문서 작업에서 재실행한 것으로 주장하지 않음.
 
 ## 공유 검증 요약
 
@@ -27,6 +28,14 @@
 일반 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. UI 인수는 별도 임시 Robolectric SDK34/mdpi에서 차슐랭 debug10/release3 PASS이며 앱의 일반 테스트에 포함되지 않는다. Compose 글자 배율은 Android 비선형 배율을 따른다. 실제 Pleos/실차 검증은 별도다.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-03 — 최신 PR/이슈 재점검 및 #17 태그 UI 계약 검증
+- 두 저장소 전체 PR의 리뷰 제출·미해결 인라인 스레드와 PR 대화, 열린 이슈 본문/댓글을 재확인. 새 UI 수정 요청은 차슐랭 #17의 UI 상태 확인이며, 크루즈 PR #31에는 새 리뷰 없음.
+- 장호연 #14 결정을 반영: D01 기존 정책 유지, D02 반대 태그는 쌍마다 하나·반대 선택 시 교체·재선택 시 해제·독립 태그 복수·소급 수정 없음. 실제 약관만 내용 대기.
+- S4에 중복 규칙을 추가하지 않고 현재 화면이 전달받은 상태를 그대로 표시하는지 검증. 명시적인 상태 스냅샷 9개와 6종 태그 반복 클릭의 콜백/상태 비변경을 가로 및 좁은 큰 글자 화면에서 확인. 임시 UI 4검사 통과, 화면 2개 시각 확인.
+- 실제 VM은 main fbc708c에서 반대 태그를 동시에 고를 수 있는 상태. #17은 이상준 로직 PR과 단위 테스트 후 실제 연결 인수가 남아 있어 닫지 않음. VM·기존 데이터는 변경하지 않음.
+- 바꾼 파일: 본인 인수인계 문서만. 제품 코드/의존성 변경 없음.
+
 
 ### 2026-11-03 — PR #15 선택 리뷰 문서 마감
 - 배터리 용량 설명에 PR #10 이후 core가 값을 비워 프리셋을 쓰는 조건을 명시. 9절 숫자 간격과 “3.8 → 4.3. 7일” 문장 경계를 정리.
