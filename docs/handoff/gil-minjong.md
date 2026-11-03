@@ -4,11 +4,12 @@
 
 ## 현재 상태 (2026-11-03 기준, 매번 덮어쓰기)
 
-- UI 후속 PR #11는 main 머지 완료. 크루즈 화면 용어 #29는 별도 UI 브랜치에서 진행한다. 기존 UI 검증 요약·작업 기록은 아래에 보존.
-- 진행 중 PRD 제안: [PR #15](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/15), `docs/observation-based-prd`. 장호연이 main에 확정한 용어/슬로건/소개/수식/임계값을 그대로 반영하고 새 내용은9절 검토 제안(미구현)에만 모음.
-- 승인 대기: PRD 최종 채택은 장호연, 새 상태/집계/안내/보관 계약은 해당 로직·서버 담당 합의가 필요. 기존 로직 이슈는 미해결 상태 유지.
-- 검증: origin/main과 코드 차이0, 본문1~8절·부록은 main과 동일. 상대 링크·수치 예시·미구현 표기·diff check 검사. 문서 정리로 실차/새 요구사항 구현 검증을 주장하지 않음.
-- 주의: 현재 반영된 정책과 제안이 섞이지 않게 유지. 머지는 장호연.
+- 한 일 요약: UI PR #11은 main 머지 완료. [PR #15](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/15)의 9절은 검토 제안(미구현)이며, 승인된 본문·수식·임계값은 유지. 크루즈브레이커 [#29](https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/issues/29)는 별도 저장소의 [PR #30](https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/30)에서 처리 중이다.
+- 진행 중 브랜치·PR: `docs/observation-based-prd` / [PR #15](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/15). 최신 리뷰는 머지 가능이며, 제안의 최종 채택·머지는 장호연 담당.
+- 다음 할 일: 장호연의 9절 채택 여부 확인 후 담당별 범위를 정한다. x86 Pleos에서 알림 권한·시스템 Back/Home·내비 왕복·충전 결과 복귀·주행 제한을 확인한다.
+- 막힌 점·질문: 이상준 [#12](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/12) 위치 대기/최신 조회, 황준용·이상준 [#13](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/13) 길안내 결과 계약, 장호연 [#14](https://github.com/hoyeoni1/hyundaiapp-chachelin/issues/14) 동의 단계/태그/실제 약관 전문은 미완료. 실제 Pleos 검증은 x86 팀 환경이 필요하다.
+- 주의: PR #10 이후 core의 capacityKwh 미제공과 tracker의 차량 보고 값 우선 규칙을 구분한다. 문서의 향후 관측 계획을 실행한 검증으로 보고하지 않는다.
+- 확인 방법: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug`. 문서 PR은 main 대비 app/core/tools diff 0, 제9절 밖 본문 동일·상대 링크·수치 예시·diff check를 확인한다. 기존 임시 UI 결과와 실차 미검증은 아래 요약에 유지.
 
 ## 공유 검증 요약
 
@@ -26,6 +27,12 @@
 일반 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. UI 인수는 별도 임시 Robolectric SDK34/mdpi에서 차슐랭 debug10/release3 PASS이며 앱의 일반 테스트에 포함되지 않는다. Compose 글자 배율은 Android 비선형 배율을 따른다. 실제 Pleos/실차 검증은 별도다.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-03 — PR #15 선택 리뷰 문서 마감
+- 배터리 용량 설명에 PR #10 이후 core가 값을 비워 프리셋을 쓰는 조건을 명시. 9절 숫자 간격과 “3.8 → 4.3. 7일” 문장 경계를 정리.
+- 현재 상태의 다음 할 일·담당별 막힌 점·확인 방법을 복원하고 크루즈브레이커 #29를 명시적 타 저장소 링크로 표기.
+- 코드 변경 없음. 제9절 밖 본문·수식·임계값은 그대로이며 실제 관찰 검증은 향후 계획으로 유지.
+
 
 ### 2026-11-03 — PR #15 리뷰의 기획 결정 반영·제안 범위 정리
 - 최신 main을 병합해 UI handoff 충돌을 정리하고 UI 이력과 최초 PRD 제안 이력을 함께 보존. 기존 커밋을 다시 쓰지 않아 강제 푸시가 필요 없음.
