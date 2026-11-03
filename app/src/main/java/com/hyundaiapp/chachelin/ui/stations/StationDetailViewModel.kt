@@ -10,11 +10,15 @@ import com.hyundaiapp.core.GeoMath
 import com.hyundaiapp.core.NaviControl
 import com.hyundaiapp.core.RouteDestination
 import com.hyundaiapp.core.VehicleSignals
+import kotlinx.coroutines.CancellationException
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.TimeoutCancellationException
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.update
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withTimeout
 
 /** S2 충전소 상세와 길안내(F6). [길안내]는 기존 경로를 덮어쓰므로 확인을 받은 뒤에만 경로를 요청한다 */
 class StationDetailViewModel(
@@ -27,36 +31,52 @@ class StationDetailViewModel(
     val state: StateFlow<StationDetailUiState> = _state.asStateFlow()
 
     private var station: Station? = null
+    private var refreshJob: Job? = null
 
-    init {
-        refresh()
-    }
-
+    /** Nav에서 진입할 때 한 번, 오류 화면에서 재시도할 때 다시 호출한다. */
     fun refresh() {
-        viewModelScope.launch {
-            // 실패하면 station이 null로 남는다(화면은 불러오는 중으로 표시)
-            runCatching {
-                val (st, sc) = stations.get(stationId) ?: return@launch
-                val detail = stations.detail(stationId)
-                station = st
-                _state.update {
-                    it.copy(
-                        station = StationRowUi(
-                            id = st.id, name = st.name, operator = st.operator,
-                            distanceM = signals.location.value?.let { here -> GeoMath.distanceM(here.point, st.point) },
-                            score = sc.chachelinScore, verifiedCharges = sc.verifiedCharges,
-                            avgKw = sc.avgKw, recentFailures7d = sc.recentFailures7d,
-                        ),
-                        ratingCounts = detail?.ratingCounts ?: it.ratingCounts,
-                        topTags = detail?.topTags.orEmpty(),
-                        recentFailureTimesMs = detail?.recentFailureTimesMs.orEmpty(),
-                    )
+        refreshJob?.cancel()
+        // 다시 들어왔을 때는 기존 내용을 유지하며 갱신한다. 첫 조회만 빈 로딩 화면을 쓴다.
+        _state.update { it.copy(loading = true, error = null) }
+        refreshJob = viewModelScope.launch {
+            try {
+                val result = withTimeout(10_000L) {
+                    stations.get(stationId)?.let { it to stations.detail(stationId) }
                 }
+                if (result == null) {
+                    station = null
+                    _state.value = StationDetailUiState(loading = false, error = "충전소 정보를 찾을 수 없어요")
+                    return@launch
+                }
+                val (row, detail) = result
+                val (st, sc) = row
+                station = st
+                _state.update { it.copy(
+                    station = StationRowUi(
+                        id = st.id, name = st.name, operator = st.operator,
+                        distanceM = signals.location.value?.let { here -> GeoMath.distanceM(here.point, st.point) },
+                        score = sc.chachelinScore, verifiedCharges = sc.verifiedCharges,
+                        avgKw = sc.avgKw, recentFailures7d = sc.recentFailures7d,
+                    ),
+                    ratingCounts = detail?.ratingCounts ?: List(5) { 0 },
+                    topTags = detail?.topTags.orEmpty(),
+                    recentFailureTimesMs = detail?.recentFailureTimesMs.orEmpty(),
+                    loading = false,
+                    error = null,
+                ) }
+            } catch (_: TimeoutCancellationException) {
+                _state.update { it.copy(loading = false, error = "응답이 늦어지고 있어요. 다시 시도해 주세요") }
+            } catch (e: CancellationException) {
+                throw e
+            } catch (_: Exception) {
+                _state.update { it.copy(loading = false, error = "충전소 정보를 불러오지 못했어요") }
             }
         }
     }
 
-    fun onRouteClick() = _state.update { it.copy(confirmRoute = true) }
+    fun onRouteClick() {
+        if (station != null) _state.update { it.copy(confirmRoute = true) }
+    }
 
     fun onConfirmRoute() {
         station?.let { navi.requestRoute(RouteDestination(it.name, it.point)) }

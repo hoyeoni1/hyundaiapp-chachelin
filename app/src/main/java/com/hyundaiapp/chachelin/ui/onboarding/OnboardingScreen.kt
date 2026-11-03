@@ -23,7 +23,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import com.hyundaiapp.chachelin.ui.OnboardingUiState
 import com.hyundaiapp.chachelin.ui.components.ConsentRow
-import com.hyundaiapp.chachelin.ui.components.PrimaryButton
+import com.hyundaiapp.chachelin.ui.components.OnboardingStartAction
 import com.hyundaiapp.chachelin.ui.components.SelectableButton
 import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.CarDimens
@@ -43,11 +43,14 @@ fun OnboardingScreen(
     onSelectPreset: (Int) -> Unit,
     onShowTerms: (Terms) -> Unit,
     onStart: () -> Unit,
+    notificationsGranted: Boolean = false,
+    onRequestNotifications: () -> Unit = {},
+    notificationsNeedSettings: Boolean = false,
 ) {
     val canStart = state.locationAgreed && state.privacyAgreed && state.selectedPreset != null
-    val startLabel = when {
+    val startHint = when {
         canStart -> "시작하기"
-        !state.locationAgreed || !state.privacyAgreed -> "필수 항목에 동의하면 시작할 수 있어요"
+        !state.locationAgreed || !state.privacyAgreed -> "필수 항목에 동의해 주세요"
         else -> "내 차를 골라 주세요"
     }
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -60,24 +63,24 @@ fun OnboardingScreen(
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     Intro()
                     Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
+                    NotificationConsent(notificationsGranted, notificationsNeedSettings, onRequestNotifications)
                     Presets(state, onSelectPreset)
                 }
-                PrimaryButton(startLabel, onStart, Modifier.fillMaxWidth(), enabled = canStart)
+                OnboardingStartAction(canStart, startHint, onStart)
             }
         } else {
             Row(
                 Modifier.fillMaxSize().padding(horizontal = CarDimens.ScreenPadding, vertical = 40.dp),
                 horizontalArrangement = Arrangement.spacedBy(40.dp),
             ) {
-                Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Intro()
-                    Spacer(Modifier.weight(1f))
                     Consents(state, onAgreeLocation, onAgreePrivacy, onShowTerms)
+                    NotificationConsent(notificationsGranted, notificationsNeedSettings, onRequestNotifications)
                 }
-                Column(Modifier.weight(1f).fillMaxHeight(), verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                Column(Modifier.weight(1f).fillMaxHeight().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Presets(state, onSelectPreset)
-                    Spacer(Modifier.weight(1f))
-                    PrimaryButton(startLabel, onStart, Modifier.fillMaxWidth(), enabled = canStart)
+                    OnboardingStartAction(canStart, startHint, onStart)
                 }
             }
         }
@@ -85,10 +88,19 @@ fun OnboardingScreen(
 }
 
 @Composable
+private fun NotificationConsent(granted: Boolean, needsSettings: Boolean, onRequest: () -> Unit) {
+    ConsentRow(
+        "충전 기록 알림 (선택)", granted, onRequest,
+        description = "충전 기록 중 알림을 표시해요.\n허용하지 않아도 충전 기록은 계속돼요.",
+        agreeLabel = if (needsSettings) "알림 설정" else "알림 허용", agreedLabel = "허용됨",
+    )
+}
+
+@Composable
 private fun Intro() {
     Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
         Text("차슐랭", style = MaterialTheme.typography.bodyLarge, color = CarColors.Primary, fontWeight = FontWeight.Medium)
-        Text("실제로 충전한 사람만 평가하는\n충전소 가이드", style = MaterialTheme.typography.headlineMedium)
+        Text("실제로 충전한 사람만\n평가하는 충전소 가이드", style = MaterialTheme.typography.headlineMedium)
     }
 }
 
