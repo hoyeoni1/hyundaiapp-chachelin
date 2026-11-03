@@ -45,8 +45,11 @@ class AppContainer(context: Context) {
     /** S7 동의·차종 */
     val vehicleProfile: VehicleProfileStore = SharedPrefsVehicleProfileStore(context)
 
+    /** 동의한 약관 판 번호(서버에 남김). 약관 문구를 바꾸면 함께 올린다. 지금은 승인 전 초안 docs/terms-draft.md의 번호 */
+    private val termsVersion = "chachelin-terms-2026-11-v1"
+
     val backend: SupabaseBackend? = if (BuildConfig.SUPABASE_URL.isNotBlank()) {
-        val config = BackendConfig(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, "CHACHELIN", BuildConfig.SUPABASE_SIMULATED)
+        val config = BackendConfig(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, "CHACHELIN", BuildConfig.SUPABASE_SIMULATED, termsVersion)
         SupabaseBackend(config, EncryptedBackendStore(context, config.storageNamespace), HttpsBackendTransport(config), appScope)
     } else null
     private val localRecords = backend?.let {

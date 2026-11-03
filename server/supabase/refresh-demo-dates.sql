@@ -1,13 +1,19 @@
 -- Manual maintenance, NOT a migration. Run as project postgres before a demonstration.
--- Only the deterministic, ownerless SEED installations from migration 20261102000200.
+-- Only the deterministic, ownerless SEED installations from migrations 20261102000200 and 20261103000200
+-- (the second adds charge owners 31..42 at st-004; counts below grow only once it is applied).
 -- Re-running on the same KST date is idempotent. LIVE/SIMULATED records are untouched.
 begin;
 select pg_advisory_xact_lock(20261102,1);
 
+create temporary table demo_refresh_expected on commit drop as
+select case when has_failure_station then 42 else 30 end charge_owners,
+  case when has_failure_station then 325 else 300 end charges
+from (select exists(select 1 from pleos_private.migration_versions where version='20261103000200') has_failure_station) v;
+
 create temporary table demo_refresh_owners on commit drop as
 select i.id, i.app from pleos_private.app_installations i
 join (
-  select md5('pleos-demo-charge-owner-'||g)::uuid id, 'CHACHELIN' app from generate_series(1,30) g
+  select md5('pleos-demo-charge-owner-'||g)::uuid id, 'CHACHELIN' app from generate_series(1,(select charge_owners from demo_refresh_expected)) g
   union all
   select md5('pleos-demo-cruise-owner-'||g)::uuid, 'CRUISEBREAKER' from generate_series(1,200) g
 ) expected on expected.id=i.id and expected.app=i.app
@@ -15,11 +21,11 @@ where i.data_source='SEED' and i.owner_user_id is null and i.consent_version='de
 
 do $check$
 begin
-  if (select count(*) from demo_refresh_owners) <> 230
-    or (select count(*) from pleos_private.charge_sessions c join demo_refresh_owners o on o.id=c.installation_id) <> 300
+  if (select count(*) from demo_refresh_owners) <> 200+(select charge_owners from demo_refresh_expected)
+    or (select count(*) from pleos_private.charge_sessions c join demo_refresh_owners o on o.id=c.installation_id) <> (select charges from demo_refresh_expected)
     or (select count(*) from pleos_private.cruise_passes p join demo_refresh_owners o on o.id=p.installation_id) <> 2000
     or (select count(*) from pleos_private.cruise_events e join demo_refresh_owners o on o.id=e.installation_id) <> 400 then
-    raise exception 'Demo seed differs from expected 230 owners / 300 charges / 2000 passes / 400 events. No refresh applied.';
+    raise exception 'Demo seed differs from expected owners / charges (230/300, or 242/325 with 20261103000200) / 2000 passes / 400 events. No refresh applied.';
   end if;
 end $check$;
 

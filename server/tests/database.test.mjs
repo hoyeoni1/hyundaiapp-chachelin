@@ -245,3 +245,75 @@ test('seed migration is replayable: exactly 10 demo stations, 300 sessions, 400 
     await seeded.exec(await readFile(new URL('../supabase/verify.sql',import.meta.url),'utf8'));
   } finally { await seeded.close(); }
 });
+
+const freshDb = async () => {
+  const fresh=new PGlite();
+  await fresh.exec(`create role anon;create role authenticated;create schema auth;create table auth.users(id uuid primary key);
+    create function auth.uid() returns uuid language sql stable as $$select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid$$;`);
+  await fresh.exec(migration);
+  return fresh;
+};
+const sql = name => readFile(new URL(`../supabase/${name}`,import.meta.url),'utf8');
+const nearby = async conn => (await conn.query(`select public.pleos_nearby_stations(37.4127,127.0947,10000,true) data`)).rows[0].data;
+
+test('score = stars x (1 - 30-day failure rate); under 5 sessions no penalty; retracted and old rows excluded', async () => {
+  const fresh=await freshDb();
+  try {
+    await fresh.exec(await sql('migrations/20261103000100_score_failure_penalty.sql'));
+    await fresh.exec(await sql('migrations/20261103000100_score_failure_penalty.sql')); // re-runnable
+    await fresh.exec(`insert into auth.users values('${A}'); select set_config('request.jwt.claim.sub','${A}',false);
+      insert into pleos_private.stations(id,name,operator,latitude,longitude,max_kw,source) values
+        ('st-a','A','t',37.4127,127.0947,100,'SEED'),('st-b','B','t',37.4127,127.0947,100,'SEED'),('st-c','C','t',37.4127,127.0947,100,'SEED');
+      insert into pleos_private.app_installations(id,app,vehicle_hash,data_source,consent_version)
+        values('${V}','CHACHELIN',repeat('b',64),'SEED','test');`);
+    // st-a: 6 rated charges (4 stars) + 2 failures + 1 retracted failure + 1 failure 40 days ago -> rate 2/8
+    // st-b: 5 rated charges (5 stars), 0 recent sessions besides them, 0 failures -> 5
+    // st-c: 4 rated charges only -> null ("평가 중")
+    let n=0; const add = (station,result,days,rating=null,state='VALID') => { n++; const id=`00000000-0000-4000-8000-${String(n).padStart(12,'0')}`;
+      return `insert into pleos_private.charge_sessions(installation_id,id,station_id,started_at,ended_at,soc_start,soc_end,avg_kw,result,record_state)
+          values('${V}','${id}','${station}',now()-interval '${days} days 1 hour',now()-interval '${days} days',20,${result==='SUCCESS'?60:20},${result==='SUCCESS'?50:'null'},'${result}','${state}');`
+        + (rating ? `insert into pleos_private.reviews(installation_id,session_id,rating) values('${V}','${id}',${rating});` : ''); };
+    const rows=[];
+    for (let i=0;i<6;i++) rows.push(add('st-a','SUCCESS',i+1,4));
+    rows.push(add('st-a','FAILED',2),add('st-a','FAILED',3),add('st-a','FAILED',4,null,'RETRACTED'),add('st-a','FAILED',40));
+    for (let i=0;i<5;i++) rows.push(add('st-b','SUCCESS',i+1,5));
+    for (let i=0;i<4;i++) rows.push(add('st-c','SUCCESS',i+1,3));
+    await fresh.exec(rows.join('\n'));
+    const byId=Object.fromEntries((await nearby(fresh)).map(s=>[s.id,s]));
+    assert.equal(Number(byId['st-a'].recent_sessions_30d),8); assert.equal(Number(byId['st-a'].recent_failures_30d),2);
+    assert.ok(Math.abs(Number(byId['st-a'].chachelin_score)-4*(1-2/8))<1e-9);
+    assert.equal(Number(byId['st-b'].chachelin_score),5);
+    assert.equal(byId['st-c'].chachelin_score,null);
+    assert.deepEqual((await nearby(fresh)).map(s=>s.id),['st-b','st-a','st-c']);
+    // Under 5 sessions in 30 days: no penalty even with a failure.
+    await fresh.exec(`delete from pleos_private.charge_sessions where station_id='st-a' and result='SUCCESS' and ended_at<now()-interval '3 days';`);
+    const a=(await nearby(fresh)).find(s=>s.id==='st-a');
+    assert.equal(Number(a.recent_sessions_30d),4); assert.equal(Number(a.failure_rate_30d),0);
+    assert.equal(a.chachelin_score,null); // reviews dropped under 5 as well
+  } finally { await fresh.close(); }
+});
+
+test('failure-heavy demo station ranks first by stars but last by score, and date refresh keeps it', async () => {
+  const fresh=await freshDb();
+  try {
+    const demo=await sql('migrations/20261102000200_demo_data.sql');
+    const failure=await sql('migrations/20261103000200_demo_failure_station.sql');
+    await fresh.exec(failure); // before the base seed: skipped
+    assert.equal((await fresh.query(`select count(*)::int n from pleos_private.migration_versions where version='20261103000200'`)).rows[0].n,0);
+    await fresh.exec(demo);
+    await fresh.exec(await sql('migrations/20261103000100_score_failure_penalty.sql'));
+    await fresh.exec(failure); await fresh.exec(failure);
+    assert.equal((await fresh.query(`select count(*)::int n from pleos_private.charge_sessions`)).rows[0].n,325);
+    await fresh.exec(`insert into auth.users values('${A}'); select set_config('request.jwt.claim.sub','${A}',false);`);
+    const rows=await nearby(fresh);
+    const st4=rows.find(s=>s.id==='st-004');
+    assert.equal(Math.max(...rows.map(s=>Number(s.avg_rating))),Number(st4.avg_rating));
+    assert.equal(rows.at(-1).id,'st-004');
+    assert.ok(Math.abs(Number(st4.chachelin_score)-Number(st4.avg_rating)*(1-20/55))<1e-9);
+    assert.ok(Number(st4.recent_failures_7d)>0);
+    // Refresh after aging: counts accepted with the extra owners, ranking unchanged.
+    await fresh.exec(`update pleos_private.charge_sessions set started_at=started_at-interval '60 days', ended_at=ended_at-interval '60 days';`);
+    await fresh.exec(await sql('refresh-demo-dates.sql'));
+    assert.deepEqual((await nearby(fresh)).map(s=>s.id),rows.map(s=>s.id));
+  } finally { await fresh.close(); }
+});
