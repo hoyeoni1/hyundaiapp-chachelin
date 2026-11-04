@@ -51,7 +51,7 @@ fun ReviewScreen(
     onToggleTag: (ReviewTag) -> Unit,
     onSubmit: () -> Unit,
     onLater: () -> Unit,
-    onBack: (() -> Unit)? = null,
+    onBack: () -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth >= 1000.dp
@@ -161,17 +161,17 @@ private val previewState = PreviewData.review.copy(rating = 5, selectedTags = se
 @Preview(name = "S4 가로", widthDp = 1280, heightDp = 720)
 @Composable
 private fun ReviewPreview() {
-    ChachelinTheme { Surface { ReviewScreen(previewState, {}, {}, {}, {}) } }
+    ChachelinTheme { Surface { ReviewScreen(previewState, {}, {}, {}, {}, onBack = {}) } }
 }
 
 @Preview(name = "S4 세로", widthDp = 720, heightDp = 1280)
 @Composable
 private fun ReviewPortraitPreview() {
-    ChachelinTheme { Surface { ReviewScreen(previewState, {}, {}, {}, {}) } }
+    ChachelinTheme { Surface { ReviewScreen(previewState, {}, {}, {}, {}, onBack = {}) } }
 }
 
 @Preview(name = "S4 별점 전", widthDp = 1280, heightDp = 720)
 @Composable
 private fun ReviewEmptyPreview() {
-    ChachelinTheme { Surface { ReviewScreen(PreviewData.review, {}, {}, {}, {}) } }
+    ChachelinTheme { Surface { ReviewScreen(PreviewData.review, {}, {}, {}, {}, onBack = {}) } }
 }

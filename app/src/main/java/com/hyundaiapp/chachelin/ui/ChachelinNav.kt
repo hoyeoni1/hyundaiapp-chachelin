@@ -33,6 +33,7 @@ import com.hyundaiapp.chachelin.ui.charging.ChargingScreen
 import com.hyundaiapp.chachelin.ui.charging.ChargingViewModel
 import com.hyundaiapp.chachelin.ui.components.CarAlertDialog
 import com.hyundaiapp.chachelin.ui.components.SecondaryButton
+import com.hyundaiapp.chachelin.ui.components.ScreenHeader
 import com.hyundaiapp.chachelin.ui.components.rememberNotificationPermission
 import com.hyundaiapp.chachelin.ui.debug.SignalMonitorScreen
 import com.hyundaiapp.chachelin.ui.history.HistoryScreen
@@ -67,7 +68,7 @@ private val CHARGE_FLOW_SCREENS = setOf(Screen.CHARGING, Screen.REVIEW, Screen.F
 
 /** 간단한 화면 스택. 화면이 늘면 navigation-compose로 바꿔도 된다(길민종) */
 @Composable
-fun ChachelinNav(container: AppContainer) {
+fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
     val rootScreen = {
         when {
             BuildConfig.DEBUG -> Screen.DEV_MENU
@@ -77,7 +78,7 @@ fun ChachelinNav(container: AppContainer) {
     }
     val stack = remember { mutableStateListOf(rootScreen()) }
     val go: (Screen) -> Unit = { stack.add(it) }
-    val back: () -> Unit = { if (stack.size > 1) stack.removeAt(stack.lastIndex) }
+    val back: () -> Unit = { if (stack.size > 1) stack.removeAt(stack.lastIndex) else onExit() }
     BackHandler(enabled = stack.size > 1) { back() }
 
     var stationId by remember { mutableStateOf<String?>(null) }
@@ -102,7 +103,7 @@ fun ChachelinNav(container: AppContainer) {
         Column(Modifier.fillMaxSize()) {
             Box(Modifier.weight(1f)) {
                 when (stack.last()) {
-                    Screen.DEV_MENU -> DevMenu(go)
+                    Screen.DEV_MENU -> DevMenu(go, onBack = back)
                     Screen.STATIONS -> {
                         val vm = viewModel { StationListViewModel(container.signals, container.stations) }
                         // 화면에 들어올 때마다 새로 조회한다(방금 끝난 충전이 반영되게)
@@ -116,12 +117,13 @@ fun ChachelinNav(container: AppContainer) {
                             },
                             onHistoryClick = { go(Screen.HISTORY) },
                             onRetry = vm::refresh,
+                            onBack = back,
                         )
                     }
                     Screen.SIGNALS -> {
                         // 신호 수신은 동의 후 기록 서비스가 시작한다. 개발 메뉴의 신호 모니터만 들어올 때 따로 켠다
                         LaunchedEffect(Unit) { container.signals.start() }
-                        SignalMonitorScreen(container.signals)
+                        SignalMonitorScreen(container.signals, onBack = back)
                     }
                     Screen.STATION_DETAIL -> {
                         // 개발 메뉴에서 바로 들어오면 고른 충전소가 없다 → 시드 첫 충전소
@@ -151,7 +153,7 @@ fun ChachelinNav(container: AppContainer) {
                         if (current != null) {
                             ReviewScreen(current, vm::onRate, vm::onToggleTag, vm::onSubmit, vm::onLater, onBack = back)
                         } else if (BuildConfig.DEBUG) {
-                            ReviewScreen(PreviewData.review, onRate = {}, onToggleTag = {}, onSubmit = back, onLater = back)
+                            ReviewScreen(PreviewData.review, onRate = {}, onToggleTag = {}, onSubmit = back, onLater = back, onBack = back)
                         }
                     }
                     Screen.FAILURE -> {
@@ -159,9 +161,9 @@ fun ChachelinNav(container: AppContainer) {
                         val state by vm.state.collectAsState()
                         val current = state
                         if (current != null) {
-                            FailureNoticeScreen(current, vm::onNotFailure, vm::onConfirm)
+                            FailureNoticeScreen(current, vm::onNotFailure, vm::onConfirm, onBack = back)
                         } else if (BuildConfig.DEBUG) {
-                            FailureNoticeScreen(PreviewData.failure, onNotFailure = back, onConfirm = back)
+                            FailureNoticeScreen(PreviewData.failure, onNotFailure = back, onConfirm = back, onBack = back)
                         }
                     }
                     Screen.HISTORY -> {
@@ -181,6 +183,7 @@ fun ChachelinNav(container: AppContainer) {
                             onAgreePrivacy = vm::onAgreePrivacy,
                             onSelectPreset = vm::onSelectPreset,
                             onShowTerms = { terms = it },
+                            onBack = back,
                             notificationsGranted = notifications.granted,
                             onRequestNotifications = notifications.request,
                             notificationsNeedSettings = notifications.openSettings,
@@ -235,14 +238,16 @@ private fun TermsDialog(terms: Terms, onDismiss: () -> Unit) {
 }
 
 @Composable
-private fun DevMenu(go: (Screen) -> Unit) {
+private fun DevMenu(go: (Screen) -> Unit, onBack: () -> Unit) {
     Column(
-        Modifier.fillMaxSize().padding(24.dp).verticalScroll(rememberScrollState()),
+        Modifier.fillMaxSize().padding(24.dp),
         verticalArrangement = Arrangement.spacedBy(12.dp),
     ) {
-        Text("차슐랭 개발 메뉴 (디버그 빌드에만 보임)", style = MaterialTheme.typography.headlineMedium)
-        Screen.entries.filter { it != Screen.DEV_MENU }.forEach { s ->
-            Button(onClick = { go(s) }) { Text(s.title) }
+        ScreenHeader("차슐랭 개발 메뉴", subtitle = "디버그 빌드", onBack = onBack)
+        Column(Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+            Screen.entries.filter { it != Screen.DEV_MENU }.forEach { s ->
+                Button(onClick = { go(s) }) { Text(s.title) }
+            }
         }
     }
 }
