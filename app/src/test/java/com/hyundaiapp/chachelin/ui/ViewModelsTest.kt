@@ -182,6 +182,26 @@ class ViewModelsTest {
     }
 
     @Test
+    fun `반대 태그는 쌍마다 하나만 고르고 고장 칸·깨끗함은 따로 고른다`() = runTest {
+        val vm = ReviewViewModel(recorder(), stations)
+        session(socEnd = 80)
+        fun tags() = vm.state.value?.selectedTags
+
+        vm.onToggleTag(ReviewTag.FAST)
+        vm.onToggleTag(ReviewTag.SLOW)
+        assertEquals(setOf(ReviewTag.SLOW), tags())
+        vm.onToggleTag(ReviewTag.WAIT)
+        vm.onToggleTag(ReviewTag.NO_WAIT)
+        assertEquals(setOf(ReviewTag.SLOW, ReviewTag.NO_WAIT), tags())
+        vm.onToggleTag(ReviewTag.BROKEN_SLOT)
+        vm.onToggleTag(ReviewTag.CLEAN)
+        assertEquals(setOf(ReviewTag.SLOW, ReviewTag.NO_WAIT, ReviewTag.BROKEN_SLOT, ReviewTag.CLEAN), tags())
+        vm.onToggleTag(ReviewTag.SLOW)
+        vm.onToggleTag(ReviewTag.CLEAN)
+        assertEquals(setOf(ReviewTag.NO_WAIT, ReviewTag.BROKEN_SLOT), tags())
+    }
+
+    @Test
     fun `별점 없이는 리뷰를 보내지 않는다`() = runTest {
         val recorder = recorder()
         val vm = ReviewViewModel(recorder, stations)

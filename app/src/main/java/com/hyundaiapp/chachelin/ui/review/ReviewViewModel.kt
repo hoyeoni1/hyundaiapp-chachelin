@@ -40,8 +40,9 @@ class ReviewViewModel(
 
     fun onRate(rating: Int) = _state.update { it?.copy(rating = rating) }
 
+    /** 빠름/느림, 대기 없음/대기 있음은 쌍마다 하나만(반대를 누르면 바뀜). 고장 칸 있음·깨끗함은 따로 고른다(11-03 장호연 결정, #17) */
     fun onToggleTag(tag: ReviewTag) = _state.update {
-        it?.copy(selectedTags = if (tag in it.selectedTags) it.selectedTags - tag else it.selectedTags + tag)
+        it?.copy(selectedTags = if (tag in it.selectedTags) it.selectedTags - tag else it.selectedTags - setOfNotNull(OPPOSITE[tag]) + tag)
     }
 
     fun onSubmit() {
@@ -62,4 +63,11 @@ class ReviewViewModel(
         durationMin = ((endedAtMs - startedAtMs) * timeScale / 60_000.0).roundToInt(),
         avgKw = avgKw,
     )
+
+    private companion object {
+        val OPPOSITE = mapOf(
+            ReviewTag.FAST to ReviewTag.SLOW, ReviewTag.SLOW to ReviewTag.FAST,
+            ReviewTag.NO_WAIT to ReviewTag.WAIT, ReviewTag.WAIT to ReviewTag.NO_WAIT,
+        )
+    }
 }

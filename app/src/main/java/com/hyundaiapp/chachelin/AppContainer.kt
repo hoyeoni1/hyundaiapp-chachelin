@@ -48,6 +48,8 @@ class AppContainer(context: Context) {
     /** 동의한 약관 판 번호(서버에 남김). 약관 문구를 바꾸면 함께 올린다. 지금은 승인 전 초안 docs/terms-draft.md의 번호 */
     private val termsVersion = "chachelin-terms-2026-11-v1"
 
+    val chargeRules = if (BuildConfig.DEBUG) ChargeRules.DEMO else ChargeRules.DEFAULT
+
     val backend: SupabaseBackend? = if (BuildConfig.SUPABASE_URL.isNotBlank()) {
         val config = BackendConfig(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, "CHACHELIN", BuildConfig.SUPABASE_SIMULATED, termsVersion)
         SupabaseBackend(config, EncryptedBackendStore(context, config.storageNamespace), HttpsBackendTransport(config), appScope)
@@ -56,7 +58,7 @@ class AppContainer(context: Context) {
         LocalChargeRecords(EncryptedBackendStore(context, it.config.storageNamespace + "-local-charges"))
     }
     val records: ChargeRecordRepository = backend?.let {
-        SupabaseChargeRecordRepository(it, vehicleProfile::vehicleId, requireNotNull(localRecords)) { vehicleProfile.onboarded.value }
+        SupabaseChargeRecordRepository(it, vehicleProfile::vehicleId, requireNotNull(localRecords), chargeRules.demoTimeScale) { vehicleProfile.onboarded.value }
     } ?: fakeRecords
     val stations: StationRepository = backend?.let {
         SupabaseStationRepository(it, vehicleProfile::vehicleId) { vehicleProfile.onboarded.value }
@@ -67,7 +69,6 @@ class AppContainer(context: Context) {
         backend?.let { b -> appScope.launch { b.status.collect { android.util.Log.i("SupabaseSync", it) } } }
     }
 
-    val chargeRules = if (BuildConfig.DEBUG) ChargeRules.DEMO else ChargeRules.DEFAULT
 
     val chargeTracker = ChargeSessionTracker(
         signals = signals,
