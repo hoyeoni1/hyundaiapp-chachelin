@@ -56,7 +56,7 @@ fun ChargingScreen(state: ChargingUiState, onBack: (() -> Unit)? = null) {
             ScreenHeader("충전 기록 중", subtitle = state.stationName, onBack = onBack)
             Column(
                 Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
-                verticalArrangement = Arrangement.spacedBy(32.dp),
+                verticalArrangement = Arrangement.spacedBy(32.dp, Alignment.CenterVertically),
             ) {
                 if (portrait) {
                     SocCard(state, Modifier.fillMaxWidth())
