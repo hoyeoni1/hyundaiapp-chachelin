@@ -12,6 +12,8 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -40,7 +42,7 @@ import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
 private val StartSegment = Color(0xFF2B7EA3)
 
 /**
- * S3 충전 중(정차 중). SoC를 크게, 경과 시간·지금까지 실측 평균을 옆에.
+ * S3 충전 중(정차 중). SoC를 크게, 경과 시간·지금까지 계산 평균을 옆에.
  * 뒤로 가도 기록은 이어진다. 충전구를 닫으면 ViewModel이 S4/S5로 넘긴다.
  */
 @Composable
@@ -52,13 +54,18 @@ fun ChargingScreen(state: ChargingUiState, onBack: (() -> Unit)? = null) {
             verticalArrangement = Arrangement.spacedBy(32.dp),
         ) {
             ScreenHeader("충전 기록 중", subtitle = state.stationName, onBack = onBack)
-            if (portrait) {
-                SocCard(state, Modifier.fillMaxWidth().weight(1f))
-                Side(state, Modifier.fillMaxWidth().height(260.dp), vertical = false)
-            } else {
-                Row(Modifier.weight(1f).fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
-                    SocCard(state, Modifier.weight(3f).fillMaxHeight())
-                    Side(state, Modifier.weight(2f).fillMaxHeight(), vertical = true)
+            Column(
+                Modifier.weight(1f).fillMaxWidth().verticalScroll(rememberScrollState()),
+                verticalArrangement = Arrangement.spacedBy(32.dp),
+            ) {
+                if (portrait) {
+                    SocCard(state, Modifier.fillMaxWidth())
+                    Side(state, Modifier.fillMaxWidth(), vertical = false)
+                } else {
+                    Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(32.dp), verticalAlignment = Alignment.Top) {
+                        SocCard(state, Modifier.weight(3f))
+                        Side(state, Modifier.weight(2f), vertical = true)
+                    }
                 }
             }
         }
@@ -112,13 +119,13 @@ private fun Side(state: ChargingUiState, modifier: Modifier, vertical: Boolean) 
     }
     if (vertical) {
         Column(modifier, verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            elapsed(Modifier.fillMaxWidth().weight(1f))
-            speed(Modifier.fillMaxWidth().weight(1f))
+            elapsed(Modifier.fillMaxWidth())
+            speed(Modifier.fillMaxWidth())
         }
     } else {
         Row(modifier, horizontalArrangement = Arrangement.spacedBy(20.dp)) {
-            elapsed(Modifier.weight(1f).fillMaxHeight())
-            speed(Modifier.weight(1f).fillMaxHeight())
+            elapsed(Modifier.weight(1f))
+            speed(Modifier.weight(1f))
         }
     }
 }

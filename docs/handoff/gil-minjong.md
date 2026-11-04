@@ -4,12 +4,12 @@
 
 ## 현재 상태 (2026-11-04 기준, 매번 덮어쓰기)
 
-- 한 일 요약: UI #11·검토 제안 #15·검증 기록 #18·제출 준비 #19 모두 main 머지 완료. #17 태그는 #19에서 장호연 지시로 VM/단위 테스트·실제 Pleos 화면 확인을 마쳐 종료됨. 별도 중복 구현 불필요.
-- 진행 중 브랜치·PR: `feat/ui-polish` — 두 앱 글자 단계·강조 통일과 보조 설명 문구 정리(리뷰·머지 대기). 그 전 `docs/terms-ui-verification` 기록은 그대로 유효.
-- 약관 검수: 실제 ChachelinNav release 경로에서 LOCATION/PRIVACY 전문을 확인. 1280×720dp, 600×1024dp/fontScale1.5, 1024×600dp/fontScale1.5 임시 Robolectric 3검사 PASS. 개인정보 전문 끝까지 스크롤, 닫기64dp 이상, 닫기·Dialog Back 뒤 동의 버튼2개 유지/시작 비활성/저장 완료false, 재열람 스크롤 초기화, 명시 동의·차종 선택 후 시작 활성 확인. 실제 Pleos 시스템 Back과 별도임.
-- 다음 할 일: 이상준 #12 위치 대기/최신 조회와 황준용·이상준 #13 길안내 결과 계약 후 UI 연결 인수. 새 #20은 조회 재시도·백그라운드 결과 알림이며 ui/ 변경 없음; #12/#13 해결로 보고하지 않음. 실제 Pleos 권한·Back/Home·내비 왕복·주행 제한은 팀 x86 환경에서 확인.
-- 막힌 점·질문: B01 앱 연결은 #19로 완료. #14는 Supabase 리전·요청 로그 확인(황준용) 후 장호연의 문서/TermsText/termsVersion 정합성 갱신이 남음. 미확정 내용을 길민종이 채우지 않음. D01/D02 정책은 확정.
-- 확인 방법: JDK17 `bash ./gradlew -I /tmp/hyundai-terms-qa/init.gradle :app:testReleaseUnitTest --tests com.hyundaiapp.chachelin.ui.TermsUiAcceptanceTest` PASS(3/3). 두 앱 합계6검사. 임시 검사·의존성은 제품에 추가하지 않음. 로컬 소스·XML·로그·화면은 `output/hyundai-terms-ui-2026-11-04/`에 보존. 일반 빌드/전체 테스트/lint 재실행으로 주장하지 않음.
+- 한 일 요약: 장호연의 #25 요청에 따라 S3 충전 카드의 화면 높이 채움을 제거하고, S4 별점96dp 상한/띄엄 배치를 없앴다. SoC·시간·계산 평균은 내용 높이로 모이고, 별5개는 오른쪽 열 너비를 채운다. 선택한 별까지 주황 아이콘·테두리·약한 배경으로 표시하고 “N점 선택”을 복원.
+- 진행 중 브랜치·PR: `fix/demo-ui-review` / [PR #26](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/26), #25 후속 UI PR. UI 2개와 본인 handoff만 변경. VM/동의/기록/판정·집계/서버와 팝업 하단 구분선은 변경하지 않음.
+- 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. 별도 임시 Robolectric4검사 PASS: 1682×1210dp/mdpi,1280×1210,1280×720,600×1024/Android fontScale1.5. SoC 카드560dp 미만, 100%·65분·전력미확인 접근, 별이 열 너비를 채움/64dp 이상, 4점 선택 semantics·원문 onNodeWithText·전송 활성·고정 버튼 확인.
+- 화면 확인: 시연 창과 좁은 큰 글자 화면을 실제 Compose로 캡처해 카드 안 빈칸·별 크기/선택 대비·footer 접근을 확인. 샘플 데이터 기반이며 실제 Pleos 시스템 바/권한/실차 동작의 재검증으로 주장하지 않음. MainActivity inset PR #24는 최신 main에 포함됨.
+- 다음 할 일: #25 UI PR 검토 후 실제 Pleos 시연 창에서 최종 체감 확인. #12 위치 대기/최신 조회와 #13 길안내 결과 계약은 해당 담당자 작업 뒤 UI 인수.
+- 증거: 작성자 PC output/hyundai-demo-ui-fixes-2026-11-04/chachelin/에 PNG·UI 검사 소스/XML·빌드 로그 보존. QA 의존성/소스는 제품에 추가하지 않음. 이전 전체 UI PDF는 이번 #23 폴리시/#25 변경 전 이력이므로 현재 화면은 이번 PNG를 기준으로 확인.
 
 ## 공유 검증 요약
 
@@ -27,6 +27,13 @@
 일반 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. UI 인수는 별도 임시 Robolectric SDK34/mdpi에서 차슐랭 debug10/release3 PASS이며 앱의 일반 테스트에 포함되지 않는다. Compose 글자 배율은 Android 비선형 배율을 따른다. 실제 Pleos/실차 검증은 별도다.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-04 — #25 충전 카드 빈칸·리뷰 별점 수정
+- SocCard·시간/평균 카드의 weight/fillMaxHeight 강제 높이를 없애고 내용 높이로 배치. body만 스크롤해 좁거나 큰 글자여도 숫자/진행 막대에 접근하며 헤더는 유지.
+- 별점96dp 상한과 SpaceBetween을 제거해5개가 열 너비를 채우도록 하고, 선택 범위의 색/테두리와 “N점 선택”을 표시. 별/태그/전송 콜백은 기존대로.
+- 일반 빌드·테스트·app lint PASS. 시연 창1682×1210과 tall1280×1210·표준1280×720·좁은600×1024/Android150% 임시 UI4검사 PASS. 100%·65분·평균미확인·별 선택/원문 semantics 포함.
+- UI 화면2개와 본인 handoff만 변경. 다른 담당 로직/서버·core 변경 없음.
+
 
 ### 2026-11-04 — 글자 단계·강조 통일, 보조 설명 정리
 - 한 일: 브랜치 `feat/ui-polish`. `Theme.kt` 글자 단계를 다시 잡음(화면 제목 36, 카드 제목 30 굵게, 목록 이름 26 SemiBold, 본문 22, 보조 20, 주인공 숫자 112). 공통 부품: 보조·위험 버튼 글자를 주 버튼과 같은 labelLarge, `StatTile` 기본 숫자 44 + 단위는 글자선 맞춤 회색, 동의 카드 설명 20 회색, 태그 버튼 글자 가운데 정렬, 구역 이름 `SectionLabel` 추가. 화면: S2 점수 112sp + 숫자 칸 셋 가로 배치(운영사·거리·갱신 상태는 제목 아래, 다시 시도는 제목 오른쪽). 가로에서 오른쪽 열 카드가 아래로 잘리던 것을 고침: 왼쪽 점수·숫자·최근 실패(시각 이어 쓰기), 오른쪽 별점·태그로 나눠 720dp 안에 들어감(실패 4건까지 확인), S3 SoC 기본 글자 단계 사용, S4 질문 30sp. 사용자 요청으로 화면의 보조 설명 문구를 뺐다(정책상 필요한 동의·권한 설명, 안전 고지, 자동 기록 안내, 시연 데이터 표시는 남김). Robolectric 렌더로 두 앱 전 화면(차슐랭은 세로 포함) 확인, `assembleDebug test` 통과.
