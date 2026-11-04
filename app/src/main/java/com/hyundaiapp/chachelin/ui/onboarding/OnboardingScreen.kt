@@ -11,7 +11,7 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.hyundaiapp.chachelin.ui.components.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -100,9 +100,8 @@ private fun Consents(state: OnboardingUiState, onAgreeLocation: () -> Unit, onAg
 private fun Presets(state: OnboardingUiState, onSelectPreset: (Int) -> Unit) {
     Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
         Text("내 차 고르기", style = MaterialTheme.typography.titleMedium, fontWeight = FontWeight.Bold)
-        Text("배터리 잔량 변화로 평균 전력(kW)을 계산할 용량이에요", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
     }
-    Text("목록에 없는 차는 아직 지원하지 않아요. 다른 차종을 대신 고르면 충전 전력이 부정확해요.", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
+    Text("목록에 없는 차는 아직 지원하지 않아요.", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
     state.vehiclePresets.withIndex().chunked(2).forEach { pair ->
         Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
             pair.forEach { (i, preset) ->

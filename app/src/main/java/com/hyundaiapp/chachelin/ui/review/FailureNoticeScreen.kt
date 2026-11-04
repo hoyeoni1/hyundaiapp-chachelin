@@ -18,7 +18,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.hyundaiapp.chachelin.ui.components.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -65,12 +65,6 @@ fun FailureNoticeScreen(
                 )
                 Text(
                     "충전구를 열었지만\n배터리가 오르지 않았어요.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = CarColors.OnSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
-                Text(
-                    "서버에 반영되면 다른 운전자에게 최근 실패로 보여요.",
                     style = MaterialTheme.typography.bodyLarge,
                     color = CarColors.OnSurfaceVariant,
                     textAlign = TextAlign.Center,

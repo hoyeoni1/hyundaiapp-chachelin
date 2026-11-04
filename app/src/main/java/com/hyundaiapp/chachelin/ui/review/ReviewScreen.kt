@@ -19,12 +19,11 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.hyundaiapp.chachelin.ui.components.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
-import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
@@ -99,12 +98,11 @@ private fun VerifiedCard(state: ReviewUiState, modifier: Modifier) {
     ) {
         Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
             Icon(CarIcons.ShieldCheck, contentDescription = null, tint = CarColors.Primary, modifier = Modifier.size(30.dp))
-            Text("인증 충전 완료", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = CarColors.Primary)
+            Text("인증 충전 완료", style = MaterialTheme.typography.titleMedium, color = CarColors.Primary)
         }
         Text(state.stationName, style = MaterialTheme.typography.titleMedium, maxLines = 1, overflow = TextOverflow.Ellipsis)
         Text("${state.socStart}% → ${state.socEnd}%", style = MaterialTheme.typography.displaySmall)
         Text("${state.durationMin}분 · 계산 평균 ${state.avgKw?.let { formatKw(it) } ?: "기록 없음"}", style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant)
-        Text("배터리 잔량 변화와 차종 용량으로 계산해요", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
     }
 }
 
@@ -117,7 +115,7 @@ private fun RatingAndTags(
     tagColumns: Int,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
-        Text("이 충전소 어땠나요?", style = MaterialTheme.typography.headlineMedium)
+        Text("이 충전소 어땠나요?", style = MaterialTheme.typography.titleLarge)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
             val fittedStarSize = minOf(starSize, (maxWidth - 32.dp) / 5)
             Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.SpaceBetween) {
@@ -140,7 +138,6 @@ private fun RatingAndTags(
                 }
             }
         }
-        Text(state.rating?.let { "${it}점 선택" } ?: "별점을 선택해 주세요", style = MaterialTheme.typography.bodyLarge, color = CarColors.Primary)
         ReviewTag.entries.chunked(tagColumns).forEach { rowTags ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 rowTags.forEach { tag ->
