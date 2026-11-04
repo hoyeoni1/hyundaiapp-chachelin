@@ -35,6 +35,17 @@
 - 검증: 두 앱 기본 debug/release와 색상 결합debug에서 임시 Nav9검사씩 PASS(합54회), 실제 화면 크기3종·64dp·클릭·복귀를 확인. 연결된adb기기가 없어 이번 검사는 Robolectric 기준.
 - 작업 보존: 별도 worktree에서 코드만 PR로 분리. 기존 feat/brand-color 변경을 백업하고 결합본 검증 후 원래 폴더에도 뒤로 수정 적용. 색상·아이콘은 덮어쓰지 않음.
 
+### 2026-11-04 — PR31 조건식 선택 리뷰 반영
+- 한 일: 두 앱 최신 리뷰 확인(머지 가능, 필수0) 후 조건식을 `(한쪽 한글) && (양쪽 글자/숫자)`로 정리. 표시 동작은 동일.
+- 검증: assembleDebug test PASS, 기존 TextWrappingTest7개 PASS. 새 테스트나 UI 규칙 확대는 없음.
+- 바꾼 파일: ui/components/Text.kt, 본인 handoff. 기존 PR에 추가 push하며 머지는 장호연 담당.
+
+### 2026-11-04 — PR28 혼합 단어 줄바꿈 선택 리뷰 후속
+- 한 일: 전체 이슈/PR 재조회 후 한글과 영문·숫자가 붙은 경계까지 WORD JOINER 조건을 넓힘. 양쪽 모두 비한글인 영문 주소·숫자·이모지는 기존 처리를 유지.
+- 바꾼 파일: ui/components/Text.kt, ui/components/TextWrappingTest.kt, 본인 handoff.
+- 검증: assembleDebug test :app:lintDebug PASS, 제품 Text7검사·임시 Compose Text4검사 PASS. 200dp/Android150%의 실제 줄 결과에서 혼합5단어 분리 없음.
+- 다음: 이 후속을 별도 PR로 리뷰 요청. core/서버/타 담당 시작 크래시 PR은 변경하지 않음.
+
 ### 2026-11-04 — PR26 머지 후 충전 카드 중앙 배치 선택 제안
 - 기존 PR26은 장호연이 빌드/테스트/Pleos 시연 확인 후 머지. 새 리뷰에서 카드 밖 큰 빈칸을 줄이는 선택 제안이 와서 본문에 여유가 있으면 카드 묶음을 세로 중앙으로 배치. 내용이 넘치는 좁은/큰 글자는 기존처럼 스크롤.
 - 1682×1210·1280×1210 중앙 배치와 기존100%/긴 시간·별점 동작 검사 PASS. 텍스트 후속과 함께 최신 main의 별도 브랜치로 분리.
