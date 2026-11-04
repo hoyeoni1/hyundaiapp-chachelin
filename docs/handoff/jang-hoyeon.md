@@ -16,6 +16,7 @@
   - 충전 판정·업로드 재시도·S2~S7 ViewModel·기록 서비스·동의 철회(이상준 PR #3)와 core v0.4.0 debug SDK 진단(황준용 PR #4)이 `main`에 들어옴(11-02, main `6bab9d0`). 머지된 main에서 `assembleDebug test` 통과(디버그 테스트 80개, 실패 0), core는 크루즈브레이커와 같음
   - 아직 없는 것: 서버(황준용 — Supabase로 확정(11-02, PC 호스팅 안 함). 황준용이 이미 작업했고 곧 커밋 예정), release 서명, 앱이 뒤에 있을 때 충전 결과 알림, S2 실측 속도 분포
 - 진행 중 브랜치·PR:
+  - 장호연 `fix/core-startup-resilience`(두 저장소, 11-04 전체 검토 보고서 `hyundai-app/project-review-2026-11-04.md` 2장 #3 후속) — core v0.5.2 시작 크래시 방어 + `build-release.sh` 키 형식 검사. 리뷰 Claude → 장호연 머지. **core(황준용 담당)·`AppContainer`(이상준 담당)를 장호연 결정으로 고침** → 머지 전 두 사람에게 알릴 것. 크루즈 쪽 같은 브랜치에는 안내 쿨다운 수정(이민하 담당 `RiskAnnouncer`)도 들어 있음
   - 열린 PR 없음. GitHub 아이디: 이상준 `wklee316`, 황준용 `Aodlf123`
   - 11-02 머지 때 승인한 것(장호연): `ui/` 2개 파일 수정(이상준, 길민종에게 알려 줄 것), `tools/windows-*.ps1`·`app/build.gradle.kts` 한 줄(황준용). 팀 문서 2절 담당표에 `AppContainer`·`ChachelinApp`·`RecordingService`·매니페스트를 이상준 담당으로 적는 일은 아직
   - 시연 배속 ×120(디버그 빌드만)·SoC 주입은 PT에서 밝혀야 함 → PRD 7절에 적기
@@ -45,6 +46,20 @@
 - 확인 방법: `./gradlew assembleDebug test` / 에뮬레이터 실행 → 개발 메뉴 → 신호 모니터
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-04 — 시작 크래시 방어(core v0.5.2), 브랜치 `fix/core-startup-resilience`
+- 배경: 11-04 두 작품 전체 검토(`hyundai-app/project-review-2026-11-04.md`)에서 공통 core에 "켜자마자 죽는" 경로 2개 확인 → 장호연 "수정 시작" 지시
+- 한 일(core, 원본 차슐랭 → `tools/sync-core.sh ../CruiseBreaker` 동기화, `--check` 일치):
+  - `BackendConfig.fromBuildConfigOrNull(...)`: URL 비면 null(Fake), 형식 오류(http·구형 anon JWT·공백·따옴표)면 `onInvalid`에 이유(키 값 제외)만 알리고 null. `require` 메시지도 붙임. 앞뒤 공백·줄바꿈 trim
+  - `EncryptedBackendStore.read()`: 형식 오류·복호화 실패를 예외로 올리지 않고 `Log.w` 뒤 null → 빈 상태로 시작, 다음 write가 덮어씀
+  - `SupabaseBackend`: `loadState()`가 읽기 예외·JSON 오류면 빈 상태로 시작하고 `status` 첫 값을 `local-storage-reset`으로(보내지 못한 작업·철회 대기는 그 경우 사라짐 → 로그에서 보임)
+  - 테스트 2개 추가(`SupabaseBackendTest`): 읽기 예외·깨진 JSON·정상 각각의 첫 status, 잘못된 설정 4종이 null이 되고 메시지에 키가 안 새는지
+  - `app/.../AppContainer.kt`(이상준 담당, 장호연 승인): `BackendConfig(...)` 직접 생성 → 팩토리 + `Log.e("SupabaseConfig", …)`
+  - `tools/build-release.sh`: `supabase.url`이 `https://`, `publishableKey`가 `sb_publishable_`로 시작하는지 빌드 전에 검사(틀리면 중단)
+  - `core/VERSION` 0.5.2, `core/README.md` 변경 기록
+- 결정한 것과 이유: 설정·상태 오류는 "죽지 않고 서버 없이 뜬다"로 통일. 심사위원 에뮬레이터에서 크래시가 가장 나쁜 결과이고, 어차피 복구 불가능한 상태이기 때문. 로그(`SupabaseConfig`, `SupabaseSync`=`local-storage-reset`, `EncryptedBackendStore`)로 원인은 남김
+- 테스트 결과: `./gradlew :core:testDebugUnitTest :app:testDebugUnitTest --offline` 통과 — debug 124개(core 32 = 30 + 새 2, app 92), 실패 0. `bash -n tools/build-release.sh` 통과. 에뮬레이터 실행은 아직 — 서버 키가 들어오면 서버 모드 리허설 때 함께 확인
+- 바꾼 파일: `core/src/main/java/com/hyundaiapp/core/backend/{BackendTransport,EncryptedBackendStore,SupabaseBackend}.kt`, `core/src/test/.../SupabaseBackendTest.kt`, `core/VERSION`, `core/README.md`, `app/src/main/java/com/hyundaiapp/chachelin/AppContainer.kt`, `tools/build-release.sh`, 이 문서
 
 ### 2026-11-04 — 텍스트 후속(차슐랭 #28, 크루즈 #40)·Supabase 공개 설정(차슐랭 #29, 크루즈 #41) 머지
 - 머지: 크루즈 #40 → 32ad976, 차슐랭 #29 → a874fca, 크루즈 #41 → ff29863. 차슐랭 #28은 GitHub가 PR head를 옛 커밋(a0d13d5)으로 잡아 머지 API가 계속 거절해서, 검토한 브랜치 끝(97d55cb)을 로컬에서 merge commit(9ea62b4)으로 main에 push → PR MERGED 처리됨
