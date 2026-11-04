@@ -25,7 +25,6 @@ import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.hyundaiapp.chachelin.ui.ChargingUiState
 import com.hyundaiapp.chachelin.ui.PreviewData
 import com.hyundaiapp.chachelin.ui.components.CarCard
@@ -62,7 +61,6 @@ fun ChargingScreen(state: ChargingUiState, onBack: (() -> Unit)? = null) {
                     Side(state, Modifier.weight(2f).fillMaxHeight(), vertical = true)
                 }
             }
-            Text("충전구를 닫으면 기록하고 평가 화면을 띄워요. 뒤로 가도 기록은 계속돼요.", style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant)
         }
     }
 }
@@ -76,7 +74,7 @@ private fun SocCard(state: ChargingUiState, modifier: Modifier) {
         verticalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterVertically),
     ) {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            Text("${state.socNow}%", style = MaterialTheme.typography.displayLarge.copy(fontSize = 112.sp, lineHeight = 120.sp))
+            Text("${state.socNow}%", style = MaterialTheme.typography.displayLarge)
             Text(
                 "시작 ${state.socStart}%에서 ${if (gained >= 0) "+" else ""}${gained}%p",
                 style = MaterialTheme.typography.titleMedium,

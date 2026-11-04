@@ -69,12 +69,6 @@ fun FailureNoticeScreen(
                     color = CarColors.OnSurfaceVariant,
                     textAlign = TextAlign.Center,
                 )
-                Text(
-                    "서버에 반영되면 다른 운전자에게 최근 실패로 보여요.",
-                    style = MaterialTheme.typography.bodyLarge,
-                    color = CarColors.OnSurfaceVariant,
-                    textAlign = TextAlign.Center,
-                )
             }
             Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
                 SecondaryButton("실패 기록 취소", onNotFailure, Modifier.weight(1f))

@@ -56,7 +56,7 @@ fun StationListScreen(
             Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            ScreenHeader("근처 충전소", subtitle = if (portrait) null else "차슐랭 점수순") {
+            ScreenHeader("근처 충전소") {
                 SecondaryButton(if (portrait) "내 기록" else "내 충전 기록", onHistoryClick, height = CarDimens.TouchTargetSmall)
             }
             when {
@@ -123,7 +123,6 @@ private fun Score(score: Double?, modifier: Modifier) {
             Text("차슐랭", style = MaterialTheme.typography.bodySmall, color = CarColors.OnSurfaceVariant)
         } else {
             Text("평가 중", style = MaterialTheme.typography.bodyLarge, fontWeight = FontWeight.Bold, color = CarColors.OnSurfaceVariant)
-            Text("리뷰 5개 미만", style = MaterialTheme.typography.bodySmall, color = CarColors.OnSurfaceVariant, maxLines = 1)
         }
     }
 }

@@ -5,7 +5,7 @@
 ## 현재 상태 (2026-11-04 기준, 매번 덮어쓰기)
 
 - 한 일 요약: UI #11·검토 제안 #15·검증 기록 #18·제출 준비 #19 모두 main 머지 완료. #17 태그는 #19에서 장호연 지시로 VM/단위 테스트·실제 Pleos 화면 확인을 마쳐 종료됨. 별도 중복 구현 불필요.
-- 진행 중 브랜치·PR: `docs/terms-ui-verification`에서 #14의 요청인 약관 연결 후 UI 검수 결과를 기록. 제품 코드·의존성·약관 문구/판 번호 변경 없음.
+- 진행 중 브랜치·PR: `feat/ui-polish` — 두 앱 글자 단계·강조 통일과 보조 설명 문구 정리(리뷰·머지 대기). 그 전 `docs/terms-ui-verification` 기록은 그대로 유효.
 - 약관 검수: 실제 ChachelinNav release 경로에서 LOCATION/PRIVACY 전문을 확인. 1280×720dp, 600×1024dp/fontScale1.5, 1024×600dp/fontScale1.5 임시 Robolectric 3검사 PASS. 개인정보 전문 끝까지 스크롤, 닫기64dp 이상, 닫기·Dialog Back 뒤 동의 버튼2개 유지/시작 비활성/저장 완료false, 재열람 스크롤 초기화, 명시 동의·차종 선택 후 시작 활성 확인. 실제 Pleos 시스템 Back과 별도임.
 - 다음 할 일: 이상준 #12 위치 대기/최신 조회와 황준용·이상준 #13 길안내 결과 계약 후 UI 연결 인수. 새 #20은 조회 재시도·백그라운드 결과 알림이며 ui/ 변경 없음; #12/#13 해결로 보고하지 않음. 실제 Pleos 권한·Back/Home·내비 왕복·주행 제한은 팀 x86 환경에서 확인.
 - 막힌 점·질문: B01 앱 연결은 #19로 완료. #14는 Supabase 리전·요청 로그 확인(황준용) 후 장호연의 문서/TermsText/termsVersion 정합성 갱신이 남음. 미확정 내용을 길민종이 채우지 않음. D01/D02 정책은 확정.
@@ -27,6 +27,11 @@
 일반 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. UI 인수는 별도 임시 Robolectric SDK34/mdpi에서 차슐랭 debug10/release3 PASS이며 앱의 일반 테스트에 포함되지 않는다. Compose 글자 배율은 Android 비선형 배율을 따른다. 실제 Pleos/실차 검증은 별도다.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-04 — 글자 단계·강조 통일, 보조 설명 정리
+- 한 일: 브랜치 `feat/ui-polish`. `Theme.kt` 글자 단계를 다시 잡음(화면 제목 36, 카드 제목 30 굵게, 목록 이름 26 SemiBold, 본문 22, 보조 20, 주인공 숫자 112). 공통 부품: 보조·위험 버튼 글자를 주 버튼과 같은 labelLarge, `StatTile` 기본 숫자 44 + 단위는 글자선 맞춤 회색, 동의 카드 설명 20 회색, 태그 버튼 글자 가운데 정렬, 구역 이름 `SectionLabel` 추가. 화면: S2 점수 112sp + 숫자 칸 셋 가로 배치(운영사·거리는 제목 아래), S3 SoC 기본 글자 단계 사용, S4 질문 30sp. 사용자 요청으로 화면의 보조 설명 문구를 뺐다(정책상 필요한 동의·권한 설명, 안전 고지, 자동 기록 안내, 시연 데이터 표시는 남김). Robolectric 렌더로 두 앱 전 화면(차슐랭은 세로 포함) 확인, `assembleDebug test` 통과.
+- 결정한 것과 이유: 강조는 "숫자는 굵은 흰색, 단위는 작은 회색, 파랑·주황은 의미가 있을 때만"으로 통일(Theme.kt 주석). 한글 본문의 글자 단위 줄바꿈은 `LineBreak.WordBreak.Phrase`로 해결되지 않아(렌더로 확인) 끊기는 고정 문구만 `\n`·줄바꿈 없는 공백으로 나눔
+- 바꾼 파일: `ui/theme/Theme.kt`, `ui/components/CarComponents.kt`, 각 화면 파일, `docs/handoff/gil-minjong.md`. 열린 팝업 PR(`fix/terms-dialog-title`)과 같은 `CarComponents.kt`를 고치지만 `CarAlertDialog` 부분은 건드리지 않음
 
 ### 2026-11-04 — 최신 PR/이슈 및 약관 UI 검수
 - 장호연 #14 댓글의 길민종 요청(긴 글 스크롤·닫기/Back=미동의)을 받아, main에 연결된 두 전문을 실제 Nav에서 검수. 임시 UI3검사/앱, 전체6검사 PASS. 1280dp·600dp 세로/큰 글자·1024dp 낮은 가로/큰 글자에서 마지막 내용·닫기 표시와64dp 이상 영역을 확인.
