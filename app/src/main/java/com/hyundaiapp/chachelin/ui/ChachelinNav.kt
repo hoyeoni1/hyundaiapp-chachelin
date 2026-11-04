@@ -21,6 +21,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
@@ -76,6 +77,7 @@ fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
             else -> Screen.ONBOARDING
         }
     }
+    val screenStates = rememberSaveableStateHolder()
     val stack = remember { mutableStateListOf(rootScreen()) }
     val go: (Screen) -> Unit = { stack.add(it) }
     val back: () -> Unit = { if (stack.size > 1) stack.removeAt(stack.lastIndex) else onExit() }
@@ -104,7 +106,7 @@ fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
             Box(Modifier.weight(1f)) {
                 when (stack.last()) {
                     Screen.DEV_MENU -> DevMenu(go, onBack = back)
-                    Screen.STATIONS -> {
+                    Screen.STATIONS -> screenStates.SaveableStateProvider(Screen.STATIONS.name) {
                         val vm = viewModel { StationListViewModel(container.signals, container.stations) }
                         // 화면에 들어올 때마다 새로 조회한다(방금 끝난 충전이 반영되게)
                         LaunchedEffect(Unit) { vm.refresh() }
@@ -215,6 +217,7 @@ fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
             onConfirm = {
                 confirmWithdraw = false
                 container.withdrawConsent()
+                screenStates.removeState(Screen.STATIONS.name)
                 stack.clear()
                 stack.add(rootScreen())
             },

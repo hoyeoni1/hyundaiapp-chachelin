@@ -10,6 +10,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -50,6 +51,7 @@ fun StationListScreen(
     onRetry: () -> Unit = {},
     onBack: () -> Unit,
 ) {
+    val listState = rememberLazyListState()
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val portrait = maxWidth < 1000.dp
         Column(
@@ -63,7 +65,7 @@ fun StationListScreen(
                 state.loading -> EmptyState("충전소를 불러오는 중이에요", loading = true, modifier = Modifier.weight(1f))
                 state.error != null -> EmptyState("충전소를 불러오지 못했어요", state.error, onRetry = onRetry, modifier = Modifier.weight(1f))
                 state.items.isEmpty() -> EmptyState("근처 3km 안에 충전소가 없어요", onRetry = onRetry, modifier = Modifier.weight(1f))
-                else -> LazyColumn(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                else -> LazyColumn(state = listState, verticalArrangement = Arrangement.spacedBy(12.dp)) {
                     items(state.items, key = { it.id }) { row ->
                         StationCard(row, portrait) { onStationClick(row.id) }
                     }

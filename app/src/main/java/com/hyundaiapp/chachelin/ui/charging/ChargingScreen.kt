@@ -50,7 +50,7 @@ fun ChargingScreen(state: ChargingUiState, onBack: () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val portrait = maxWidth < maxHeight
         Column(
-            Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 40.dp),
+            Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(32.dp),
         ) {
             ScreenHeader("충전 기록 중", subtitle = state.stationName, onBack = onBack)
