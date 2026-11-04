@@ -186,7 +186,7 @@ private fun FailuresCard(times: List<Long>, modifier: Modifier, compact: Boolean
         Text("최근 실패 기록 (최대 4건)", style = MaterialTheme.typography.titleMedium)
         if (times.isEmpty()) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
-                Icon(CarIcons.Check, contentDescription = null, tint = CarColors.Primary, modifier = Modifier.size(26.dp))
+                Icon(CarIcons.Check, contentDescription = null, tint = CarColors.OnSurfaceVariant, modifier = Modifier.size(26.dp))
                 Text("최근 7일 실패 없음", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
             }
         } else if (compact) {
