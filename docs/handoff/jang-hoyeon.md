@@ -16,7 +16,7 @@
   - 충전 판정·업로드 재시도·S2~S7 ViewModel·기록 서비스·동의 철회(이상준 PR #3)와 core v0.4.0 debug SDK 진단(황준용 PR #4)이 `main`에 들어옴(11-02, main `6bab9d0`). 머지된 main에서 `assembleDebug test` 통과(디버그 테스트 80개, 실패 0), core는 크루즈브레이커와 같음
   - 아직 없는 것: 서버(황준용 — Supabase로 확정(11-02, PC 호스팅 안 함). 황준용이 이미 작업했고 곧 커밋 예정), release 서명, 앱이 뒤에 있을 때 충전 결과 알림, S2 실측 속도 분포
 - 진행 중 브랜치·PR:
-  - 장호연 `fix/core-startup-resilience`(두 저장소, 11-04 전체 검토 보고서 `hyundai-app/project-review-2026-11-04.md` 2장 #3 후속) — core v0.5.2 시작 크래시 방어 + `build-release.sh` 키 형식 검사. 리뷰 Claude → 장호연 머지. **core(황준용 담당)·`AppContainer`(이상준 담당)를 장호연 결정으로 고침** → 머지 전 두 사람에게 알릴 것. 크루즈 쪽 같은 브랜치에는 안내 쿨다운 수정(이민하 담당 `RiskAnnouncer`)도 들어 있음
+  - 장호연 `fix/core-startup-resilience` — **11-04 머지 완료**(차슐랭 #30 → `0aa4032`, 크루즈 #42 → `9ff1318`). core v0.5.2 시작 크래시 방어 + `build-release.sh` 키 형식 검사(크루즈 쪽에는 안내 쿨다운 수정도). core(황준용)·`AppContainer`(이상준)를 장호연 결정으로 고쳤으므로 두 사람에게 알릴 것(황준용 확인 코멘트 없음)
   - 열린 PR 없음. GitHub 아이디: 이상준 `wklee316`, 황준용 `Aodlf123`
   - 11-02 머지 때 승인한 것(장호연): `ui/` 2개 파일 수정(이상준, 길민종에게 알려 줄 것), `tools/windows-*.ps1`·`app/build.gradle.kts` 한 줄(황준용). 팀 문서 2절 담당표에 `AppContainer`·`ChachelinApp`·`RecordingService`·매니페스트를 이상준 담당으로 적는 일은 아직
   - 시연 배속 ×120(디버그 빌드만)·SoC 주입은 PT에서 밝혀야 함 → PRD 7절에 적기
@@ -46,6 +46,13 @@
 - 확인 방법: `./gradlew assembleDebug test` / 에뮬레이터 실행 → 개발 메뉴 → 신호 모니터
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-04 — 시작 크래시 방어 PR 머지(차슐랭 #30 `0aa4032`, 크루즈 #42 `9ff1318`)
+- 한 일(Claude 에이전트, 장호연 "리뷰 후 머지" 지시): 두 PR 모두 Claude 리뷰 `✅ 머지 가능`(ed8dee7·d7821af) 확인. 둘 다 `docs/handoff/jang-hoyeon.md` "작업 기록"에서만 main과 충돌 → 두 항목 모두 남기는 쪽으로 origin/main을 브랜치에 합쳐 push. 합친 브랜치에서 `assembleDebug test` 통과(차슐랭 246개, 크루즈 210개, 실패 0), `sync-core.sh --check` 일치(core 0.5.2). 차슐랭 #30 → 크루즈 #42 순서로 merge commit
+- 담당자: 크루즈 #42는 이민하가 `AppContainer`·`RiskAnnouncer` 변경에 동의 코멘트, `docs/disengage-rules.md` 문구도 main에 반영(1ee2539). core(황준용)·차슐랭 `AppContainer`(이상준)는 확인 코멘트 없이 팀장 결정으로 머지 → 알릴 것
+- 리뷰의 선택 제안(안 고침, 필요하면 차슐랭 core에서): `EncryptedBackendStore.read()`가 일시적 I/O 오류도 손상으로 봄 → `IOException`은 다시 던지거나 원본을 `.corrupt`로 보관; `status` 첫 값 `local-storage-reset`은 워커가 돌면 바로 덮임
+- 확인: 머지 뒤 두 main(`0aa4032`·`9ff1318`) `assembleDebug test` 통과(차슐랭 246개, 크루즈 210개, 실패 0), `sync-core.sh --check` 일치
+- 다음: 키가 들어왔으니 `bash tools/build-release.sh`(두 저장소) 후 `apk/` 커밋, 서버 연결 상태 전체 리허설. 11-04 검토 보고서 2장 나머지(#1 주최 측 문의 메일, #4 시연 빌드 전략, #5 크루즈 ScreenPolicy null, #7 차슐랭 S1 위치 타임아웃 #12, #8 아이콘·allowBackup)
 
 ### 2026-11-04 — core v0.5.2 시작 크래시 방어 PR 검토(차슐랭 #30, 크루즈 #42)
 - 검토 중 22:35에 장호연 계정으로 두 PR이 머지됨(0aa4032, 9ff1318). 머지된 main의 코드는 Claude가 검토·시험한 것과 같음(문서만 다름)
