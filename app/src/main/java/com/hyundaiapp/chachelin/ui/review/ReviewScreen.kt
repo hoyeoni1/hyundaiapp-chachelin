@@ -26,7 +26,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
-import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import com.hyundaiapp.chachelin.data.ReviewTag
 import com.hyundaiapp.chachelin.ui.PreviewData
@@ -61,11 +60,11 @@ fun ReviewScreen(
             if (wide) {
                 Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
                     Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { VerifiedCard(state, Modifier.fillMaxWidth()) }
-                    Column(Modifier.weight(2f).verticalScroll(rememberScrollState())) { RatingAndTags(state, onRate, onToggleTag, 96.dp, 3) }
+                    Column(Modifier.weight(2f).verticalScroll(rememberScrollState())) { RatingAndTags(state, onRate, onToggleTag, 3) }
                 }
             } else {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(24.dp)) {
-                    RatingAndTags(state, onRate, onToggleTag, 96.dp, 2)
+                    RatingAndTags(state, onRate, onToggleTag, 2)
                     VerifiedCard(state, Modifier.fillMaxWidth())
                 }
             }
@@ -111,19 +110,19 @@ private fun RatingAndTags(
     state: ReviewUiState,
     onRate: (Int) -> Unit,
     onToggleTag: (ReviewTag) -> Unit,
-    starSize: Dp,
     tagColumns: Int,
 ) {
     Column(verticalArrangement = Arrangement.spacedBy(24.dp)) {
         Text("이 충전소 어땠나요?", style = MaterialTheme.typography.titleLarge)
         BoxWithConstraints(Modifier.fillMaxWidth()) {
-            val fittedStarSize = minOf(starSize, (maxWidth - 32.dp) / 5)
-            Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.SpaceBetween) {
+            val fittedStarSize = (maxWidth - 48.dp) / 5
+            Row(Modifier.fillMaxWidth().selectableGroup(), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 for (stars in 1..5) {
                     val on = (state.rating ?: 0) >= stars
                     Surface(
-                        color = CarColors.SurfaceVariant,
+                        color = if (on) CarColors.Warning.copy(alpha = 0.12f) else CarColors.SurfaceVariant,
                         shape = RoundedCornerShape(20.dp),
+                        border = BorderStroke(if (on) 2.dp else 1.dp, if (on) CarColors.Warning else CarColors.Outline),
                         modifier = Modifier
                             .size(fittedStarSize)
                             .selectable(selected = state.rating == stars, role = Role.RadioButton, onClick = { onRate(stars) }),
@@ -131,12 +130,15 @@ private fun RatingAndTags(
                         Icon(
                             CarIcons.Star,
                             contentDescription = "${stars}점",
-                            tint = if (on) CarColors.Warning else CarColors.Track,
-                            modifier = Modifier.padding(fittedStarSize * 0.2f),
+                            tint = if (on) CarColors.Warning else CarColors.OnSurfaceVariant,
+                            modifier = Modifier.padding(fittedStarSize * 0.16f),
                         )
                     }
                 }
             }
+        }
+        state.rating?.let { rating ->
+            Text("${rating}점 선택", style = MaterialTheme.typography.titleMedium, color = CarColors.Warning)
         }
         ReviewTag.entries.chunked(tagColumns).forEach { rowTags ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
