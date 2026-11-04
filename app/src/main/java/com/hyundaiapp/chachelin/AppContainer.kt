@@ -53,10 +53,12 @@ class AppContainer(context: Context) {
 
     val chargeRules = if (BuildConfig.DEBUG) ChargeRules.DEMO else ChargeRules.DEFAULT
 
-    val backend: SupabaseBackend? = if (BuildConfig.SUPABASE_URL.isNotBlank()) {
-        val config = BackendConfig(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, "CHACHELIN", BuildConfig.SUPABASE_SIMULATED, termsVersion)
+    // 서버 설정이 없으면 Fake, 있는데 형식이 틀리면(구형 키·http·공백) 죽지 않고 로그만 남기고 Fake(core 0.5.2)
+    val backend: SupabaseBackend? = BackendConfig.fromBuildConfigOrNull(
+        BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, "CHACHELIN", BuildConfig.SUPABASE_SIMULATED, termsVersion,
+    ) { android.util.Log.e("SupabaseConfig", it) }?.let { config ->
         SupabaseBackend(config, EncryptedBackendStore(context, config.storageNamespace), HttpsBackendTransport(config), appScope)
-    } else null
+    }
     private val localRecords = backend?.let {
         LocalChargeRecords(EncryptedBackendStore(context, it.config.storageNamespace + "-local-charges"))
     }
