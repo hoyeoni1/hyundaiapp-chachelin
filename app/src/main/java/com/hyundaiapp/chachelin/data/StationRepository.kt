@@ -41,7 +41,10 @@ interface StationRepository {
     suspend fun get(stationId: String): StationWithScore?
     suspend fun detail(stationId: String): StationDetail?
 
-    /** 반경 안에서 가장 가까운 충전소. 충전 세션을 충전소와 묶을 때 쓴다 */
+    /**
+     * 반경 안에서 가장 가까운 충전소. 충전 세션을 충전소와 묶을 때 쓴다.
+     * null은 "반경 안에 충전소 없음"이 확인된 경우에만 돌려준다. 조회하지 못했으면 예외를 던진다(판정이 다시 조회함, PRD 5.3).
+     */
     suspend fun nearest(point: GeoPoint, radiusM: Double): Station?
 }
 

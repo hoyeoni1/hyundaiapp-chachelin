@@ -11,6 +11,8 @@ import com.hyundaiapp.chachelin.data.StationRepository
 import com.hyundaiapp.chachelin.data.SupabaseStationRepository
 import com.hyundaiapp.chachelin.data.SupabaseChargeRecordRepository
 import com.hyundaiapp.chachelin.data.VehicleProfileStore
+import com.hyundaiapp.chachelin.data.stationName
+import com.hyundaiapp.chachelin.domain.ChargeResultNotices
 import com.hyundaiapp.chachelin.domain.ChargeRules
 import com.hyundaiapp.chachelin.domain.ChargeSessionRecorder
 import com.hyundaiapp.chachelin.domain.ChargeSessionTracker
@@ -24,6 +26,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.launch
 
 /**
@@ -78,6 +81,17 @@ class AppContainer(context: Context) {
     )
     val chargeRecorder = ChargeSessionRecorder(chargeTracker, records, vehicleProfile::vehicleId)
 
+    /** 앱 화면이 보이는지([MainActivity]가 바꾼다). 안 보일 때만 결과 알림을 띄운다 */
+    val appVisible = MutableStateFlow(false)
+
+    private val resultNotification = ResultNotification(context)
+    private val resultNotices = ChargeResultNotices(
+        pending = chargeRecorder.pendingResult,
+        appVisible = appVisible,
+        show = { record -> resultNotification.show(record, record.stationId?.let { stations.stationName(it) }) },
+        hide = resultNotification::hide,
+    )
+
     /** 기록 중일 때만 있다. [stopRecording]이 취소하면 기록 관련 코루틴이 모두 멈춘다 */
     private var recordingJob: Job? = null
 
@@ -93,6 +107,7 @@ class AppContainer(context: Context) {
         signals.start()
         chargeRecorder.start(scope)
         chargeTracker.start(scope)
+        resultNotices.start(scope)
     }
 
     /** 기록을 멈추고 신호 수신도 끊는다. [RecordingService.onDestroy]가 부른다 */
@@ -102,6 +117,7 @@ class AppContainer(context: Context) {
         job.cancel()
         chargeTracker.reset()
         chargeRecorder.reset()
+        resultNotification.hide()
         signals.stop()
     }
 
