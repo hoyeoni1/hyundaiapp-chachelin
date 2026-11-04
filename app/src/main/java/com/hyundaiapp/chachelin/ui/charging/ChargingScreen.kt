@@ -46,7 +46,7 @@ private val StartSegment = Color(0xFF2B7EA3)
  * 뒤로 가도 기록은 이어진다. 충전구를 닫으면 ViewModel이 S4/S5로 넘긴다.
  */
 @Composable
-fun ChargingScreen(state: ChargingUiState, onBack: (() -> Unit)? = null) {
+fun ChargingScreen(state: ChargingUiState, onBack: () -> Unit) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val portrait = maxWidth < maxHeight
         Column(
@@ -133,11 +133,11 @@ private fun Side(state: ChargingUiState, modifier: Modifier, vertical: Boolean) 
 @Preview(name = "S3 가로", widthDp = 1280, heightDp = 720)
 @Composable
 private fun ChargingPreview() {
-    ChachelinTheme { Surface { ChargingScreen(PreviewData.charging) } }
+    ChachelinTheme { Surface { ChargingScreen(PreviewData.charging, onBack = {}) } }
 }
 
 @Preview(name = "S3 세로", widthDp = 720, heightDp = 1280)
 @Composable
 private fun ChargingPortraitPreview() {
-    ChachelinTheme { Surface { ChargingScreen(PreviewData.charging) } }
+    ChachelinTheme { Surface { ChargingScreen(PreviewData.charging, onBack = {}) } }
 }

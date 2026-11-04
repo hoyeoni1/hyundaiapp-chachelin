@@ -23,6 +23,7 @@ import com.hyundaiapp.chachelin.ui.OnboardingUiState
 import com.hyundaiapp.chachelin.ui.components.ConsentRow
 import com.hyundaiapp.chachelin.ui.components.OnboardingStartAction
 import com.hyundaiapp.chachelin.ui.components.SelectableButton
+import com.hyundaiapp.chachelin.ui.components.ScreenHeader
 import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
 
@@ -43,6 +44,7 @@ fun OnboardingScreen(
     notificationsGranted: Boolean = false,
     onRequestNotifications: () -> Unit = {},
     notificationsNeedSettings: Boolean = false,
+    onBack: () -> Unit,
 ) {
     val canStart = state.locationAgreed && state.privacyAgreed && state.selectedPreset != null
     val startHint = when {
@@ -53,6 +55,7 @@ fun OnboardingScreen(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth >= 1000.dp
         Column(Modifier.fillMaxSize().padding(horizontal = if (wide) 48.dp else 32.dp, vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            ScreenHeader("첫 실행 동의", onBack = onBack)
             if (wide) Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Intro()
@@ -126,11 +129,11 @@ private fun Presets(state: OnboardingUiState, onSelectPreset: (Int) -> Unit) {
 @Preview(name = "S7 가로", widthDp = 1280, heightDp = 720)
 @Composable
 private fun OnboardingPreview() {
-    ChachelinTheme { Surface { OnboardingScreen(OnboardingUiState(locationAgreed = true, selectedPreset = 0), {}, {}, {}, {}, {}) } }
+    ChachelinTheme { Surface { OnboardingScreen(OnboardingUiState(locationAgreed = true, selectedPreset = 0), {}, {}, {}, {}, {}, onBack = {}) } }
 }
 
 @Preview(name = "S7 세로", widthDp = 720, heightDp = 1280)
 @Composable
 private fun OnboardingPortraitPreview() {
-    ChachelinTheme { Surface { OnboardingScreen(OnboardingUiState(locationAgreed = true, selectedPreset = 0), {}, {}, {}, {}, {}) } }
+    ChachelinTheme { Surface { OnboardingScreen(OnboardingUiState(locationAgreed = true, selectedPreset = 0), {}, {}, {}, {}, {}, onBack = {}) } }
 }

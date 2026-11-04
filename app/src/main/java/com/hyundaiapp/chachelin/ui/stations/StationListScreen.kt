@@ -49,6 +49,7 @@ fun StationListScreen(
     onStationClick: (String) -> Unit,
     onHistoryClick: () -> Unit = {},
     onRetry: () -> Unit = {},
+    onBack: () -> Unit,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val portrait = maxWidth < 1000.dp
@@ -56,7 +57,7 @@ fun StationListScreen(
             Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            ScreenHeader("근처 충전소") {
+            ScreenHeader("근처 충전소", onBack = onBack) {
                 SecondaryButton(if (portrait) "내 기록" else "내 충전 기록", onHistoryClick, height = CarDimens.TouchTargetSmall)
             }
             when {
@@ -166,17 +167,17 @@ private fun Stat(label: String, value: String, color: Color, alignEnd: Boolean) 
 @Preview(name = "S1 가로", widthDp = 1280, heightDp = 720)
 @Composable
 private fun StationListPreview() {
-    ChachelinTheme { Surface { StationListScreen(PreviewData.stationList, {}) } }
+    ChachelinTheme { Surface { StationListScreen(PreviewData.stationList, {}, onBack = {}) } }
 }
 
 @Preview(name = "S1 세로", widthDp = 720, heightDp = 1280)
 @Composable
 private fun StationListPortraitPreview() {
-    ChachelinTheme { Surface { StationListScreen(PreviewData.stationList, {}) } }
+    ChachelinTheme { Surface { StationListScreen(PreviewData.stationList, {}, onBack = {}) } }
 }
 
 @Preview(name = "S1 오류", widthDp = 1280, heightDp = 720)
 @Composable
 private fun StationListErrorPreview() {
-    ChachelinTheme { Surface { StationListScreen(StationListUiState(loading = false, error = "네트워크 연결 없음"), {}) } }
+    ChachelinTheme { Surface { StationListScreen(StationListUiState(loading = false, error = "네트워크 연결 없음"), {}, onBack = {}) } }
 }
