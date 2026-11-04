@@ -8,6 +8,7 @@ import androidx.compose.foundation.layout.FlowRow
 import androidx.compose.foundation.layout.IntrinsicSize
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.RowScope
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -21,7 +22,7 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
+import com.hyundaiapp.chachelin.ui.components.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -46,6 +47,7 @@ import com.hyundaiapp.chachelin.ui.components.formatKm
 import com.hyundaiapp.chachelin.ui.components.formatOneDecimal
 import com.hyundaiapp.chachelin.ui.components.formatWhole
 import com.hyundaiapp.chachelin.ui.theme.CarColors
+import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
 
 /**
@@ -65,22 +67,33 @@ fun StationDetailScreen(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth >= 1000.dp
         Column(Modifier.fillMaxSize().padding(horizontal = if (maxWidth < maxHeight) 32.dp else 48.dp, vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            ScreenHeader(station?.name ?: "충전소", subtitle = station?.let { "${it.operator} · ${formatKm(it.distanceM)}" }, onBack = onBack)
+            // 갱신 중·실패 상태는 제목 아래 한 줄에 붙여 본문 높이를 아낀다(가로 720dp에 카드가 잘리지 않게)
+            val status = when {
+                station == null -> null
+                state.loading -> " · 최신 정보 확인 중"
+                state.error != null -> " · 갱신 실패, 이전 정보"
+                else -> ""
+            }
+            val retry: (@Composable RowScope.() -> Unit)? =
+                if (station != null && !state.loading && state.error != null) { { SecondaryButton("다시 시도", onRetry, height = CarDimens.TouchTargetSmall) } } else null
+            ScreenHeader(
+                station?.name ?: "충전소",
+                subtitle = station?.let { "${it.operator} · ${formatKm(it.distanceM)}$status" },
+                onBack = onBack,
+                actions = retry,
+            )
             if (station == null) {
                 EmptyState(if (state.loading) "충전소 정보를 불러오는 중이에요" else "충전소를 불러오지 못했어요",
                     state.error, loading = state.loading, onRetry = if (state.loading) null else onRetry,
                     modifier = Modifier.weight(1f).verticalScroll(rememberScrollState()))
             } else {
-                if (state.loading || state.error != null) Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Text(if (state.loading) "최신 정보를 확인하고 있어요" else "갱신하지 못했어요. 이전 정보를 표시해요", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant, modifier = Modifier.weight(1f))
-                    if (!state.loading) SecondaryButton("다시 시도", onRetry)
-                }
+                // 가로: 왼쪽 점수·숫자·최근 실패, 오른쪽 별점·태그. 두 열 모두 720dp 높이 안에 들어간다
                 if (wide) Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(24.dp)) {
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { Summary(station) }
-                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-                        RatingsCard(state, Modifier.fillMaxWidth())
-                        FailuresCard(state.recentFailureTimesMs, Modifier.fillMaxWidth())
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                        Summary(station)
+                        FailuresCard(state.recentFailureTimesMs, Modifier.fillMaxWidth(), compact = true)
                     }
+                    Column(Modifier.weight(1f).verticalScroll(rememberScrollState())) { RatingsCard(state, Modifier.fillMaxWidth()) }
                 } else Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(20.dp)) {
                     Summary(station)
                     RatingsCard(state, Modifier.fillMaxWidth())
@@ -168,14 +181,21 @@ private fun RatingsCard(state: StationDetailUiState, modifier: Modifier) {
 }
 
 @Composable
-private fun FailuresCard(times: List<Long>, modifier: Modifier) {
-    CarCard(modifier, contentPadding = PaddingValues(24.dp), verticalArrangement = Arrangement.spacedBy(12.dp)) {
+private fun FailuresCard(times: List<Long>, modifier: Modifier, compact: Boolean = false) {
+    CarCard(modifier, contentPadding = PaddingValues(24.dp, if (compact) 18.dp else 24.dp), verticalArrangement = Arrangement.spacedBy(if (compact) 6.dp else 12.dp)) {
         Text("최근 실패 기록 (최대 4건)", style = MaterialTheme.typography.titleMedium)
         if (times.isEmpty()) {
             Row(verticalAlignment = Alignment.CenterVertically, horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 Icon(CarIcons.Check, contentDescription = null, tint = CarColors.Primary, modifier = Modifier.size(26.dp))
                 Text("최근 7일 실패 없음", style = MaterialTheme.typography.bodyMedium, color = CarColors.OnSurfaceVariant)
             }
+        } else if (compact) {
+            // 가로 화면은 높이가 모자라 시각을 이어 쓴다. 한 시각 안에서는 줄을 바꾸지 않는다
+            Text(
+                times.take(MAX_FAILURES).joinToString("  ·  ") { formatDateTime(it).replace(' ', '\u00A0') },
+                style = MaterialTheme.typography.bodyLarge,
+                color = CarColors.Warning,
+            )
         } else {
             times.take(MAX_FAILURES).forEach { ms ->
                 Surface(color = CarColors.SurfaceVariant, contentColor = CarColors.OnSurface, shape = RoundedCornerShape(12.dp), modifier = Modifier.fillMaxWidth()) {
