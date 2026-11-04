@@ -38,8 +38,8 @@ import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
 
-/** 시작 SoC 구간을 나머지와 구분하는 어두운 파랑 */
-private val StartSegment = Color(0xFF2B7EA3)
+/** 시작 SoC 구간을 나머지와 구분하는 어두운 레드 */
+private val StartSegment = Color(0xFF9C2C38)
 
 /**
  * S3 충전 중(정차 중). SoC를 크게, 경과 시간·지금까지 계산 평균을 옆에.
