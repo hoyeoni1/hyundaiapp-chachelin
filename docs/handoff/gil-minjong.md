@@ -5,7 +5,7 @@
 ## 현재 상태 (2026-11-04 기준, 매번 덮어쓰기)
 
 - 한 일 요약: 장호연의 #25 요청에 따라 S3 충전 카드의 화면 높이 채움을 제거하고, S4 별점96dp 상한/띄엄 배치를 없앴다. SoC·시간·계산 평균은 내용 높이로 모이고, 별5개는 오른쪽 열 너비를 채운다. 선택한 별까지 주황 아이콘·테두리·약한 배경으로 표시하고 “N점 선택”을 복원.
-- 진행 중 브랜치·PR: `fix/demo-ui-review` / #25 후속 UI PR. UI 2개와 본인 handoff만 변경. VM/동의/기록/판정·집계/서버와 팝업 하단 구분선은 변경하지 않음.
+- 진행 중 브랜치·PR: `fix/demo-ui-review` / [PR #26](https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/26), #25 후속 UI PR. UI 2개와 본인 handoff만 변경. VM/동의/기록/판정·집계/서버와 팝업 하단 구분선은 변경하지 않음.
 - 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. 별도 임시 Robolectric4검사 PASS: 1682×1210dp/mdpi,1280×1210,1280×720,600×1024/Android fontScale1.5. SoC 카드560dp 미만, 100%·65분·전력미확인 접근, 별이 열 너비를 채움/64dp 이상, 4점 선택 semantics·원문 onNodeWithText·전송 활성·고정 버튼 확인.
 - 화면 확인: 시연 창과 좁은 큰 글자 화면을 실제 Compose로 캡처해 카드 안 빈칸·별 크기/선택 대비·footer 접근을 확인. 샘플 데이터 기반이며 실제 Pleos 시스템 바/권한/실차 동작의 재검증으로 주장하지 않음. MainActivity inset PR #24는 최신 main에 포함됨.
 - 다음 할 일: #25 UI PR 검토 후 실제 Pleos 시연 창에서 최종 체감 확인. #12 위치 대기/최신 조회와 #13 길안내 결과 계약은 해당 담당자 작업 뒤 UI 인수.
