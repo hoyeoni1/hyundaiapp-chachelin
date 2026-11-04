@@ -3,11 +3,13 @@ package com.hyundaiapp.chachelin.domain
 import com.hyundaiapp.chachelin.data.Station
 import com.hyundaiapp.chachelin.data.StationRepository
 import com.hyundaiapp.core.EvBatteryState
+import com.hyundaiapp.core.GeoPoint
 import com.hyundaiapp.core.VehicleSignals
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Deferred
 import kotlinx.coroutines.async
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.SharedFlow
@@ -35,6 +37,8 @@ class ChargeSessionTracker(
     private val rules: ChargeRules,
     /** S7에서 고른 차종의 용량. SDK가 값을 주면(현재는 퍼미션 문제로 null) SDK 값을 먼저 쓴다 */
     private val presetCapacityKwh: () -> Float? = { null },
+    /** 충전소 조회가 실패했을 때 다시 조회하는 간격. 끝까지 쓰면 마지막 값으로 계속 시도한다 */
+    private val lookupRetryDelaysMs: List<Long> = listOf(5_000L, 15_000L, 60_000L, 300_000L),
     private val clock: () -> Long = System::currentTimeMillis,
 ) {
     private val _phase = MutableStateFlow(ChargePhase.IDLE)
@@ -75,8 +79,8 @@ class ChargeSessionTracker(
         update(session, ev)
         // 조회가 서버를 타도 충전구 신호를 놓치지 않도록 따로 돌린다
         session.station = scope.async {
-            findStation().also { station ->
-                session.stationId = station?.id
+            lookupStation(session).also { lookup ->
+                session.stationId = lookup.getOrNull()?.id
                 if (current === session) publishLive(session)
             }
         }
@@ -98,12 +102,20 @@ class ChargeSessionTracker(
         _phase.value = ChargePhase.IDLE
         _live.value = null
         scope.launch {
-            val station = withTimeoutOrNull(STATION_LOOKUP_TIMEOUT_MS) { session.station.await() }
-            session.station.cancel()
-            val socStart = session.socStart ?: return@launch
-            if (socEnd == null) return@launch
+            val socStart = session.socStart
+            if (socStart == null || socEnd == null) {
+                session.station.cancel()
+                return@launch
+            }
             val durationMs = endedAtMs - session.startedAtMs
-            val result = rules.judge(socEnd - socStart, durationMs, atStation = station != null) ?: return@launch
+            val gain = socEnd - socStart
+            // 충전소가 있든 없든 기록하지 않는 세션(잠깐 연 경우 등)은 조회를 기다리지 않는다
+            if (rules.judge(gain, durationMs, atStation = true) == null && rules.judge(gain, durationMs, atStation = false) == null) {
+                session.station.cancel()
+                return@launch
+            }
+            val station = resolveStation(session)
+            val result = rules.judge(gain, durationMs, atStation = station != null) ?: return@launch
             _completed.emit(
                 ChargeSessionRecord(
                     id = UUID.randomUUID().toString(),
@@ -136,25 +148,49 @@ class ChargeSessionTracker(
         return ChargeMath.averageKw(socStart, socEnd, capacity, durationMs * rules.demoTimeScale)
     }
 
-    /** 위치를 아직 못 받았으면 받을 때까지 기다린다. 조회가 실패하면 충전소를 모르는 것으로 본다(null) */
-    private suspend fun findStation(): Station? = try {
-        val here = signals.location.filterNotNull().first().point
-        stations.nearest(here, rules.stationRadiusM)
-    } catch (e: CancellationException) {
-        throw e
-    } catch (e: Exception) {
-        null
+    /**
+     * 세션 위치의 가장 가까운 충전소. 위치를 아직 못 받았으면 받을 때까지 기다리고, 처음 받은 위치를 세션 위치로 남긴다.
+     * 성공의 null은 "150m 안에 충전소 없음"이 확인된 것이고, 실패는 조회 자체를 못 한 것이다(PRD 5.3, 11-02).
+     */
+    private suspend fun lookupStation(session: Session): Result<Station?> {
+        val here = session.point ?: signals.location.filterNotNull().first().point.also { session.point = it }
+        return try {
+            Result.success(stations.nearest(here, rules.stationRadiusM))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            Result.failure(e)
+        }
+    }
+
+    /**
+     * 판정에 쓸 충전소. 조회가 실패하거나 늦으면 "충전소 아님"으로 단정하지 않고 세션 위치로 될 때까지 다시 조회한다(PRD 5.3, 11-02).
+     * 그동안 결과(S4/S5·업로드)는 미뤄진다. 앱 프로세스가 죽으면 이 세션은 사라진다.
+     */
+    private suspend fun resolveStation(session: Session): Station? {
+        val first = withTimeoutOrNull(STATION_LOOKUP_TIMEOUT_MS) { session.station.await() }
+        session.station.cancel()
+        if (first != null && first.isSuccess) return first.getOrNull()
+        var attempt = 0
+        while (true) {
+            delay(lookupRetryDelaysMs[attempt.coerceAtMost(lookupRetryDelaysMs.lastIndex)])
+            attempt++
+            val retry = withTimeoutOrNull(STATION_LOOKUP_TIMEOUT_MS) { lookupStation(session) }
+            if (retry != null && retry.isSuccess) return retry.getOrNull()
+        }
     }
 
     private class Session(val startedAtMs: Long) {
-        lateinit var station: Deferred<Station?>
+        lateinit var station: Deferred<Result<Station?>>
+        /** 충전소를 찾은 위치. 다시 조회할 때도 이 위치를 쓴다 */
+        var point: GeoPoint? = null
         var stationId: String? = null
         var socStart: Int? = null
         var socNow: Int? = null
     }
 
     private companion object {
-        /** 충전구를 닫은 뒤 위치·충전소 조회를 기다리는 최대 시간. 넘으면 충전소를 모르는 것으로 본다 */
+        /** 조회 한 번을 기다리는 최대 시간. 넘으면 실패로 보고 다시 조회한다 */
         const val STATION_LOOKUP_TIMEOUT_MS = 10_000L
     }
 }

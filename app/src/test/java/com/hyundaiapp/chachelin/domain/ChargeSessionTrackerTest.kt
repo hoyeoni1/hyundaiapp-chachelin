@@ -37,7 +37,7 @@ class ChargeSessionTrackerTest {
         fake.setEv { copy(capacityKwh = null) }
         val tracker = ChargeSessionTracker(
             fake, stations, ChargeRules.DEFAULT,
-            presetCapacityKwh = { capacity }, clock = { now },
+            presetCapacityKwh = { capacity }, lookupRetryDelaysMs = listOf(1_000L, 2_000L), clock = { now },
         )
         val done = mutableListOf<ChargeSessionRecord>()
         backgroundScope.launch { tracker.completed.toList(done) }
@@ -135,26 +135,82 @@ class ChargeSessionTrackerTest {
     }
 
     @Test
-    fun `위치를 끝내 못 받으면 제한 시간 뒤 충전소 없이 끝낸다`() = run { h ->
+    fun `위치를 못 받으면 충전소 아님으로 단정하지 않고 위치가 들어올 때까지 기다린다`() = run { h ->
         fake.location.value = null
         ev(open = false, soc = 40)
         ev(open = true)
         now += 30 * minutes
         ev(soc = 80)
         ev(open = false)
+        advanceTimeBy(60_000L)
         assertTrue(h.done.isEmpty())
-        advanceTimeBy(10_001L)
-        assertEquals(ChargeResult.NOT_AT_STATION, h.done.single().result)
+
+        fake.setLocation(37.4127, 127.0947)
+        advanceTimeBy(3_000L)
+        val record = h.done.single()
+        assertEquals(ChargeResult.SUCCESS, record.result)
+        assertEquals("st-003", record.stationId)
     }
 
     @Test
-    fun `충전소 조회가 실패해도 앱이 죽지 않고 충전소 없이 기록한다`() = run(stations = ThrowingStations) { h ->
+    fun `충전소 조회가 계속 실패하면 충전소 아님으로 기록하지 않고 결과를 미룬다`() = run(stations = ThrowingStations) { h ->
         ev(open = false, soc = 40)
         ev(open = true)
         now += 30 * minutes
         ev(soc = 80)
         ev(open = false)
+        advanceTimeBy(120_000L)
+        assertTrue(h.done.isEmpty())
+    }
+
+    @Test
+    fun `충전소 조회가 실패했다가 다시 되면 그 결과로 판정한다`() = run(stations = FlakyStations(failures = 2)) { h ->
+        ev(open = false, soc = 40)
+        ev(open = true)
+        now += 30 * minutes
+        ev(soc = 80)
+        ev(open = false)
+        assertTrue(h.done.isEmpty())
+        advanceTimeBy(1_001L)
+        assertTrue(h.done.isEmpty())
+        advanceTimeBy(2_000L)
+        val record = h.done.single()
+        assertEquals(ChargeResult.SUCCESS, record.result)
+        assertEquals("st-003", record.stationId)
+    }
+
+    @Test
+    fun `다시 조회해서 150m 안에 충전소가 없다고 확인되면 그때 충전소 아님으로 기록한다`() = run(stations = FlakyStations(failures = 1)) { h ->
+        fake.setLocation(37.5, 127.0)
+        ev(open = false, soc = 40)
+        ev(open = true)
+        now += 30 * minutes
+        ev(open = false, soc = 80)
+        assertTrue(h.done.isEmpty())
+        advanceTimeBy(1_001L)
         assertEquals(ChargeResult.NOT_AT_STATION, h.done.single().result)
+    }
+
+    @Test
+    fun `다시 조회할 때는 충전구를 연 위치를 쓴다`() = run(stations = FlakyStations(failures = 1)) { h ->
+        ev(open = false, soc = 40)
+        ev(open = true)
+        now += 30 * minutes
+        ev(open = false, soc = 80)
+        // 닫은 뒤 위치가 바뀌어도(이동 시작) 충전한 곳으로 판정한다
+        fake.setLocation(37.5, 127.0)
+        advanceTimeBy(1_001L)
+        assertEquals("st-003", h.done.single().stationId)
+    }
+
+    @Test
+    fun `충전소와 상관없이 기록하지 않는 세션은 조회 실패를 기다리지 않는다`() = run(stations = ThrowingStations) { h ->
+        ev(open = false, soc = 40)
+        ev(open = true)
+        now += 10_000L
+        ev(open = false)
+        assertTrue(h.done.isEmpty())
+        assertEquals(ChargePhase.IDLE, h.tracker.phase.value)
     }
 
     @Test
@@ -278,6 +334,17 @@ class ChargeSessionTrackerTest {
 
     private object ThrowingStations : StationRepository by FakeStationRepository() {
         override suspend fun nearest(point: GeoPoint, radiusM: Double): Station? = error("네트워크 오류")
+    }
+
+    /** 앞의 [failures]번은 네트워크 오류로 실패한다 */
+    private class FlakyStations(private var failures: Int) : StationRepository by FakeStationRepository() {
+        override suspend fun nearest(point: GeoPoint, radiusM: Double): Station? {
+            if (failures > 0) {
+                failures--
+                error("네트워크 오류")
+            }
+            return FakeStationRepository().nearest(point, radiusM)
+        }
     }
 
     private class SlowStations(private val base: StationRepository) : StationRepository by base {

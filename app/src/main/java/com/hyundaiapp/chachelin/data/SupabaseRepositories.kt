@@ -52,11 +52,17 @@ class SupabaseStationRepository(
         )
     }
     override suspend fun nearest(point: GeoPoint, radiusM: Double): Station? {
-        val candidates = try { nearby(point, radiusM) }
-        catch (e: CancellationException) { throw e }
-        catch (_: Exception) { cache.values.toList() }
-        return candidates.map { it.station }.filter { GeoMath.distanceM(point, it.point) <= radiusM }
+        fun closest(candidates: Collection<StationWithScore>) = candidates.map { it.station }
+            .filter { GeoMath.distanceM(point, it.point) <= radiusM }
             .minByOrNull { GeoMath.distanceM(point, it.point) }
+        return try {
+            closest(nearby(point, radiusM))
+        } catch (e: CancellationException) {
+            throw e
+        } catch (e: Exception) {
+            // 오프라인이면 캐시로 찾되, 캐시에 없다고 "충전소 없음"으로 답하지 않는다(판정이 다시 조회함, PRD 5.3)
+            closest(cache.values) ?: throw e
+        }
     }
 }
 
