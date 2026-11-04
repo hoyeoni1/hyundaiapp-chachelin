@@ -4,12 +4,13 @@
 
 ## 현재 상태 (2026-11-04 기준, 매번 덮어쓰기)
 
-- 한 일 요약: UI #11·검토 제안 #15·검증 기록 #18·제출 준비 #19 모두 main 머지 완료. #17 태그는 #19에서 장호연 지시로 VM/단위 테스트·실제 Pleos 화면 확인을 마쳐 종료됨. 별도 중복 구현 불필요.
-- 진행 중 브랜치·PR: `docs/terms-ui-verification`에서 #14의 요청인 약관 연결 후 UI 검수 결과를 기록. 제품 코드·의존성·약관 문구/판 번호 변경 없음.
-- 약관 검수: 실제 ChachelinNav release 경로에서 LOCATION/PRIVACY 전문을 확인. 1280×720dp, 600×1024dp/fontScale1.5, 1024×600dp/fontScale1.5 임시 Robolectric 3검사 PASS. 개인정보 전문 끝까지 스크롤, 닫기64dp 이상, 닫기·Dialog Back 뒤 동의 버튼2개 유지/시작 비활성/저장 완료false, 재열람 스크롤 초기화, 명시 동의·차종 선택 후 시작 활성 확인. 실제 Pleos 시스템 Back과 별도임.
-- 다음 할 일: 이상준 #12 위치 대기/최신 조회와 황준용·이상준 #13 길안내 결과 계약 후 UI 연결 인수. 새 #20은 조회 재시도·백그라운드 결과 알림이며 ui/ 변경 없음; #12/#13 해결로 보고하지 않음. 실제 Pleos 권한·Back/Home·내비 왕복·주행 제한은 팀 x86 환경에서 확인.
-- 막힌 점·질문: B01 앱 연결은 #19로 완료. #14는 Supabase 리전·요청 로그 확인(황준용) 후 장호연의 문서/TermsText/termsVersion 정합성 갱신이 남음. 미확정 내용을 길민종이 채우지 않음. D01/D02 정책은 확정.
-- 확인 방법: JDK17 `bash ./gradlew -I /tmp/hyundai-terms-qa/init.gradle :app:testReleaseUnitTest --tests com.hyundaiapp.chachelin.ui.TermsUiAcceptanceTest` PASS(3/3). 두 앱 합계6검사. 임시 검사·의존성은 제품에 추가하지 않음. 로컬 소스·XML·로그·화면은 `output/hyundai-terms-ui-2026-11-04/`에 보존. 일반 빌드/전체 테스트/lint 재실행으로 주장하지 않음.
+- 한 일 요약: 사용자 요청 범위를 “약관 팝업 상단”으로 확인해 LOCATION/PRIVACY 제목에 회색 배경(CarColors.Track), 2dp 테두리, 12dp 모서리, 굵은 제목과 안쪽 여백을 적용. 긴 본문과 제목의 경계를 분명히 함.
+- 진행 중 브랜치·PR: `fix/terms-dialog-title`. CarAlertDialog의 framedTitle 기본값은 false이며 TermsDialog에서만 true. 일반 화면 제목·철회/길안내 확인창·약관 문구·동의/닫기 콜백은 기존대로 유지.
+- 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. 기존 임시 약관 UI3검사/앱을 재실행해 두 앱6검사 PASS. 실제 ChachelinNav release 경로에서 1280×720dp, 600×1024dp/fontScale1.5, 1024×600dp/fontScale1.5의 제목 표시/스크롤 전후 위치 고정, 본문 끝 접근, 닫기64dp 이상, 닫기·Dialog Back 미동의 유지와 명시적 동의 조건을 확인.
+- 화면 확인: 두 앱 제목 패널·본문 간격, 좁은/낮은 화면 제목과 닫기 표시를 Dialog 전용 PNG로 시각 검사. 변경 전 캡처는 UI 코드가 현재 기준과 동일한 직전 약관 검사에서 가져왔으며 이전 증거를 덮어쓰지 않음.
+- 다음 할 일: PR 검토 후 실제 Pleos에서 팝업 배치·권한·Back/Home 동작을 팀 x86 환경에서 확인. 이상준 #12 위치 대기/최신 조회와 황준용·이상준 #13 길안내 결과 계약 후 UI 인수. #20 조회 재시도·결과 알림은 main 반영됐고 이번 제목 변경과 별개.
+- 주의: 제품 코드 변경은 본인 담당 UI 부품과 Nav의 약관 호출부만. UI 검사·의존성을 제품에 추가하지 않음. core·VM·data/domain·약관 전문/판 번호·서버 전송 변경 없음. 실제 Pleos 검증을 수행한 것으로 주장하지 않음.
+- 증거: 작성자 로컬 `output/hyundai-terms-title-2026-11-04/`에 일반 빌드 로그·UI 검사 소스/XML/로그·변경 전후 화면 보존. 팀 공유 조건/결과는 위 검증 항목과 PR 본문에서 확인 가능.
 
 ## 공유 검증 요약
 
@@ -27,6 +28,13 @@
 일반 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. UI 인수는 별도 임시 Robolectric SDK34/mdpi에서 차슐랭 debug10/release3 PASS이며 앱의 일반 테스트에 포함되지 않는다. Compose 글자 배율은 Android 비선형 배율을 따른다. 실제 Pleos/실차 검증은 별도다.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-04 — 약관 팝업 제목 영역 시각 구분
+- 사용자가 약관 팝업 상단만 바꾸도록 범위를 확인. 공통 CarAlertDialog에 선택형 framedTitle을 추가해 약관 호출부에서만 적용. 회색 배경·2dp 테두리·굵은 제목·안쪽 여백으로 본문과 구분.
+- 일반 화면 헤더/확인창·약관 전문·동의와 닫기 행동은 변경하지 않음. 긴 본문만 스크롤하고 제목과 닫기는 고정 유지.
+- 두 앱 일반 assembleDebug/test/app lint PASS. 기존 약관 UI3검사/앱을 현재 코드로 재실행해 합계6검사 PASS. 가로1280dp·세로600dp/큰 글자·낮은 가로1024dp/큰 글자 화면을 캡처/시각 확인.
+- 변경 파일: ui/components/CarComponents.kt, 해당 앱 Nav의 TermsDialog 호출부, 본인 handoff. 이전 약관 검수 기록과 원본 증거는 보존.
+
 
 ### 2026-11-04 — 최신 PR/이슈 및 약관 UI 검수
 - 장호연 #14 댓글의 길민종 요청(긴 글 스크롤·닫기/Back=미동의)을 받아, main에 연결된 두 전문을 실제 Nav에서 검수. 임시 UI3검사/앱, 전체6검사 PASS. 1280dp·600dp 세로/큰 글자·1024dp 낮은 가로/큰 글자에서 마지막 내용·닫기 표시와64dp 이상 영역을 확인.
