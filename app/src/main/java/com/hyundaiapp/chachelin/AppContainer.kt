@@ -51,7 +51,8 @@ class AppContainer(context: Context) {
     /** 동의한 약관 판 번호(서버에 남김). 약관 문구를 바꾸면 함께 올린다. 지금은 승인 전 초안 docs/terms-draft.md의 번호 */
     private val termsVersion = "chachelin-terms-2026-11-v1"
 
-    val chargeRules = if (BuildConfig.DEBUG) ChargeRules.DEMO else ChargeRules.DEFAULT
+    /** 시연 빌드(debug, 시연 데이터 모드 release)는 시연 기준. 실제 데이터 모드(supabase.demo=false)만 PRD 5.3 실제 기준 */
+    val chargeRules = if (BuildConfig.DEMO_RULES) ChargeRules.DEMO else ChargeRules.DEFAULT
 
     // 서버 설정이 없으면 Fake, 있는데 형식이 틀리면(구형 키·http·공백) 죽지 않고 로그만 남기고 Fake(core 0.5.2)
     val backend: SupabaseBackend? = BackendConfig.fromBuildConfigOrNull(

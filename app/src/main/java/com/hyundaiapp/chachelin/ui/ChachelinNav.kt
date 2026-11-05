@@ -21,6 +21,9 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshots.SnapshotStateList
+import androidx.compose.runtime.saveable.listSaver
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.saveable.rememberSaveableStateHolder
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
@@ -51,7 +54,7 @@ import com.hyundaiapp.chachelin.ui.stations.StationDetailViewModel
 import com.hyundaiapp.chachelin.ui.stations.StationListScreen
 import com.hyundaiapp.chachelin.ui.stations.StationListViewModel
 
-/** PRD 5.4 화면 목록. 디버그 빌드는 개발 메뉴에서 시작한다 */
+/** PRD 5.4 화면 목록. 시작은 S7(동의 전)·S1(동의 후). 개발 메뉴는 디버그 빌드에서 S1 제목을 길게 눌러 연다 */
 enum class Screen(val title: String) {
     DEV_MENU("개발 메뉴"),
     STATIONS("S1 근처 충전소"),
@@ -70,15 +73,11 @@ private val CHARGE_FLOW_SCREENS = setOf(Screen.CHARGING, Screen.REVIEW, Screen.F
 /** 간단한 화면 스택. 화면이 늘면 navigation-compose로 바꿔도 된다(길민종) */
 @Composable
 fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
-    val rootScreen = {
-        when {
-            BuildConfig.DEBUG -> Screen.DEV_MENU
-            container.vehicleProfile.onboarded.value -> Screen.STATIONS
-            else -> Screen.ONBOARDING
-        }
-    }
+    // 디버그 빌드도 실제 흐름으로 시작한다(시연 영상·심사 모두 같은 화면, 11-05 장호연 결정)
+    val rootScreen = { if (container.vehicleProfile.onboarded.value) Screen.STATIONS else Screen.ONBOARDING }
     val screenStates = rememberSaveableStateHolder()
-    val stack = remember { mutableStateListOf(rootScreen()) }
+    // 액티비티가 다시 만들어져도(내비 왕복·설정 변경) 보던 화면으로 돌아온다
+    val stack = rememberSaveable(saver = ScreenStackSaver) { mutableStateListOf(rootScreen()) }
     val go: (Screen) -> Unit = { stack.add(it) }
     val back: () -> Unit = { if (stack.size > 1) stack.removeAt(stack.lastIndex) else onExit() }
     BackHandler(enabled = stack.size > 1) { back() }
@@ -120,6 +119,7 @@ fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
                             onHistoryClick = { go(Screen.HISTORY) },
                             onRetry = vm::refresh,
                             onBack = back,
+                            onDevMenu = if (BuildConfig.DEBUG) ({ go(Screen.DEV_MENU) }) else null,
                         )
                     }
                     Screen.SIGNALS -> {
@@ -225,6 +225,11 @@ fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
         )
     }
 }
+
+private val ScreenStackSaver = listSaver<SnapshotStateList<Screen>, String>(
+    save = { it.map(Screen::name) },
+    restore = { names -> mutableStateListOf<Screen>().apply { names.forEach { add(Screen.valueOf(it)) } } },
+)
 
 /** 동의 철회 확인. 취소·바깥 누르기는 철회 아님 */
 @Composable
