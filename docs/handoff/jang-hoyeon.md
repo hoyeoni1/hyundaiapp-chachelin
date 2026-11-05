@@ -48,6 +48,13 @@
 
 ## 작업 기록 (최신이 위, 지우지 않음)
 
+### 2026-11-05 — README 심사용 안내 추가(두 저장소, main 직접 push)
+- 배경: 11-05 제출 요건 재검토(`contest-analysis-todo.md` 3.3)에서 README에 GitHub 가산점 필수 4항목(앱 이름·한 줄 소개, 실행 방법, 테스트 환경·필요 설정, APK 위치) 중 첫 항목만 있고 오픈소스 고지(약관 7조 7항)가 없음을 확인 → 장호연 "써 줘"
+- 한 일(Claude): README 맨 위 `## 시작하기` 앞에 **"심사용 안내 (GitHub 제출물)"** 절 — 항목 표(앱 이름·한 줄 소개·APK 위치·패키지·기획서·시연 순서), 실행 방법(에뮬레이터 v2.1.0, `adb install`, 동의 흐름, `pm clear --user 10`, `vconsole.sh`·`demo-charge.sh` 시연, 시연 고지), 테스트 환경·필요 설정(확인 환경, 서버 설정 APK 내장, 권한 목록, DO 미선언, `supabase-public.properties` 복사·Fake 폴백, debug=release 흐름·개발 메뉴는 debug만), 오픈소스 고지 표(AndroidX·Kotlin·Pleos SDK·테스트 라이브러리, 소스 권리는 팀). 그 아래 "팀 내부 개발 안내" 구분선. 기존 내용은 그대로. 크루즈 README도 같은 구성(`demo-drive.sh`, `CAR_SPEED` 부여, DO 선언, TTS)
+- 확인: 코드 기준으로 적음 — 개발 메뉴는 `BuildConfig.DEBUG`에서만(`ChachelinNav`·`CruiseBreakerNav`), 권한은 매니페스트, 의존성은 `build.gradle.kts`, APK 경로는 11-05 커밋된 파일. 문서만 바꿈(빌드 영향 없음)
+- 남은 결정(장호연): ① README 아래쪽 팀 내부 안내와 `docs/handoff/`에 팀원 실명이 남음(접수양식 실명 금지는 양식에만 적용) — 그대로 둘지, 제출 전 내부 안내를 `docs/dev-guide.md`로 옮길지 ② 비공개 저장소: 심사용 계정이 11-13까지 미공지면 public 전환할지 ③ 숏폼(특별상) 제작 여부 ④ 팀 내 IP·상금 배분 합의 문서(약관 6.3) ⑤ `versionName` 1.0으로 올릴지(지금 0.1, 올리면 release 다시 빌드)
+- 바꾼 파일: `README.md`, 이 문서
+
 ### 2026-11-05 — 시연 흐름 PR 2개 머지(차슐랭 #35 → 1047949, 크루즈 #47 → 0823124) + release APK 커밋
 - 장호연 지시(AskUserQuestion 답 "머지하고 release 커밋")로 Claude가 진행. 두 PR 모두 merge commit, 충돌 없음
 - 머지된 main에서 `bash tools/build-release.sh` → `apk/SamgakGorae_<App>_release.apk` 서명 빌드·커밋(시연 데이터 모드 + 시연 판정 기준 + 실제 흐름 시작). 머지 전 브랜치 빌드로 에뮬레이터 시연 확인함(위 항목)
