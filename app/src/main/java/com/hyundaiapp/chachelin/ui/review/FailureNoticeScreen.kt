@@ -3,6 +3,7 @@ package com.hyundaiapp.chachelin.ui.review
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
@@ -47,36 +48,38 @@ fun FailureNoticeScreen(
     onConfirm: () -> Unit,
     onBack: () -> Unit,
 ) {
-    Column(Modifier.fillMaxSize().background(CarColors.Scrim).padding(32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-        ScreenHeader("충전 결과", onBack = onBack)
-        Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
-            CarCard(
-                Modifier.widthIn(max = 760.dp).fillMaxWidth().heightIn(max = 900.dp),
-                contentPadding = PaddingValues(24.dp),
-                verticalArrangement = Arrangement.spacedBy(24.dp),
-            ) {
-                Column(Modifier.fillMaxWidth().weight(1f, fill = false).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
-                    Box(Modifier.size(96.dp).background(CarColors.Warning, CircleShape), contentAlignment = Alignment.Center) {
-                        Icon(CarIcons.BoltOff, contentDescription = null, tint = CarColors.OnAccent, modifier = Modifier.size(52.dp))
+    BoxWithConstraints(Modifier.fillMaxSize()) {
+        Column(Modifier.fillMaxSize().background(CarColors.Scrim).padding(horizontal = if (maxWidth < maxHeight) 32.dp else 48.dp, vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
+            ScreenHeader("충전 결과", onBack = onBack)
+            Box(Modifier.weight(1f).fillMaxWidth(), contentAlignment = Alignment.Center) {
+                CarCard(
+                    Modifier.widthIn(max = 760.dp).fillMaxWidth().heightIn(max = 900.dp),
+                    contentPadding = PaddingValues(24.dp),
+                    verticalArrangement = Arrangement.spacedBy(24.dp),
+                ) {
+                    Column(Modifier.fillMaxWidth().weight(1f, fill = false).verticalScroll(rememberScrollState()), horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.spacedBy(16.dp)) {
+                        Box(Modifier.size(96.dp).background(CarColors.Warning, CircleShape), contentAlignment = Alignment.Center) {
+                            Icon(CarIcons.BoltOff, contentDescription = null, tint = CarColors.OnAccent, modifier = Modifier.size(52.dp))
+                        }
+                        Text("충전 실패를 기록했어요", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
+                        Text(
+                            state.stationName,
+                            style = MaterialTheme.typography.bodyLarge,
+                            textAlign = TextAlign.Center,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(
+                            "충전구를 열었지만\n배터리가 오르지 않았어요.",
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = CarColors.OnSurfaceVariant,
+                            textAlign = TextAlign.Center,
+                        )
                     }
-                    Text("충전 실패를 기록했어요", style = MaterialTheme.typography.headlineMedium, textAlign = TextAlign.Center)
-                    Text(
-                        state.stationName,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
-                    Text(
-                        "충전구를 열었지만\n배터리가 오르지 않았어요.",
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = CarColors.OnSurfaceVariant,
-                        textAlign = TextAlign.Center,
-                    )
-                }
-                Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
-                    SecondaryButton("실패 기록 취소", onNotFailure, Modifier.weight(1f))
-                    PrimaryButton("닫기", onConfirm, Modifier.weight(1f))
+                    Row(Modifier.fillMaxWidth().padding(top = 8.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+                        SecondaryButton("실패 기록 취소", onNotFailure, Modifier.weight(1f))
+                        PrimaryButton("닫기", onConfirm, Modifier.weight(1f))
+                    }
                 }
             }
         }
