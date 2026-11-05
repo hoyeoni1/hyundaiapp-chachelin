@@ -48,6 +48,12 @@
 
 ## 작업 기록 (최신이 위, 지우지 않음)
 
+### 2026-11-05 — README 팀 내부 안내를 `docs/dev-guide.md`로 이동(두 저장소, main 직접 push)
+- 배경: 심사위원이 GitHub 링크로 들어오면 README의 팀 내부 안내(담당별 첫 작업·규칙, 팀원 실명 포함)를 먼저 보게 됨 → 장호연 "옮겨 줘"
+- 한 일(Claude): README의 `## 시작하기`부터 끝(`코드 구조`·`담당별 첫 작업`·`규칙`)까지를 **`docs/dev-guide.md`**로 그대로 옮기고(링크는 `docs/` 기준으로 고침), README에는 `## 팀 개발 안내` 한 줄 링크만 남김. `docs/README.md` 목차 맨 위에 항목 추가. 크루즈 README도 같음
+- 확인: README·PRD·docs에서 README 절을 가리키는 링크 없음(grep). 문서만 바꿈. README에 남은 실명 없음(`docs/handoff/` 파일명·내용의 실명은 그대로 — 접수양식 실명 금지는 양식에만 적용)
+- 바꾼 파일: `README.md`, `docs/dev-guide.md`(신설), `docs/README.md`, 이 문서
+
 ### 2026-11-05 — README 심사용 안내 추가(두 저장소, main 직접 push)
 - 배경: 11-05 제출 요건 재검토(`contest-analysis-todo.md` 3.3)에서 README에 GitHub 가산점 필수 4항목(앱 이름·한 줄 소개, 실행 방법, 테스트 환경·필요 설정, APK 위치) 중 첫 항목만 있고 오픈소스 고지(약관 7조 7항)가 없음을 확인 → 장호연 "써 줘"
 - 한 일(Claude): README 맨 위 `## 시작하기` 앞에 **"심사용 안내 (GitHub 제출물)"** 절 — 항목 표(앱 이름·한 줄 소개·APK 위치·패키지·기획서·시연 순서), 실행 방법(에뮬레이터 v2.1.0, `adb install`, 동의 흐름, `pm clear --user 10`, `vconsole.sh`·`demo-charge.sh` 시연, 시연 고지), 테스트 환경·필요 설정(확인 환경, 서버 설정 APK 내장, 권한 목록, DO 미선언, `supabase-public.properties` 복사·Fake 폴백, debug=release 흐름·개발 메뉴는 debug만), 오픈소스 고지 표(AndroidX·Kotlin·Pleos SDK·테스트 라이브러리, 소스 권리는 팀). 그 아래 "팀 내부 개발 안내" 구분선. 기존 내용은 그대로. 크루즈 README도 같은 구성(`demo-drive.sh`, `CAR_SPEED` 부여, DO 선언, TTS)
