@@ -5,7 +5,7 @@
 ## 현재 상태 (2026-11-05 기준, 매번 덮어쓰기)
 
 - 한 일 요약:
-  - **11-05 시연 흐름 확정**: 확정 시나리오 `docs/demo-scenario.md`(이 순서대로 누르면 그대로 동작해야 함). 앱은 debug·release 모두 S7→S1로 시작, 개발 메뉴는 S1 제목 길게 누르기, 제출 release도 시연 판정 기준(`DEMO_RULES`). 에뮬레이터 + 실제 서버로 처음부터 끝까지 확인. 브랜치 `feat/demo-flow-20261105`(차슐랭 PR #35, 크루즈 PR #47 — 리뷰·머지 대기, 아래 작업 기록)
+  - **11-05 시연 흐름 확정**: 확정 시나리오 `docs/demo-scenario.md`(이 순서대로 누르면 그대로 동작해야 함). 앱은 debug·release 모두 S7→S1로 시작, 개발 메뉴는 S1 제목 길게 누르기, 제출 release도 시연 판정 기준(`DEMO_RULES`). 에뮬레이터 + 실제 서버로 처음부터 끝까지 확인. 차슐랭 PR #35 → `1047949`, 크루즈 PR #47 → `0823124` **머지 완료**, release APK `apk/` 커밋(아래 작업 기록)
   - 두 앱 기반 완료, `main`에 반영. 에뮬레이터에서 신호 수신 확인
     - core v0.2.1(초안)
     - 앱 구조·UiState 계약
@@ -32,7 +32,7 @@
   3. 약관(B01): 확정 전문이 앱 [내용 보기]에 들어감(`ui/TermsText.kt`, 11-04 머지). 황준용 답(Supabase 리전·요청 로그)이 오면 `docs/terms-draft.md`와 `TermsText.kt`의 해당 2곳 고치기. 판 번호를 바꾸면 각 AppContainer `termsVersion`도. 크루즈 #25는 11-04 닫음. 차슐랭 #14도 11-04 닫음(길민종 화면 검수 통과, 차슐랭 #21·크루즈 #33)
   4. 남은 팀원 이슈: #12·#13(이상준·황준용 UI 감사 계약, 제출 필수 아님). #17은 #19로 닫힘. #8(차슐랭)·#20(크루즈)은 11-04 닫음(#10·#22로 해결)
   5. 주최 측 문의 메일 발송 — `docs/organizer-inquiry-email.md`에 위치기반서비스 신고 여부 문항 추가 권장. 심사용 GitHub 계정명(4번) 답을 받아야 아래 7번 가능
-  6. 서명 키·`signingConfig`·`tools/build-release.sh`는 완료(키 `C:/Users/H/.samgakgorae/`, **백업할 것**). `feat/demo-flow-20261105` 머지 뒤 두 저장소에서 `bash tools/build-release.sh` → `apk/` 커밋. 11-05부터 release도 시연 판정 기준·실제 흐름 시작이라 심사위원이 직접 눌러도 시연이 됨(실제 기준은 `supabase.demo=false`일 때만)
+  6. 서명 키·`signingConfig`·`tools/build-release.sh`는 완료(키 `C:/Users/H/.samgakgorae/`, **백업할 것**). 11-05 `apk/SamgakGorae_Chachelin_release.apk` 커밋 완료(다시 만들 때 `bash tools/build-release.sh`). 11-05부터 release도 시연 판정 기준·실제 흐름 시작이라 심사위원이 직접 눌러도 시연이 됨(실제 기준은 `supabase.demo=false`일 때만)
   7. 저장소 접근: 두 저장소가 **PRIVATE** → 심사용 계정 초대(또는 공개 전환) + 접근 확인. 새로 clone해서 빌드되는지 확인
   8. 시연 영상 촬영 → 기획서 7번 칸 【제출 전 기입】 2곳(GitHub 주소, 영상) 채우고 DOCX 재생성
   9. 01 참가신청서·04 서명 칸, 5명 서명(11-13) → 11-14 메일 2통 발송(전원 CC). 11-05 중간 점검, Pleos Playground 프로젝트 생성
@@ -47,6 +47,12 @@
 - 확인 방법: `./gradlew assembleDebug test` / 시연 전체는 `docs/demo-scenario.md` 순서대로 / 신호 모니터는 S1 제목 길게 누르기 → 개발 메뉴
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-05 — 시연 흐름 PR 2개 머지(차슐랭 #35 → 1047949, 크루즈 #47 → 0823124) + release APK 커밋
+- 장호연 지시(AskUserQuestion 답 "머지하고 release 커밋")로 Claude가 진행. 두 PR 모두 merge commit, 충돌 없음
+- 머지된 main에서 `bash tools/build-release.sh` → `apk/SamgakGorae_<App>_release.apk` 서명 빌드·커밋(시연 데이터 모드 + 시연 판정 기준 + 실제 흐름 시작). 머지 전 브랜치 빌드로 에뮬레이터 시연 확인함(위 항목)
+- **알릴 것(장호연 → 팀원)**: 길민종 — `ui/` 변경(`ChachelinNav`·`StationListScreen`·`CruiseBreakerNav`·`InitialScreen`·`ScreenPolicy`·`RiskListScreen`·공통 `CarComponents.onTitleLongPress`), 개발 메뉴는 목록 제목 길게 누르기. 이상준 — `AppContainer.chargeRules`(`DEMO_RULES`)·`StationListViewModel` 위치 타임아웃, 첫 충전 S4 20초 지연 1회 관찰(재현 안 됨) 확인 요청. 황준용 — core 0.5.2 `VehicleSdkSource.subscribeEv` SoC 재조회 한 줄(두 저장소 동일)
+- 남은 열린 PR: 없음
 
 ### 2026-11-05 — 시연 흐름 확정·실제 흐름 시작 화면(브랜치 `feat/demo-flow-20261105`, 두 저장소)
 - 장호연 목표("실제 앱이 시연 가능한 상태로 끊김 없이 동작, 사용자 시나리오를 픽스하고 그대로 쓰면 동작")로 Claude가 작업. 장호연 결정 4가지: ① 시작 화면은 debug·release 모두 실제 흐름(S7→S1), 개발 메뉴는 숨은 진입 ② 제출 release도 시연 판정 기준 ③ 크루즈는 경로 재생 없이 고정 위치 ④ 차슐랭 먼저
