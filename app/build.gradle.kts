@@ -49,9 +49,14 @@ android {
         buildConfig = true
     }
     buildTypes {
-        getByName("debug") { buildConfigField("boolean", "SUPABASE_SIMULATED", "true") }
+        // 시연 판정 기준(인증 10초·실패 30초·화면 배속 ×120)은 시연 데이터 모드와 같이 간다(11-05 장호연 결정)
+        getByName("debug") {
+            buildConfigField("boolean", "SUPABASE_SIMULATED", "true")
+            buildConfigField("boolean", "DEMO_RULES", "true")
+        }
         getByName("release") {
             buildConfigField("boolean", "SUPABASE_SIMULATED", backendFlag("supabase.demo", true).toString())
+            buildConfigField("boolean", "DEMO_RULES", backendFlag("supabase.demo", true).toString())
             if (releaseStore != null) signingConfig = signingConfigs.getByName("release")
         }
     }

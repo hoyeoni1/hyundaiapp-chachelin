@@ -50,6 +50,8 @@ fun StationListScreen(
     onHistoryClick: () -> Unit = {},
     onRetry: () -> Unit = {},
     onBack: () -> Unit,
+    /** 디버그 빌드 개발 메뉴. 제목을 길게 누르면 연다(화면에는 보이지 않음) */
+    onDevMenu: (() -> Unit)? = null,
 ) {
     val listState = rememberLazyListState()
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -58,7 +60,7 @@ fun StationListScreen(
             Modifier.fillMaxSize().padding(horizontal = if (portrait) 32.dp else CarDimens.ScreenPadding, vertical = 32.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp),
         ) {
-            ScreenHeader("근처 충전소", onBack = onBack, inlineActions = true) {
+            ScreenHeader("근처 충전소", onBack = onBack, inlineActions = true, onTitleLongPress = onDevMenu) {
                 HeaderIconButton(CarIcons.History, "내 충전 기록", onHistoryClick)
             }
             when {

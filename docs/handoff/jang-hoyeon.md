@@ -2,9 +2,10 @@
 
 담당 경로: `tools/`, `apk/`, `README.md`, `PRD.md`, `docs/`, 릴리스. 총괄로서 전체 기반(초기 core·앱 뼈대)도 만들었음
 
-## 현재 상태 (2026-11-04 기준, 매번 덮어쓰기)
+## 현재 상태 (2026-11-05 기준, 매번 덮어쓰기)
 
 - 한 일 요약:
+  - **11-05 시연 흐름 확정**: 확정 시나리오 `docs/demo-scenario.md`(이 순서대로 누르면 그대로 동작해야 함). 앱은 debug·release 모두 S7→S1로 시작, 개발 메뉴는 S1 제목 길게 누르기, 제출 release도 시연 판정 기준(`DEMO_RULES`). 에뮬레이터 + 실제 서버로 처음부터 끝까지 확인. 브랜치 `feat/demo-flow-20261105`(두 저장소, PR 리뷰·머지 대기 — 아래 작업 기록)
   - 두 앱 기반 완료, `main`에 반영. 에뮬레이터에서 신호 수신 확인
     - core v0.2.1(초안)
     - 앱 구조·UiState 계약
@@ -31,7 +32,7 @@
   3. 약관(B01): 확정 전문이 앱 [내용 보기]에 들어감(`ui/TermsText.kt`, 11-04 머지). 황준용 답(Supabase 리전·요청 로그)이 오면 `docs/terms-draft.md`와 `TermsText.kt`의 해당 2곳 고치기. 판 번호를 바꾸면 각 AppContainer `termsVersion`도. 크루즈 #25는 11-04 닫음. 차슐랭 #14도 11-04 닫음(길민종 화면 검수 통과, 차슐랭 #21·크루즈 #33)
   4. 남은 팀원 이슈: #12·#13(이상준·황준용 UI 감사 계약, 제출 필수 아님). #17은 #19로 닫힘. #8(차슐랭)·#20(크루즈)은 11-04 닫음(#10·#22로 해결)
   5. 주최 측 문의 메일 발송 — `docs/organizer-inquiry-email.md`에 위치기반서비스 신고 여부 문항 추가 권장. 심사용 GitHub 계정명(4번) 답을 받아야 아래 7번 가능
-  6. 서명 키·`signingConfig`·`tools/build-release.sh`는 완료(키 `C:/Users/H/.samgakgorae/`, **백업할 것**). 2번 키가 들어오면 두 저장소에서 `bash tools/build-release.sh` → `apk/` 커밋. release는 실제 충전 기준(인증 3분·실패 2분)이라 시연 영상은 debug 빌드로 찍기
+  6. 서명 키·`signingConfig`·`tools/build-release.sh`는 완료(키 `C:/Users/H/.samgakgorae/`, **백업할 것**). `feat/demo-flow-20261105` 머지 뒤 두 저장소에서 `bash tools/build-release.sh` → `apk/` 커밋. 11-05부터 release도 시연 판정 기준·실제 흐름 시작이라 심사위원이 직접 눌러도 시연이 됨(실제 기준은 `supabase.demo=false`일 때만)
   7. 저장소 접근: 두 저장소가 **PRIVATE** → 심사용 계정 초대(또는 공개 전환) + 접근 확인. 새로 clone해서 빌드되는지 확인
   8. 시연 영상 촬영 → 기획서 7번 칸 【제출 전 기입】 2곳(GitHub 주소, 영상) 채우고 DOCX 재생성
   9. 01 참가신청서·04 서명 칸, 5명 서명(11-13) → 11-14 메일 2통 발송(전원 CC). 11-05 중간 점검, Pleos Playground 프로젝트 생성
@@ -43,9 +44,19 @@
   - Virtual Console은 하트비트가 없으면 쓰기가 503 → `tools/vconsole.sh up` 먼저
   - 이 PC는 python이 `py -3`(3.14)으로 있음(DOCX 재생성 가능, 11-03 확인)
   - 이 PC의 CLI 빌드는 JAVA_HOME이 없음 → `export JAVA_HOME="E:\AndroidStudio\jbr"`(JDK 21, Gradle 빌드·테스트 통과 확인)
-- 확인 방법: `./gradlew assembleDebug test` / 에뮬레이터 실행 → 개발 메뉴 → 신호 모니터
+- 확인 방법: `./gradlew assembleDebug test` / 시연 전체는 `docs/demo-scenario.md` 순서대로 / 신호 모니터는 S1 제목 길게 누르기 → 개발 메뉴
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-05 — 시연 흐름 확정·실제 흐름 시작 화면(브랜치 `feat/demo-flow-20261105`, 두 저장소)
+- 장호연 목표("실제 앱이 시연 가능한 상태로 끊김 없이 동작, 사용자 시나리오를 픽스하고 그대로 쓰면 동작")로 Claude가 작업. 장호연 결정 4가지: ① 시작 화면은 debug·release 모두 실제 흐름(S7→S1), 개발 메뉴는 숨은 진입 ② 제출 release도 시연 판정 기준 ③ 크루즈는 경로 재생 없이 고정 위치 ④ 차슐랭 먼저
+- 앱: `ChachelinNav` 루트가 동의 전 S7·동의 후 S1(debug도 같음). 개발 메뉴는 S1 제목 길게 누르기(`ScreenHeader.onTitleLongPress`, 공통 부품이라 크루즈 `CarComponents.kt`도 동일). `BuildConfig.DEMO_RULES`(debug true, release는 `supabase.demo`와 같이) → `ChargeRules.DEMO`. S1 위치 대기 15초 타임아웃 → 오류 + [다시 시도](#12 일부). 화면 스택 `rememberSaveable`(액티비티 재생성에도 유지)
+- core 0.5.2(황준용 경로, 장호연 결정으로 수정 → 황준용에게 알릴 것): `VehicleSdkSource.subscribeEv`에서 리스너 등록 뒤 SoC를 한 번 더 조회. 앱 시작 직후 스크립트가 넣은 SoC 40을 놓쳐 시작 SoC가 80으로 잡히던 문제(11-04 기록) 방지. `sync-core.sh`로 크루즈에 동기화
+- 문서: **`docs/demo-scenario.md` 신설(확정 시연 순서·기대 시간·복구표)**, PRD 5.3·7절, README, `tools/demo-charge.sh`·`demo-drive.sh` 머리 주석
+- 확인(에뮬레이터, 실제 서버 시연 데이터 모드, 앱 데이터 지우고 처음부터): S7 동의 → S1 10곳 → S2 시흥동 주민센터 → [길안내] 내비 경로 → 앱 복귀 → `demo-charge.sh success` → S3 자동 → S4 자동(닫은 뒤 1~2초) → 별 5·태그 2·[평가 보내기] → S2 인증 +1·5점 +1 → `fail` → S5 → [닫기] → S2 7일 실패 +1 → S6 인증·실패 줄. 제목 길게 누르기 → 개발 메뉴 → [뒤로] → S1. `assembleDebug test` 통과(app 99, core 32/18)
+- **1회 관찰·재현 안 됨**: 설치 직후 첫 충전에서 충전구를 닫은 뒤 S4가 약 20초 늦게 뜨고 그동안 S2 아래 [충전 결과 확인하기]만 보임. 이후 4회는 1~2초. 복구는 그 버튼. 원인 미확인(이상준 확인 요청: `ChargeSessionTracker.resolveStation` 첫 조회 실패 → 5초 재시도 가능성)
+- 담당 경로 참고: `ui/`(길민종) `StationListScreen`·`CarComponents`·`ChachelinNav`, 로직(이상준) `AppContainer`·`StationListViewModel`, `core/`(황준용), `app/build.gradle.kts`를 장호연 결정으로 고침. PR 머지 뒤 세 사람에게 알릴 것
+- 남은 것: PR 머지(장호연) → `bash tools/build-release.sh`로 release 재빌드(판정 기준이 바뀜) → `apk/` 커밋. 아이콘 2종(독에서 두 앱 구분 불가, 11-04 검토 #8)
 
 ### 2026-11-05 — 길민종 Pleos 검수 후속 PR 2개 머지(차슐랭 #34 → bdfaa3b, 크루즈 #46 → 3105a8d)
 - 장호연 지시로 Claude가 진행. 두 PR 모두 base가 main이라 그대로 merge commit으로 머지(충돌 없음)

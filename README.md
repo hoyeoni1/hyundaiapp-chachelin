@@ -3,6 +3,7 @@
 차량이 직접 확인한 충전 기록으로 충전소를 평가하는 Pleos Connect 앱. 팀 삼각고래 · 일반 부문.
 
 - 기획: [PRD.md](PRD.md)
+- **시연 순서(확정)**: [docs/demo-scenario.md](docs/demo-scenario.md) — 이 순서대로 누르면 그대로 동작해야 한다
 - 서버·인증·데이터 흐름·운영: [공통 서버 설명서](docs/server-overview.md)
 - 핵심 신호: Vehicle SDK EV 배터리(SoC·충전 상태·충전구), NaviHelper 위치·충전 사업자·길안내
 - 실측 메모: [docs/vehicle-data-findings.md](docs/vehicle-data-findings.md) (에뮬레이터에서 SoC는 자동으로 오르지 않음, 콘솔로 주입)
@@ -13,7 +14,7 @@
 2. 두 저장소를 **같은 폴더 아래 나란히** clone (`.../Chachelin`, `.../CruiseBreaker`)
 3. Android Studio로 `Chachelin` 폴더 열기 → Gradle Sync → 에뮬레이터 켜고 ▶ Run `app`
    - CLI: `./gradlew assembleDebug` / `./gradlew installDebug` / 테스트 `./gradlew test`
-4. 앱이 켜지면 **개발 메뉴**(디버그 빌드에만 보임) → **신호 모니터**에서 `vehicle=READY`, `navi=READY`, SoC 값이 보이면 정상
+4. 앱이 켜지면 **S7 첫 실행 동의** → 동의·차종·[시작하기] → **S1 근처 충전소**(debug·release 같음). 디버그 빌드는 S1 제목 "근처 충전소"를 **길게 누르면** 개발 메뉴가 열린다 → **신호 모니터**에서 `vehicle=READY`, `navi=READY`, SoC 값이 보이면 정상
 5. 값 바꿔 보기: `bash tools/vconsole.sh up` 후 `bash tools/vconsole.sh put 'ev-battery?field=charge_port_open&value=true'` → 신호 모니터의 충전구가 `켜짐`으로 바뀜
 
 ## 코드 구조
