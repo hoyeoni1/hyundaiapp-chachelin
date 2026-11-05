@@ -56,6 +56,7 @@
 - 확인(에뮬레이터, 실제 서버 시연 데이터 모드, 앱 데이터 지우고 처음부터): S7 동의 → S1 10곳 → S2 시흥동 주민센터 → [길안내] 내비 경로 → 앱 복귀 → `demo-charge.sh success` → S3 자동 → S4 자동(닫은 뒤 1~2초) → 별 5·태그 2·[평가 보내기] → S2 인증 +1·5점 +1 → `fail` → S5 → [닫기] → S2 7일 실패 +1 → S6 인증·실패 줄. 제목 길게 누르기 → 개발 메뉴 → [뒤로] → S1. `assembleDebug test` 통과(app 99, core 32/18)
 - **1회 관찰·재현 안 됨**: 설치 직후 첫 충전에서 충전구를 닫은 뒤 S4가 약 20초 늦게 뜨고 그동안 S2 아래 [충전 결과 확인하기]만 보임. 이후 4회는 1~2초. 복구는 그 버튼. 원인 미확인(이상준 확인 요청: `ChargeSessionTracker.resolveStation` 첫 조회 실패 → 5초 재시도 가능성)
 - 담당 경로 참고: `ui/`(길민종) `StationListScreen`·`CarComponents`·`ChachelinNav`, 로직(이상준) `AppContainer`·`StationListViewModel`, `core/`(황준용), `app/build.gradle.kts`를 장호연 결정으로 고침. PR 머지 뒤 세 사람에게 알릴 것
+- 추가 확인(11-05 오후): 앱 데이터를 지우고 길안내 왕복까지 같은 경로로 2회 더 돌려도 S4는 1초 안에 뜸(위 20초 지연은 재현 안 됨). `tools/build-release.sh`로 서명 release APK를 만들어 에뮬레이터에 설치(기존 debug는 `adb uninstall` 뒤) → S7→S1→충전→S4까지 같은 흐름, 제목 길게 눌러도 개발 메뉴 안 열림, 크래시 0. `apk/`는 머지 뒤 main에서 다시 빌드해 커밋할 것(지금은 로컬에만 있음)
 - 남은 것: PR 머지(장호연) → `bash tools/build-release.sh`로 release 재빌드(판정 기준이 바뀜) → `apk/` 커밋. 아이콘 2종(독에서 두 앱 구분 불가, 11-04 검토 #8)
 
 ### 2026-11-05 — 길민종 Pleos 검수 후속 PR 2개 머지(차슐랭 #34 → bdfaa3b, 크루즈 #46 → 3105a8d)
