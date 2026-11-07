@@ -51,6 +51,15 @@
 
 ## 작업 기록 (최신이 위, 지우지 않음)
 
+### 2026-11-07 — 리허설 후속 수정(브랜치 `fix/rehearsal-20261107`, 두 저장소 PR)
+- 장호연 지시("다 고쳐서 올려줘"). Claude가 작업. **PR 머지는 장호연**, 머지 뒤 두 저장소 `bash tools/build-release.sh` → `apk/` 재커밋 필요(아이콘이 제출 APK에 들어가려면)
+- **런처 아이콘(두 앱)**: `res/mipmap-anydpi-v26/ic_launcher(_round).xml`(적응형) + `res/drawable/ic_launcher_foreground.xml`(벡터) + `res/values/colors.xml`(배경 = 대표색), 매니페스트 `android:icon`/`roundIcon`. 차슐랭 = 레드 배경 흰 번개 + 별, 크루즈 = 앰버 배경 위가 끊긴 속도계. PNG 없음(minSdk 28). 에뮬레이터 앱 목록에서 확인
+  - 참고: Pleos 독(아래 바 오른쪽 2칸)은 **최근에 쓴 앱** 자리다. 11-07 리허설 때 독의 로봇 아이콘 2개는 우리 앱이 아니라 예전 샘플 앱 `com.example.pleosprobe`·`pleoshello`였음 → 시연 에뮬레이터에서는 두 샘플 앱을 지우는 게 깔끔
+- **S4 태그 밀림(차슐랭 `ui/review/ReviewScreen.kt`, 길민종 경로)**: "N점 선택" 줄을 항상 그림(별 전 "별을 눌러 평가해 주세요"). 에뮬레이터에서 별 전후 태그 위치가 같은 것 확인
+- **서버(황준용 경로, 장호연 결정)**: `server/supabase/migrations/20261107000100_demo_names.sql`(시드 이름만: 크루즈 구간 → "판교IC 진입로"(#37), st-005~010 → 지명 + "(시연)"), `server/supabase/clear-rehearsal-data.sql`(수동: SIMULATED 기록만 삭제, 설치는 유지). `server/deploy.md` "11-07 추가" 절에 적용 순서. `tests/database.test.mjs`에 2개 추가 → 19개 통과. **원격 적용은 장호연이 SQL Editor로(촬영 직전)**
+- 검증: `assembleDebug test :app:lintDebug` 통과, DB 테스트 19/19
+- **알릴 것**: 길민종(ReviewScreen), 황준용(server migration·스크립트·테스트), 이상준(매니페스트 아이콘 줄)
+
 ### 2026-11-07 — 제출 APK 리허설(에뮬레이터 + 실제 서버, 시나리오 화면 단위 점검)
 - 장호연 지시("실제 시연이라 생각하고 화면 단위로 검토"). Claude가 Pleos 에뮬레이터(36.4.10)에 **커밋된 release APK 2개**를 설치해 두 `docs/demo-scenario.md`를 1단계부터 끝까지 진행. 스크린샷: 팀 폴더 `screenshots-2026-11-07/`(ch-*, cb-*)
 - 주의: 에뮬레이터에 debug 빌드가 깔려 있으면 release는 서명이 달라 `INSTALL_FAILED_UPDATE_INCOMPATIBLE` → debug를 지우고 설치해야 함

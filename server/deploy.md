@@ -36,6 +36,19 @@
 
 CLI를 쓰는 사람(황준용)은 `db push --linked --dry-run`으로 두 파일이 대기 중인지 본 뒤 `db push --linked`로 적용해도 된다. 대시보드로 적용했으면 CLI 이력은 `migration repair --status applied 20261103000100 20261103000200`으로 맞춘다.
 
+## 11-07 추가: 시드 이름 정리 + 리허설 기록 지우기 (장호연이 대시보드에서 적용, 시연 영상 촬영 직전)
+
+11-07 제출 APK 리허설에서 나온 두 가지. 둘 다 다시 실행해도 안전하다.
+
+1. SQL Editor → New query → `supabase/migrations/20261107000100_demo_names.sql` → **Run**. 이름만 바꾼다(SEED 행만):
+   크루즈 시드 구간 "시연 지점 (고정 위치 앞 약 400m)" → "판교IC 진입로"(크루즈 #37), 차슐랭 st-005~010 "시연 충전소 NN · 가상 충전소" → "삼평동 공영주차장 (시연)" 등 지명 + "(시연)" · "시연 데이터"(st-001~004와 같은 표기).
+2. 새 쿼리 → `supabase/clear-rehearsal-data.sql` → **Run**. 에뮬레이터 리허설이 올린 SIMULATED 기록(충전·리뷰·실패 취소·크루즈 해제/통과)을 지운다. SEED·LIVE는 그대로, 설치(app_installations)도 남겨 이미 깔린 앱은 그대로 쓴다. 첫 결과 표에 지울 건수가 나온다.
+3. 새 쿼리 → `supabase/refresh-demo-dates.sql` → **Run**(시드 날짜를 오늘로).
+4. 새 쿼리 → `supabase/verify.sql` → **Run**. 기대: versions에 `20261107000100`이 추가되어 5행, seed_counts.charge_sessions = **325**(SEED만 세므로 2번과 상관없이 같음).
+5. 확인(선택): 차슐랭 S1에서 st-005~010 이름이 바뀌고, 시흥동 주민센터 인증·7일 실패가 시드 값으로 돌아왔는지. 크루즈 S2 구간 이름이 "판교IC 진입로"인지.
+
+리허설을 다시 하면 기록이 또 쌓인다 → **촬영 직전에** 2~3번을 다시 돌린다. CLI 이력은 `migration repair --status applied 20261107000100`.
+
 ## 재실행·오류 처리
 
 - initial migration은 **한 번만 적용**한다. 이미 적용된 경우 테이블 중복 오류가 나며 transaction이 rollback된다. 오류 뒤 SQL Editor가 transaction aborted 상태라면 `ROLLBACK;`만 실행하고 원인을 확인한다. 성공한 initial migration을 지우거나 다시 만들지 않는다.
