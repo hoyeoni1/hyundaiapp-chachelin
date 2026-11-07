@@ -51,6 +51,12 @@
 
 ## 작업 기록 (최신이 위, 지우지 않음)
 
+### 2026-11-07 — 주최 측 문의 메일 최종 점검(두 저장소 + 팀 폴더 원본, main 직접 push)
+- 장호연 요청("보내기 전 공식 사이트·FAQ·SDK 문서 전부 다시 검토"). Claude가 Chrome으로 공식 사이트(메인·FAQ 23문항·공지 3건·참가 가이드 6쪽)와 Pleos 문서(SDK Overview, App Review Guidelines 3쪽, TTS 권한·앱 등록)를 읽고 대조
+- 12문항 → 10문항: 뺌 = 심사용 계정(공지 대기), 저장소 개인 계정명(FAQ가 개인 계정 저장소 전제), Vehicle Control SDK(Vehicle SDK에 차량 제어 포함). 새로 = Vehicle SDK 퍼미션 사전 협의(심사 가이드 "사전 협의·승인된 경우에만 선언"), 저장소 주소·APK 경로 입력처. 위치기반서비스는 공모전 단계만 묻도록 좁힘. 대응표와 근거 링크는 `docs/organizer-inquiry-email.md`
+- 사이트 확인 사항: 접수 마감 **11-15(일)**, 1차 합격 20팀은 PT에서 실제 동작 시연 필수, 수정 제출 제목 `[수정제출] …`
+- 남은 것: **장호연이 직접 발송**(팀원 4명 CC)
+
 ### 2026-11-07 — 리허설 후속 PR #36 머지(→ b677108) + release APK 재커밋
 - 장호연 지시("네, 머지해줘")로 Claude가 진행. 충돌 없음, merge commit. 브랜치 `fix/rehearsal-20261107` 삭제
 - 머지된 main에서 `bash tools/build-release.sh` → `apk/SamgakGorae_Chachelin_release.apk` 다시 커밋(시연 데이터 모드, 서명). `aapt`로 아이콘 포함 확인, 에뮬레이터 설치·실행 크래시 0, 독에 새 아이콘 표시
