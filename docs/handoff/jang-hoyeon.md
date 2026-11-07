@@ -36,7 +36,7 @@
   7. 약관(B01): 황준용 답(Supabase 리전·요청 로그)이 오면 `docs/terms-draft.md`와 `ui/TermsText.kt`의 2곳 고치기(판 번호를 바꾸면 AppContainer `termsVersion`도)
   8. 알릴 것: 황준용에게 core v0.5.2 변경(#30/크루즈 #42) — 확인 코멘트 아직 없음
   9. 제출 필수 아님: 이슈 #12·#13(이상준·황준용 UI 감사 계약), 이상준 — 내 충전 기록 첫 로딩 중 빈 상태가 먼저 보임(길민종 11-04 보고)
-  10. 정리(급하지 않음): 로컬 머지 브랜치는 11-07 삭제함. 원격 머지 브랜치(`feat/demo-flow-20261105`, `fix/verified-navigation-20261104`, `fix/car-header-back-20261104`, `feat/brand-color`) 삭제는 장호연 확인 뒤
+  10. 정리(급하지 않음): 로컬 머지 브랜치는 11-07 삭제함. 원격 머지 브랜치도 11-07 삭제함(장호연 지시) — 끝남
   - 11-07에 끝난 것으로 확인: 두 저장소 `local.properties`에 Supabase 키 있음. Supabase 원격 migration은 11-04~05 실제 서버로 시연 흐름을 확인해 적용된 것으로 보이나 `verify.sql`로 직접 확인하지는 않음
 - 막힌 점·질문: 없음. "크루즈브레이커 DO 차단"은 10-31 재확인 결과 차슐랭 화면을 착각한 것(크루즈브레이커 `docs/background-freeze-experiment.md` "함께 확인한 것"에 기록, 이민하 질문 답변 완료)
 - 주의:
@@ -49,6 +49,10 @@
 - 확인 방법: `./gradlew assembleDebug test` / 시연 전체는 `docs/demo-scenario.md` 순서대로 / 신호 모니터는 S1 제목 길게 누르기 → 개발 메뉴
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-07 — 머지 끝난 원격 브랜치 삭제
+- 장호연 지시("네, 삭제해 줘"). Claude가 진행
+- `origin/main`에 모두 들어간 것(`git merge-base --is-ancestor`)만 골라 원격 브랜치 27개 삭제. 열린 PR 없음. 이제 원격은 `main`만 남음. 지운 브랜치는 GitHub PR 화면의 "Restore branch"로 되살릴 수 있음
 
 ### 2026-11-07 — 장호연 지시("할 수 있는 작업 전부")로 제출 준비 정리(두 저장소, 문서만 main 직접 push)
 - **새로 clone 빌드 확인**: 두 저장소를 빈 폴더에 새로 clone(`local.properties` 없이 `ANDROID_HOME`만) → `./gradlew assembleDebug assembleRelease test` 성공. 테스트 실패 0 — 차슐랭 app debug·release 각 99, core 32 / 크루즈 app debug·release 각 83, core 32. 키가 없으면 Fake 저장소로 빌드됨(README "소스에서 빌드" 설명과 같음). `tools/sync-core.sh --check` 일치(core 0.5.2)
