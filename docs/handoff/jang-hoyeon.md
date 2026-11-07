@@ -2,7 +2,7 @@
 
 담당 경로: `tools/`, `apk/`, `README.md`, `PRD.md`, `docs/`, 릴리스. 총괄로서 전체 기반(초기 core·앱 뼈대)도 만들었음
 
-## 현재 상태 (2026-11-05 기준, 매번 덮어쓰기)
+## 현재 상태 (2026-11-07 기준, 매번 덮어쓰기)
 
 - 한 일 요약:
   - **11-05 시연 흐름 확정**: 확정 시나리오 `docs/demo-scenario.md`(이 순서대로 누르면 그대로 동작해야 함). 앱은 debug·release 모두 S7→S1로 시작, 개발 메뉴는 S1 제목 길게 누르기, 제출 release도 시연 판정 기준(`DEMO_RULES`). 에뮬레이터 + 실제 서버로 처음부터 끝까지 확인. 차슐랭 PR #35 → `1047949`, 크루즈 PR #47 → `0823124` **머지 완료**, release APK `apk/` 커밋(아래 작업 기록)
@@ -18,7 +18,7 @@
   - 아직 없는 것: 서버(황준용 — Supabase로 확정(11-02, PC 호스팅 안 함). 황준용이 이미 작업했고 곧 커밋 예정), release 서명, 앱이 뒤에 있을 때 충전 결과 알림, S2 실측 속도 분포
 - 진행 중 브랜치·PR:
   - 장호연 `fix/core-startup-resilience` — **11-04 머지 완료**(차슐랭 #30 → `0aa4032`, 크루즈 #42 → `9ff1318`). core v0.5.2 시작 크래시 방어 + `build-release.sh` 키 형식 검사(크루즈 쪽에는 안내 쿨다운 수정도). core(황준용)·`AppContainer`(이상준)를 장호연 결정으로 고쳤으므로 두 사람에게 알릴 것(황준용 확인 코멘트 없음)
-  - 열린 PR 없음. GitHub 아이디: 이상준 `wklee316`, 황준용 `Aodlf123`
+  - 열린 PR 없음(11-07 확인, 마지막 머지 #35). 열린 이슈 #12·#13. GitHub 아이디: 이상준 `wklee316`, 황준용 `Aodlf123`
   - 11-02 머지 때 승인한 것(장호연): `ui/` 2개 파일 수정(이상준, 길민종에게 알려 줄 것), `tools/windows-*.ps1`·`app/build.gradle.kts` 한 줄(황준용). 팀 문서 2절 담당표에 `AppContainer`·`ChachelinApp`·`RecordingService`·매니페스트를 이상준 담당으로 적는 일은 아직
   - 시연 배속 ×120(디버그 빌드만)·SoC 주입은 PT에서 밝혀야 함 → PRD 7절에 적기
   - 길민종 `feat/ui-screens` — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/1 — **11-01 머지 완료**(Claude 리뷰 `✅ 머지 가능` 후 장호연 지시로 merge commit). 후속은 리뷰 코멘트의 "다음에 챙길 것"
@@ -26,16 +26,18 @@
   - 장호연 `feat/demo-scripts`(두 저장소) — 11-02 main merge(인수인계 충돌은 main 쪽으로 해결) + 판정 규칙 v2·현재 앱에 맞게 고쳐 PR. `demo-drive.sh` 기본은 고정 위치 시연(위치 재생 없이 지금 앱으로 동작, 이민하 확인 순서와 같음), `route`는 앱 위치 재생 모드가 생긴 뒤. 가짜 콘솔·가짜 adb로 값 순서만 확인했고 **에뮬레이터 실행은 아직**(이상준이 `demo-charge.sh`는 에뮬레이터에서 확인함)
   - 기타: 기획서(`docs/proposal.md`, `docs/submission/`)는 팀장 결정으로 `main`에 바로 push
 - 리뷰·머지: PR 리뷰는 Claude(정기 작업 "삼각고래 PR 리뷰", 매일 09~23시 매시), 머지는 장호연만(`docs/pr-review-guide.md`)
-- 다음 할 일(우선순위 순, 11-04 PR 차슐랭 #19·크루즈 #32 머지 뒤):
-  1. Supabase 원격 적용(대시보드 SQL Editor): `20261103000100` → `20261103000200` → `refresh-demo-dates.sql` → `verify.sql`(charge_sessions 325). 순서·기대값은 차슐랭 `server/deploy.md` "11-03 추가 migration"
-  2. 두 저장소 `local.properties`에 `supabase.url`·`supabase.publishableKey` 넣기(지금 이 PC엔 없음 → 빌드가 조용히 Fake). 그다음 서버 연결 상태로 두 시연 스크립트 리허설
-  3. 약관(B01): 확정 전문이 앱 [내용 보기]에 들어감(`ui/TermsText.kt`, 11-04 머지). 황준용 답(Supabase 리전·요청 로그)이 오면 `docs/terms-draft.md`와 `TermsText.kt`의 해당 2곳 고치기. 판 번호를 바꾸면 각 AppContainer `termsVersion`도. 크루즈 #25는 11-04 닫음. 차슐랭 #14도 11-04 닫음(길민종 화면 검수 통과, 차슐랭 #21·크루즈 #33)
-  4. 남은 팀원 이슈: #12·#13(이상준·황준용 UI 감사 계약, 제출 필수 아님). #17은 #19로 닫힘. #8(차슐랭)·#20(크루즈)은 11-04 닫음(#10·#22로 해결)
-  5. 주최 측 문의 메일 발송 — `docs/organizer-inquiry-email.md`에 위치기반서비스 신고 여부 문항 추가 권장. 심사용 GitHub 계정명(4번) 답을 받아야 아래 7번 가능
-  6. 서명 키·`signingConfig`·`tools/build-release.sh`는 완료(키 `C:/Users/H/.samgakgorae/`, **백업할 것**). 11-05 `apk/SamgakGorae_Chachelin_release.apk` 커밋 완료(다시 만들 때 `bash tools/build-release.sh`). 11-05부터 release도 시연 판정 기준·실제 흐름 시작이라 심사위원이 직접 눌러도 시연이 됨(실제 기준은 `supabase.demo=false`일 때만)
-  7. 저장소 접근: 두 저장소가 **PRIVATE** → 심사용 계정 초대(또는 공개 전환) + 접근 확인. 새로 clone해서 빌드되는지 확인
-  8. 시연 영상 촬영 → 기획서 7번 칸 【제출 전 기입】 2곳(GitHub 주소, 영상) 채우고 DOCX 재생성
-  9. 01 참가신청서·04 서명 칸, 5명 서명(11-13) → 11-14 메일 2통 발송(전원 CC). 11-05 중간 점검, Pleos Playground 프로젝트 생성
+- 다음 할 일(우선순위 순, 11-07 점검 기준 — 코드·APK는 끝났고 남은 건 제출 준비. 서명 11-13, 발송 11-14):
+  1. 주최 측 문의 메일 발송(`docs/organizer-inquiry-email.md`, 위치기반서비스 신고 여부 문항 추가 권장) — 발송 기록 없음. 심사용 GitHub 계정명(4번) 답이 와야 2번 가능
+  2. 저장소 접근: 두 저장소가 아직 **PRIVATE**(11-07 확인) → 심사용 계정 초대 또는 공개 전환 + 접근 확인 + 새로 clone해서 빌드되는지 확인
+  3. 시연 영상 촬영(`docs/demo-scenario.md` 순서). 크루즈는 촬영 전에 #37 실제 서버 시드 이름을 황준용에게 맞춰 달라고 할 것
+  4. 기획서 7번 칸 【제출 전 기입】 2곳(GitHub 주소, 영상, `docs/proposal.md`에 2곳 남음) 채우고 DOCX 재생성
+  5. 01 참가신청서(연락처·참가 단위·부문 체크·작성일)·04 서명 칸 → 5명 서명(11-13) → 11-14 메일 2통 발송(전원 CC)
+  6. 서명 키 `C:/Users/H/.samgakgorae/samgakgorae-release.jks` **백업**(백업 기록 없음). APK는 11-05 커밋(`a4d54c5`, 마지막 코드 `eb62793` 뒤라 최신). 다시 만들 때 `bash tools/build-release.sh`. release도 시연 판정 기준·실제 흐름 시작(실제 기준은 `supabase.demo=false`일 때만)
+  7. 약관(B01): 황준용 답(Supabase 리전·요청 로그)이 오면 `docs/terms-draft.md`와 `ui/TermsText.kt`의 2곳 고치기(판 번호를 바꾸면 AppContainer `termsVersion`도)
+  8. 알릴 것: 황준용에게 core v0.5.2 변경(#30/크루즈 #42) — 확인 코멘트 아직 없음
+  9. 제출 필수 아님: 이슈 #12·#13(이상준·황준용 UI 감사 계약), 이상준 — 내 충전 기록 첫 로딩 중 빈 상태가 먼저 보임(길민종 11-04 보고)
+  10. 정리(급하지 않음): 머지된 로컬·원격 브랜치(`feat/demo-flow-20261105`, `fix/verified-navigation-20261104`, `fix/car-header-back-20261104`, `feat/brand-color`, `fix/core-startup-resilience`) 삭제
+  - 11-07에 끝난 것으로 확인: 두 저장소 `local.properties`에 Supabase 키 있음. Supabase 원격 migration은 11-04~05 실제 서버로 시연 흐름을 확인해 적용된 것으로 보이나 `verify.sql`로 직접 확인하지는 않음
 - 막힌 점·질문: 없음. "크루즈브레이커 DO 차단"은 10-31 재확인 결과 차슐랭 화면을 착각한 것(크루즈브레이커 `docs/background-freeze-experiment.md` "함께 확인한 것"에 기록, 이민하 질문 답변 완료)
 - 주의:
   - gh는 브라우저 로그인이라 계정 전체 권한이다. 두 저장소로 줄이려면 fine-grained 토큰(Contents 읽기, Pull requests 읽기·쓰기)으로 다시 로그인
@@ -47,6 +49,11 @@
 - 확인 방법: `./gradlew assembleDebug test` / 시연 전체는 `docs/demo-scenario.md` 순서대로 / 신호 모니터는 S1 제목 길게 누르기 → 개발 메뉴
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-07 — 최신 상태 점검, "다음 할 일" 갱신(두 저장소, main 직접 push)
+- 장호연 요청("최신 상태 체크 후 남은 작업 보고" → "갱신해 줘"). Claude가 진행, 문서만 바꿈
+- 확인: 로컬 main이 2커밋 뒤라 pull. 열린 PR 없음, 열린 이슈 #12·#13, 저장소 PRIVATE, `local.properties` Supabase 키 있음, 서명 키 있음, release APK가 마지막 코드 커밋 뒤라 최신, `docs/proposal.md` 【제출 전 기입】 2곳 남음
+- "다음 할 일"을 제출 준비 위주로 다시 씀(끝난 Supabase 키·적용 항목 빼고 키 백업·브랜치 정리·이상준 로딩 상태 추가). 열린 PR 줄도 고침
 
 ### 2026-11-05 — README 팀 내부 안내를 `docs/dev-guide.md`로 이동(두 저장소, main 직접 push)
 - 배경: 심사위원이 GitHub 링크로 들어오면 README의 팀 내부 안내(담당별 첫 작업·규칙, 팀원 실명 포함)를 먼저 보게 됨 → 장호연 "옮겨 줘"
