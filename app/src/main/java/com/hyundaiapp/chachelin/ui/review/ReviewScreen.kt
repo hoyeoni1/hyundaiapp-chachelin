@@ -137,9 +137,13 @@ private fun RatingAndTags(
                 }
             }
         }
-        state.rating?.let { rating ->
-            Text("${rating}점 선택", style = MaterialTheme.typography.titleMedium, color = CarColors.Warning)
-        }
+        // 줄을 항상 그려 둔다: 별을 누를 때 줄이 새로 생기면 아래 태그가 밀려 바로 누른 태그가 빗나간다(11-07 리허설)
+        val rating = state.rating
+        Text(
+            if (rating != null) "${rating}점 선택" else "별을 눌러 평가해 주세요",
+            style = MaterialTheme.typography.titleMedium,
+            color = if (rating != null) CarColors.Warning else CarColors.OnSurfaceVariant,
+        )
         ReviewTag.entries.chunked(tagColumns).forEach { rowTags ->
             Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
                 rowTags.forEach { tag ->

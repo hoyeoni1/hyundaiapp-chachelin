@@ -317,3 +317,47 @@ test('failure-heavy demo station ranks first by stars but last by score, and dat
     assert.deepEqual((await nearby(fresh)).map(s=>s.id),rows.map(s=>s.id));
   } finally { await fresh.close(); }
 });
+
+test('11-07 demo names rename only seed labels, re-runnable, skipped before the base seed', async () => {
+  const fresh=await freshDb();
+  try {
+    const names=await sql('migrations/20261107000100_demo_names.sql');
+    await fresh.exec(names); // before the base seed: skipped
+    assert.equal((await fresh.query(`select count(*)::int n from pleos_private.migration_versions where version='20261107000100'`)).rows[0].n,0);
+    await fresh.exec(await sql('migrations/20261102000200_demo_data.sql'));
+    await fresh.exec(names); await fresh.exec(names);
+    const seg=(await fresh.query(`select road_name from pleos_private.segments where geohash=pleos_private.geohash_encode(37.4163,127.0947)`)).rows[0];
+    assert.equal(seg.road_name,'판교IC 진입로');
+    const st=(await fresh.query(`select id,name,operator from pleos_private.stations order by id`)).rows;
+    assert.equal(st.find(s=>s.id==='st-005').name,'삼평동 공영주차장 (시연)');
+    assert.ok(st.every(s=>s.operator==='시연 데이터'));
+    assert.ok(st.every(s=>s.name.endsWith('(시연)')));
+    assert.equal(st.find(s=>s.id==='st-003').name,'시흥동 주민센터 (시연)'); // untouched
+    assert.equal((await fresh.query(`select count(*)::int n from pleos_private.charge_sessions`)).rows[0].n,300);
+  } finally { await fresh.close(); }
+});
+
+test('clear-rehearsal-data deletes SIMULATED records only and keeps installations', async () => {
+  const fresh=await freshDb();
+  try {
+    await fresh.exec(await sql('migrations/20261102000200_demo_data.sql'));
+    const sim='20000000-0000-4000-8000-000000000002', live='20000000-0000-4000-8000-000000000003';
+    await fresh.exec(`insert into auth.users values('${A}');
+      insert into pleos_private.app_installations(id,owner_user_id,app,vehicle_hash,data_source,consent_version) values
+        ('${sim}','${A}','CHACHELIN',repeat('a',64),'SIMULATED','v1'),('${live}','${A}','CHACHELIN',repeat('b',64),'LIVE','v1');
+      insert into pleos_private.charge_sessions(installation_id,id,station_id,started_at,ended_at,soc_start,soc_end,avg_kw,result) values
+        ('${sim}',gen_random_uuid(),'st-003',now()-interval '1 hour',now(),40,80,50,'SUCCESS'),
+        ('${sim}',gen_random_uuid(),'st-003',now()-interval '1 hour',now(),40,40,null,'FAILED'),
+        ('${live}',gen_random_uuid(),'st-003',now()-interval '1 hour',now(),40,80,50,'SUCCESS');`);
+    await fresh.exec(`insert into pleos_private.reviews(installation_id,session_id,rating,tags)
+      select installation_id,id,5,array['FAST'] from pleos_private.charge_sessions where installation_id='${sim}' and result='SUCCESS'`);
+    const clear=await sql('clear-rehearsal-data.sql');
+    await fresh.exec(clear); await fresh.exec(clear); // re-runnable
+    const count=async w=>(await fresh.query(`select count(*)::int n from pleos_private.charge_sessions c join pleos_private.app_installations i on i.id=c.installation_id where ${w}`)).rows[0].n;
+    assert.equal(await count(`i.data_source='SIMULATED'`),0);
+    assert.equal(await count(`i.data_source='LIVE'`),1);
+    assert.equal(await count(`i.data_source='SEED'`),300);
+    assert.equal((await fresh.query(`select count(*)::int n from pleos_private.reviews where installation_id='${sim}'`)).rows[0].n,0);
+    assert.equal((await fresh.query(`select count(*)::int n from pleos_private.app_installations where id='${sim}'`)).rows[0].n,1);
+  } finally { await fresh.close(); }
+});

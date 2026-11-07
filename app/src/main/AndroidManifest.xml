@@ -25,6 +25,8 @@
     <application
         android:name=".ChachelinApp"
         android:label="@string/app_name"
+        android:icon="@mipmap/ic_launcher"
+        android:roundIcon="@mipmap/ic_launcher_round"
         android:theme="@android:style/Theme.DeviceDefault.NoActionBar">
 
         <!-- DO(distractionOptimized) 미선언: 주행 중에는 플랫폼이 앱 사용을 막는다(PRD 3.2, 정차 전용 앱) -->

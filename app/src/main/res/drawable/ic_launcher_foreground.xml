@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 차슐랭: 충전 번개 + 별점(대표색 레드 배경). 108dp 캔버스, 안전 영역(가운데 66dp) 안에 그린다 -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp"
+    android:height="108dp"
+    android:viewportWidth="108"
+    android:viewportHeight="108">
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M58,24 L36,58 L52,58 L46,84 L72,46 L56,46 Z" />
+    <path
+        android:fillColor="#FFFFFFFF"
+        android:pathData="M75,25 L77,30.25 L82.61,30.53 L78.23,34.05 L79.7,39.47 L75,36.4 L70.3,39.47 L71.77,34.05 L67.39,30.53 L73,30.25 Z" />
+</vector>
