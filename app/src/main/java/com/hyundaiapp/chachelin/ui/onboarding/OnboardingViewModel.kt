@@ -29,7 +29,7 @@ class OnboardingViewModel(
     }
 
     /** 차종 순서를 저장하기 전 버전에서 동의한 경우는 용량이 같은 첫 차종으로 보여 준다 */
-    private fun savedPreset(): Int? = profile.presetIndex
+    private fun savedPreset(): Int? = profile.presetIndex.value
         ?: profile.capacityKwh?.let { kwh -> VehiclePreset.ALL.indexOfFirst { it.capacityKwh == kwh }.takeIf { it >= 0 } }
 
     private fun emptyState() = OnboardingUiState(vehiclePresets = VehiclePreset.ALL.map { it.label })
@@ -46,7 +46,7 @@ class OnboardingViewModel(
         val preset = current.selectedPreset?.let { VehiclePreset.ALL.getOrNull(it) } ?: return false
         if (!current.locationAgreed || !current.privacyAgreed) return false
         profile.completeOnboarding(preset.capacityKwh, current.selectedPreset)
-        onStarted()
+        if (!current.editing) onStarted()
         return true
     }
 }

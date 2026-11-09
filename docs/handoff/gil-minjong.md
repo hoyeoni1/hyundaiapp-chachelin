@@ -2,15 +2,10 @@
 
 담당 경로: `app/src/main/java/com/hyundaiapp/*/ui/`(화면·테마). 상태 계약 `ui/UiStates.kt`는 로직 담당과 합의
 
-## 현재 상태 (2026-11-04 기준, 매번 덮어쓰기)
+## 현재 상태 (2026-11-09 기준, 매번 덮어쓰기)
 
-- 한 일: 공식 Pleos ARM64 에뮬레이터를 실행하고 실제 ADB 터치·화면 XML·PNG로 구현된 화면 이동을 검사. 목록 스크롤을 상세·기록 왕복 및 refresh 중에도 보존. 충전/실패 헤더를 다른 화면과 같은 위치로 정렬. 두 앱 공통 모달 취소의 실제 터치 폭62dp를64dp 이상으로 수정.
-- 진행 브랜치: `fix/verified-navigation-20261104`(최신 origin/main 기반). 기존 헤더/대표색 PR은 이미 머지된 상태이며 이번 PR에는 새 수정만 포함. PR 머지는 장호연 담당.
-- 확인한 시나리오: 첫 동의/약관/권한 거절/목록·상세·기록/실제 Pleos 내비 전달/충전 포트·SoC에 따른 자동 충전·성공 리뷰·실패/각 결과 보류·재진입·취소·확인/백그라운드 결과/개발8화면. 실제 차량 신호는 Virtual Console로 주입, 실차 시험은 아님. 실제 앱 viewport1682×1210dp/API34. 공유 Supabase 공개 설정·SIMULATED 데이터 사용.
-- 검증: 최종 main 기반 `assembleDebug assembleRelease test :app:lintDebug` PASS. 앱 단위 테스트 debug/release 각각 99개, core debug32/release18개 실패0. 실제 최종 APK smoke는 PR 본문/로컬 검수 보고서 참조. 새 퍼미션·QA 의존성·core/서버/VM 변경 없음.
-- 제한: 철회 창 열기/취소는 검사하지만, 서버·기기 기록을 지우는 최종 철회는 자동 승인 심사가 사용자 명시 승인 부재로 차단. 승인 전 실행하지 않으며 통과로 표기하지 않음.
-- 다음 할 일: 이상준: 내 충전 기록 최초 로딩 중 빈 상태가 먼저 표시되는 현상(HistoryUiState에 loading 계약 없음). 기존 #12/#13 위치·내비 실패 계약은 별도.
-- 증거: 로컬 `output/hyundai-emulator-navigation-2026-11-04/`의 checklist.json·actions.jsonl·vehicle-actions.jsonl·PNG/XML·검수 보고서. 서버 계정/개인 키·APK·전체 native log는 PR에 올리지 않음.
+- 차슐랭 #39 리뷰 후속은 `fix/home-vehicle-refresh-20261109`에서 검토한다. 저장한 차종을 홈에서 즉시 표시하고 홈 헤더에 기존 뒤로 동작을 연결했다. 설정의 차종 저장은 첫 동의와 구분한다.
+- #39 원래 작성자 브랜치와 PR은 유지하며 후속 커밋을 별도로 검토한다. 새 홈과 #37 충전 알림을 함께 넣는 경우 통합 후보에서 화면과 알림 흐름을 확인한다.
 
 ## 공유 검증 요약
 
@@ -28,6 +23,11 @@
 일반 검증: JDK17 `bash ./gradlew assembleDebug test :app:lintDebug` PASS. UI 인수는 별도 임시 Robolectric SDK34/mdpi에서 차슐랭 debug10/release3 PASS이며 앱의 일반 테스트에 포함되지 않는다. Compose 글자 배율은 Android 비선형 배율을 따른다. 실제 Pleos/실차 검증은 별도다.
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-09 — #39 홈 리뷰 후속
+
+- 설정 저장 후 같은 홈 ViewModel에서도 차종 변경을 관찰하도록 수정하고 회귀 검사를 추가했다. 새 홈에도 차량용 헤더 뒤로 버튼을 제공한다.
+
 
 ### 2026-11-04 — 실제 Pleos 전체 화면 복귀 검수 및 발견 문제 수정
 - 실행: 새 Pleos ARM64 AVD에서 첫 동의/약관/권한 거절/목록·상세·기록/실제 Pleos 내비 전달/충전 포트·SoC에 따른 자동 충전·성공 리뷰·실패/각 결과 보류·재진입·취소·확인/백그라운드 결과/개발8화면. 실제 버튼 중심 좌표 탭, 화면 전후 XML/PNG와 차량 신호 주입 로그 보존.
