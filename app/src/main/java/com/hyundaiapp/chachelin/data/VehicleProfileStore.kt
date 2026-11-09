@@ -13,7 +13,11 @@ interface VehicleProfileStore {
     val onboarded: StateFlow<Boolean>
     val capacityKwh: Float?
 
-    fun completeOnboarding(capacityKwh: Float)
+    /** S7에서 고른 차종([com.hyundaiapp.chachelin.domain.VehiclePreset.ALL]의 순서). 설정 화면에서 다시 보여 줄 때 쓴다 */
+    val presetIndex: StateFlow<Int?>
+
+    /** 처음 동의할 때와 설정에서 차종을 바꿀 때 부른다 */
+    fun completeOnboarding(capacityKwh: Float, presetIndex: Int? = null)
 
     /** 서버 `charge_sessions.vehicle_hash`용(PRD 5.5). 설치마다 무작위 UUID, 처음 부를 때 만든다. 차대번호·계정은 쓰지 않는다 */
     fun vehicleId(): String
@@ -25,13 +29,19 @@ interface VehicleProfileStore {
 class SharedPrefsVehicleProfileStore(context: Context) : VehicleProfileStore {
     private val prefs = context.getSharedPreferences("vehicle_profile", Context.MODE_PRIVATE)
     private val _onboarded = MutableStateFlow(prefs.contains(KEY_CAPACITY))
+    private val _presetIndex = MutableStateFlow(if (prefs.contains(KEY_PRESET)) prefs.getInt(KEY_PRESET, 0) else null)
 
     override val onboarded: StateFlow<Boolean> = _onboarded.asStateFlow()
     override val capacityKwh: Float?
         get() = if (prefs.contains(KEY_CAPACITY)) prefs.getFloat(KEY_CAPACITY, 0f) else null
 
-    override fun completeOnboarding(capacityKwh: Float) {
-        prefs.edit().putFloat(KEY_CAPACITY, capacityKwh).apply()
+    override val presetIndex: StateFlow<Int?> = _presetIndex.asStateFlow()
+
+    override fun completeOnboarding(capacityKwh: Float, presetIndex: Int?) {
+        prefs.edit().putFloat(KEY_CAPACITY, capacityKwh).apply {
+            if (presetIndex != null) putInt(KEY_PRESET, presetIndex) else remove(KEY_PRESET)
+        }.apply()
+        _presetIndex.value = presetIndex
         _onboarded.value = true
     }
 
@@ -48,11 +58,13 @@ class SharedPrefsVehicleProfileStore(context: Context) : VehicleProfileStore {
     override fun clear() {
         // 철회는 바로 반영돼야 하므로 commit(동기 저장)
         prefs.edit().clear().commit()
+        _presetIndex.value = null
         _onboarded.value = false
     }
 
     private companion object {
         const val KEY_CAPACITY = "capacity_kwh"
+        const val KEY_PRESET = "preset_index"
         const val KEY_VEHICLE_ID = "vehicle_id"
     }
 }
@@ -61,10 +73,13 @@ class FakeVehicleProfileStore : VehicleProfileStore {
     override val onboarded = MutableStateFlow(false)
     override var capacityKwh: Float? = null
         private set
+    private val _presetIndex = MutableStateFlow<Int?>(null)
+    override val presetIndex: StateFlow<Int?> = _presetIndex.asStateFlow()
     private var id: String? = null
 
-    override fun completeOnboarding(capacityKwh: Float) {
+    override fun completeOnboarding(capacityKwh: Float, presetIndex: Int?) {
         this.capacityKwh = capacityKwh
+        _presetIndex.value = presetIndex
         onboarded.value = true
     }
 
@@ -72,6 +87,7 @@ class FakeVehicleProfileStore : VehicleProfileStore {
 
     override fun clear() {
         capacityKwh = null
+        _presetIndex.value = null
         onboarded.value = false
         id = null
     }

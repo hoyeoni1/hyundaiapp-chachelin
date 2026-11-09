@@ -89,4 +89,18 @@ data class OnboardingUiState(
     val privacyAgreed: Boolean = false,
     val vehiclePresets: List<String> = listOf("아이오닉 5 (77.4kWh)", "아이오닉 6 (77.4kWh)", "EV6 (77.4kWh)", "코나 일렉트릭 (64.8kWh)"),
     val selectedPreset: Int? = null,
+    /** 이미 동의를 마친 뒤 다시 들어온 경우(설정). 동의를 다시 받지 않고 저장된 값을 보여 준다(11-09 시연 피드백) */
+    val editing: Boolean = false,
+)
+
+/** 홈의 충전 상태 칸 */
+enum class HomeChargeStatus { IDLE, CHARGING, REVIEW, FAILURE }
+
+/** 홈(11-09 시연 피드백: 홈 화면 없음) */
+data class HomeUiState(
+    val charge: HomeChargeStatus = HomeChargeStatus.IDLE,
+    /** S7에서 고른 차 이름. 모르면 null */
+    val carLabel: String? = null,
+    val recordCount: Int = 0,
+    val lastRecord: HistoryRowUi? = null,
 )

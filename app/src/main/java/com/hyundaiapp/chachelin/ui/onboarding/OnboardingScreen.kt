@@ -24,6 +24,8 @@ import com.hyundaiapp.chachelin.ui.components.ConsentRow
 import com.hyundaiapp.chachelin.ui.components.OnboardingStartAction
 import com.hyundaiapp.chachelin.ui.components.SelectableButton
 import com.hyundaiapp.chachelin.ui.components.ScreenHeader
+import com.hyundaiapp.chachelin.ui.components.SecondaryButton
+import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import com.hyundaiapp.chachelin.ui.theme.CarColors
 import com.hyundaiapp.chachelin.ui.theme.ChachelinTheme
 
@@ -45,6 +47,8 @@ fun OnboardingScreen(
     onRequestNotifications: () -> Unit = {},
     notificationsNeedSettings: Boolean = false,
     onBack: () -> Unit,
+    /** 설정([OnboardingUiState.editing])에서만 보이는 [동의 철회] */
+    onWithdraw: (() -> Unit)? = null,
 ) {
     val canStart = state.locationAgreed && state.privacyAgreed && state.selectedPreset != null
     val startHint = when {
@@ -55,7 +59,10 @@ fun OnboardingScreen(
     BoxWithConstraints(Modifier.fillMaxSize()) {
         val wide = maxWidth >= 1000.dp
         Column(Modifier.fillMaxSize().padding(horizontal = if (wide) 48.dp else 32.dp, vertical = 32.dp), verticalArrangement = Arrangement.spacedBy(20.dp)) {
-            ScreenHeader("첫 실행 동의", onBack = onBack)
+            // 동의를 마친 뒤 다시 들어오면 설정: 저장된 동의·차종을 보여 주고 다시 동의받지 않는다(11-09 시연 피드백)
+            ScreenHeader(if (state.editing) "설정" else "첫 실행 동의", subtitle = if (state.editing) "동의한 항목과 내 차" else null, onBack = onBack) {
+                if (state.editing && onWithdraw != null) SecondaryButton("동의 철회", onWithdraw, height = CarDimens.TouchTargetSmall)
+            }
             if (wide) Row(Modifier.weight(1f), horizontalArrangement = Arrangement.spacedBy(32.dp)) {
                 Column(Modifier.weight(1f).verticalScroll(rememberScrollState()), verticalArrangement = Arrangement.spacedBy(16.dp)) {
                     Intro()
@@ -69,7 +76,7 @@ fun OnboardingScreen(
                 NotificationConsent(notificationsGranted, notificationsNeedSettings, onRequestNotifications)
                 Presets(state, onSelectPreset)
             }
-            OnboardingStartAction(canStart, startHint, onStart)
+            OnboardingStartAction(canStart, startHint, onStart, label = if (state.editing) "저장" else "시작하기")
         }
     }
 }

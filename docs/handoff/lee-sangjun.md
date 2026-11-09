@@ -2,41 +2,50 @@
 
 담당 경로: 차슐랭 로직 — `app/src/main/java/com/hyundaiapp/chachelin/` 아래 `domain/`, `data/`(인터페이스 합의), ViewModel, `AppContainer`·`ChachelinApp`·`RecordingService`. 화면(`ui/` Screen·테마)은 길민종
 
-## 현재 상태 (2026-11-04 기준, 매번 덮어쓰기)
+## 현재 상태 (2026-11-09 기준, 매번 덮어쓰기)
 
 - 한 일 요약:
-  - PR #3(판정·업로드·ViewModel·기록 서비스·철회)은 11-02 main에 머지됨. 서버(황준용 PR #10, Supabase)도 머지돼 `local.properties`에 공개 URL·키가 있으면 실제 저장소, 없으면 Fake로 동작
-  - **11-04 `feat/station-retry-and-result-notice`**: 서버 연결 후 남은 PRD 5.3 결정 두 가지
-    - 충전소 조회 실패: "충전소 아님"으로 단정하지 않고, 충전구를 연 위치로 될 때까지 다시 조회(5초·15초·1분·5분, 5분으로 계속)한 뒤 판정·업로드. 충전소와 상관없이 기록하지 않는 세션은 기다리지 않음. 실제 저장소 `nearest`는 오프라인일 때 캐시에서 찾고, 캐시에 없으면 null 대신 오류를 던짐
-    - 결과 알림: 앱이 화면에 없을 때 S4/S5 대상 결과가 생기면 알림("충전 완료 · 3초 평가" / "충전 실패를 기록했어요"), 누르면 앱이 열려 S4/S5. 세션마다 한 번, 처리하거나 앱을 열면 지움. 알림 권한이 없으면 띄우지 않음(기록은 그대로)
-  - 단위 테스트 debug·release 각 91개 통과, debug·release 빌드, `:app:lintDebug` 오류 0(경고 16)
-- 확인한 것(에뮬레이터, 2026-11-04, Fake 저장소): 내비가 앞에 있을 때 인증 충전 → 알림 센터에 "충전 완료 · 3초 평가 / 시흥동 주민센터 · 40% → 80%" → 누르면 S4, 알림 지워짐 / 실패 → "충전 실패를 기록했어요" → 누르면 앱이 열림
-  - **확인 못 한 것**: 실제 Supabase 연결 상태(이 PC에 키 없음, 조회 실패·재조회는 단위 테스트로만 확인), 화면 위 팝업(헤드업) — 중요도 HIGH로 했지만 Pleos 에뮬레이터 캡처에서는 팝업이 보이지 않고 알림 센터에만 쌓임
-- 진행 중 브랜치·PR: `feat/station-retry-and-result-notice` (PR 리뷰·머지 대기)
+  - PR #3(판정·업로드·화면 연결·기록 서비스·철회), #20(충전소 조회 실패 재조회·결과 알림)은 main에 머지됨
+  - **11-09 `fix/demo-feedback-20261109`**: 시연 피드백 7개 중 1~4 반영, 6은 이미 해결된 것 확인, 5·7은 결정 필요
+    - 1 화면 전환: 들어가면 오른쪽에서, 돌아오면 왼쪽에서 짧게 밀어 넣기(220ms)
+    - 2 이동 버튼: 왼쪽 고정 이동 막대(홈·충전소·내 기록·설정). 충전 흐름(S3·S4·S5)과 첫 동의에서는 숨김
+    - 3 홈: 동의 후 시작 화면. 충전 상태(기록 중·평가 대기·실패 → 바로 가기), 근처 충전소·내 충전 기록·설정 큰 버튼, 최근 기록 한 줄
+    - 4 동의 화면 재진입: 동의를 마쳤으면 같은 화면이 "설정"으로 열려 저장된 동의·차종을 보여 줌(다시 동의 안 받음). 차종 변경·저장, [동의 철회]도 여기서
+    - 6 상반 태그: main(PR #19)에서 이미 쌍마다 하나만 고를 수 있음 — 에뮬레이터에서 [빠름] 뒤 [느림]을 누르면 [빠름]이 풀림을 확인. 시연은 이전 APK였을 가능성
+  - 단위 테스트 debug·release 각 105개 통과, debug·release 빌드, `:app:lintDebug` 통과
+- 확인한 것(에뮬레이터, 2026-11-09, Fake 저장소): 새로 설치 → 첫 실행 동의(막대 없음) → 시작 → 홈(막대) → [충전소] → S1 → [설정] → 동의함·코나 선택 상태 → 아이오닉 6으로 저장 → 홈에 "내 차 아이오닉 6" / `demo-charge.sh success` → S3 → S4(막대 없음) → 태그 상반 쌍 배타 → [평가 건너뛰기] → 홈(기록 1건, 최근 기록 줄)
+- 진행 중 브랜치·PR: `fix/demo-feedback-20261109` (PR 리뷰·머지 대기)
 - 다음 할 일(우선순위 순):
-  1. 서버 키가 있는 PC에서 연결 리허설: Wi-Fi를 끈 채 충전 → 결과가 미뤄지는지, 다시 켜면 인증 충전으로 올라가는지
-  2. 이슈 #12(S1 위치 대기 기한·최신 위치 우선), #13(길안내 요청 대기·실패·성공 계약, 황준용과) — 길민종 UI 감사에서 넘어온 것
-  3. NAV02(길민종 제안): S3·S4에서 Back으로 나가면 앱 안에서 다시 들어갈 길이 없음 → 진행 중·미처리 세션 진입점(길민종과 합의)
-  4. 조회 재시도 중인 세션은 메모리에만 있어 앱 프로세스가 죽으면 사라짐. 필요하면 영속 저장(황준용 outbox와 같은 방식)
+  1. **결정 필요(장호연)**: 피드백 5(리뷰 텍스트 코멘트) — PRD S4는 "키보드 없음·3초 평가"이고 서버 `reviews`에 글 칸이 없음. 넣으려면 서버 열 추가(황준용)·약관(자유 입력 개인정보)·S4 화면이 함께 바뀜. 추천: 이번 제출에서는 빼고 확장 계획(음성 후기 STT)에 적기
+  2. **결정 필요(장호연)**: 피드백 7(충전 속도는 유저 태그 대신 실제 기록으로) — 이미 S1·S2·S4에 계산 평균 kW가 나옴. 추천: [빠름]/[느림] 태그를 빼고 S2에 "이 충전소 계산 평균 vs 충전기 최대 kW"를 보여 주기. 태그 목록은 서버 enum·시드·S2 상위 태그와 묶여 있어 황준용·길민종과 같이 바꿔야 함
+  3. 길민종 PR #37(충전 시작 알림)이 `ChachelinNav.kt`·`MainActivity`·`AppContainer`를 고쳐서 이 브랜치와 충돌할 수 있음 → 먼저 머지되는 쪽에 맞춰 다른 쪽을 고침. #37은 내 담당 경로(`AppContainer`·`ResultNotification` 대체 등)를 고치므로 내 확인이 필요(장호연 메모)
+  4. 서버 키가 있는 PC에서 오프라인 충전 리허설, 이슈 #12·#13, NAV02(이번 홈·막대로 S3·S4 재진입은 홈 상태 칸·아래 버튼으로 가능해짐)
 - 막힌 점·질문(누구에게):
-  - 황준용: `SupabaseStationRepository.nearest`를 고쳤음(오프라인 + 캐시에 없음 → null 대신 예외). `StationRepository.nearest` 계약에 "null은 없음이 확인된 경우만"을 적음. 리뷰 부탁
-  - 장호연: PRD 5.3 "결과 알림" 구현됨, 헤드업 팝업은 실차·실제 Pleos에서 확인 필요. #17(태그 쌍 배타)은 장호연 PR #19에 들어 있어 이 브랜치에서는 손대지 않음
+  - 길민종: **담당 경로 밖을 고쳤음(시연 피드백, 사용자 요청)** — `ui/ChachelinNav.kt`(홈·설정 화면, 이동 막대, 전환), `ui/onboarding/OnboardingScreen.kt`(설정 모드 제목·저장·철회 버튼), 새 파일 `ui/home/HomeScreen.kt`·`AppNavRail.kt`. 공통 부품(`CarComponents`·`CarIcons`·테마)은 건드리지 않음(새 아이콘은 `ui/home/AppNavRail.kt`의 `NavIcons`). 모양은 편하게 바꿔도 됨. 크루즈브레이커에도 같은 막대가 필요한지 판단
+  - 장호연: 위 5·7 결정, release APK 재빌드(화면 흐름이 바뀌어 `docs/demo-scenario.md` 1단계 "S7→S1"이 "S7→홈"으로 바뀜)
 - 주의(함정·직접 겪은 이상한 동작):
-  - **에뮬레이터 32.x에서는 터치가 안 먹는다.** 시스템 앱 `ai.umos.drivingview`(왼쪽 3D 차량)가 충돌·재시작을 반복하고, 그때 생기는 전체 화면 입력 차단 창이 터치를 삼킨다(logcat `Not sending touch gesture to ... ActivityRecordInputSink`). 왼쪽 패널이 비어 있으면 이 증상. **emulator 37.2.13으로 올리면 해결**. 이 앱을 끄면(`pm disable-user`) 홈 화면이 같이 죽으니 끄지 말 것
-  - **Windows에서 프로젝트 경로에 한글이 있으면 AGP가 빌드를 거부한다.** 영문 경로로 복사해서 빌드하고, 복사 후 `diff`로 같은지 확인할 것(복사가 조용히 실패해 옛 코드를 검증한 적 있음). Gradle 데몬이 lint 캐시 jar를 잡고 있으면 `lintVitalAnalyzeRelease`가 "다른 프로세스가 사용 중"으로 실패 → `gradlew --stop` 후 다시
-  - 알림 채널 중요도는 처음 만들 때 정해진다. 채널 설정을 바꾸면 앱을 지우고 다시 설치해야 반영됨
-  - **기록은 S7 동의 후에만 돈다.** 새로 설치했으면 개발 메뉴 S7부터. S7 화면 배치가 바뀌었음(알림 허용 줄 추가)
-  - `am start` 직후나 [길안내] 후에는 내비가 앞을 덮는다 → 하단 독의 앱 아이콘을 누른다
-  - 앱이 다시 살아날 때 충전구가 이미 열려 있으면 그때를 세션 시작으로 본다 → 충전 시간·ΔSoC가 실제보다 작게 잡힘
-  - 에뮬레이터 SoC는 충전 중에도 자동으로 안 오름 → 콘솔로 주입. 위치는 판교 부근 고정(시드 st-003과 같은 좌표)
-  - `getEvBatteryCapacity`는 `CAR_ENERGY`만으로 "need Permission" → 차종 프리셋(S7) 값을 씀
+  - **에뮬레이터 32.x에서는 터치가 안 먹는다.** `ai.umos.drivingview`가 충돌을 반복하며 입력을 막음 → emulator 37.2.13. 이 앱을 끄면 홈 화면도 죽으니 끄지 말 것
+  - **Windows에서 프로젝트 경로에 한글이 있으면 AGP가 빌드를 거부한다.** 영문 경로로 통째로 복사해 빌드하고 `diff`로 같은지, 로그에 `BUILD SUCCESSFUL`이 있는지 확인(11-09에도 복사본이 지워져 빌드가 조용히 안 돈 적 있음). Gradle 데몬이 lint jar를 잡으면 `gradlew --stop`
+  - 알림 채널 중요도는 처음 만들 때 정해짐. 바꾸면 앱을 지우고 다시 설치
+  - 기록은 S7 동의 후에만 돈다. `am start` 직후·[길안내] 후에는 내비가 앞을 덮음 → 하단 독의 앱 아이콘
+  - 앱이 다시 살아날 때 충전구가 이미 열려 있으면 그때를 세션 시작으로 봄. 위치는 판교 고정(시드 st-003 좌표)
 - 확인 방법:
   - `./gradlew assembleDebug assembleRelease test :app:lintDebug`
-  - 결과 알림: `adb shell pm grant --user 10 com.hyundaiapp.chachelin android.permission.POST_NOTIFICATIONS` → 독에서 내비를 앞으로 → `bash tools/demo-charge.sh success` → `adb shell dumpsys notification --noredact | grep -A30 'chachelin|2|'`, 알림 센터는 `adb shell cmd statusbar expand-notifications`
-  - 서비스: `adb shell "dumpsys activity services" | grep RecordingService`
-- 시연 순서: `tools/demo-charge.sh`(main에 있음) 주석과 PRD 7절. 처음이면 개발 메뉴 S7 동의부터. PT에서 밝힐 것: SoC는 콘솔 주입, 충전 시간·kW는 시연 배속(×120), 다른 차량 기록은 시드 데이터
+  - 화면 흐름: 새로 설치 → S7 → 홈 → 막대로 각 화면 → [설정]에서 동의 다시 안 묻는지 → `bash tools/demo-charge.sh success`로 S3·S4
+  - 결과 알림: `adb shell pm grant --user 10 com.hyundaiapp.chachelin android.permission.POST_NOTIFICATIONS` → 내비를 앞으로 → `demo-charge.sh success` → `adb shell dumpsys notification --noredact | grep -A30 'chachelin|2|'`
+- 시연 순서: `docs/demo-scenario.md`(장호연). 처음이면 S7 동의부터. PT에서 밝힐 것: SoC는 콘솔 주입, 충전 시간·kW는 시연 배속(×120), 다른 차량 기록은 시드 데이터
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-09 (이상준, Claude 에이전트와 작업 — 시연 피드백)
+- 한 일: 최신 main(#35·#36 포함)에서 `fix/demo-feedback-20261109`. 피드백 1(화면 전환 애니메이션), 2(왼쪽 이동 막대), 3(홈 화면), 4(동의 화면 재진입 시 설정으로) 구현. 6(상반 태그)은 main에서 이미 해결됨을 에뮬레이터로 확인. 5(텍스트 코멘트)·7(속도는 실제 기록으로)은 PRD·서버와 묶인 결정이라 장호연에게 넘김. 테스트 99 → 105개(`DemoFeedbackTest` 6개)
+- 결정한 것과 이유:
+  - 막대 칸은 홈 위에 한 단계로만 쌓음: 어느 칸에서든 뒤로 가면 홈, 홈에서 뒤로 가면 앱 종료 — 스택이 깊어져 "어디로 돌아가는지" 모르는 일을 막기 위해
+  - 충전 흐름(S3·S4·S5)과 첫 동의에서는 막대를 숨김: 평가·동의 중에 다른 화면으로 새지 않게(3초 평가)
+  - 설정은 S7 화면을 그대로 씀: 동의 문구·약관 보기를 두 벌로 관리하지 않기 위해. 동의 버튼은 이미 "동의함"으로 보여 다시 누를 필요 없음
+  - 차종 순서를 `VehicleProfileStore.presetIndex`에 새로 저장. 예전 설치는 용량이 같은 첫 차종으로 보여 줌(아이오닉 5·6·EV6가 모두 77.4kWh라 셋 중 첫 번째로 보일 수 있음 — 다시 고르면 저장됨)
+  - 전환은 220ms 짧은 밀어 넣기만: 정차 화면 전용이지만 차량 화면 가이드(애니메이션 최소)에 맞춤
+- 바꾼 파일: `ui/ChachelinNav.kt`, `ui/onboarding/{OnboardingScreen,OnboardingViewModel}.kt`, `ui/home/{HomeScreen,HomeViewModel,AppNavRail}.kt`(새 파일), `ui/UiStates.kt`(`OnboardingUiState.editing`, `HomeUiState`), `data/VehicleProfileStore.kt`(`presetIndex`), 테스트 `DemoFeedbackTest`(새 파일), `docs/handoff/lee-sangjun.md`
 
 ### 2026-11-04 (이상준, Claude 에이전트와 작업 — 서버 연결 후 남은 일)
 - 한 일: 최신 main(서버 PR #10 포함)에서 `feat/station-retry-and-result-notice`. PRD 5.3의 11-02 결정 중 남은 두 가지 구현 — 충전소 조회 실패 시 재조회(`ChargeSessionTracker`, `SupabaseStationRepository.nearest`), 결과 알림(`domain/ChargeResultNotices.kt`, `ResultNotification.kt`, `MainActivity` 화면 표시 여부). 테스트 81 → 91개(조회 실패 4개, 알림 6개). 에뮬레이터에서 알림 표시·눌러서 S4 열림 확인
