@@ -255,13 +255,13 @@ fun SectionLabel(text: String, modifier: Modifier = Modifier) {
     Text(text, style = MaterialTheme.typography.labelMedium, color = CarColors.OnSurfaceVariant, modifier = modifier.padding(top = 8.dp))
 }
 
-/** 정차 화면 제목줄. 차량에서 시스템 버튼 없이 돌아갈 수 있도록 뒤로 동작을 필수로 받는다. */
+/** 정차 화면 제목줄. 뒤로 갈 화면이 있으면 버튼을 표시한다. */
 @Composable
 fun ScreenHeader(
     title: String,
     modifier: Modifier = Modifier,
     subtitle: String? = null,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     /** 아이콘 버튼만 둘 때 true. 좁은 화면에서도 버튼을 제목 옆에 둔다 */
     inlineActions: Boolean = false,
     /** 제목을 길게 눌렀을 때(디버그 개발 메뉴 같은 숨은 진입용). null이면 아무 일도 없다 */
@@ -272,10 +272,12 @@ fun ScreenHeader(
         val compact = maxWidth < 840.dp && !inlineActions
         Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
             Row(Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
-                IconButton(onClick = onBack, modifier = Modifier.align(Alignment.Top).size(CarDimens.TouchTargetSmall)) {
-                    Icon(CarIcons.ChevronLeft, contentDescription = "뒤로", tint = CarColors.OnSurface, modifier = Modifier.size(32.dp))
+                if (onBack != null) {
+                    IconButton(onClick = onBack, modifier = Modifier.align(Alignment.Top).size(CarDimens.TouchTargetSmall)) {
+                        Icon(CarIcons.ChevronLeft, contentDescription = "뒤로", tint = CarColors.OnSurface, modifier = Modifier.size(32.dp))
+                    }
+                    Box(Modifier.size(8.dp))
                 }
-                Box(Modifier.size(8.dp))
                 val titleModifier = if (onTitleLongPress != null) {
                     Modifier.weight(1f).pointerInput(onTitleLongPress) { detectTapGestures(onLongPress = { onTitleLongPress() }) }
                 } else Modifier.weight(1f)

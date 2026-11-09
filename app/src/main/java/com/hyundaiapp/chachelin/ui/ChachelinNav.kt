@@ -178,7 +178,7 @@ fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
                             onShowTerms = { terms = it },
                             onWithdraw = { confirmWithdraw = true },
                             onFirstRunDone = { stack[0] = Screen.HOME },
-                            stackSize = stack.size,
+                            stackSize = entry.depth,
                             notifications = notifications,
                             context = context,
                         )
@@ -245,7 +245,7 @@ private fun ScreenContent(
                 onHistory = { goTab(NavTab.HISTORY) },
                 onSettings = { goTab(NavTab.SETTINGS) },
                 onOpenCharge = openChargeFlow,
-                onBack = back,
+                onBack = back.takeIf { stackSize > 1 },
                 onDevMenu = if (BuildConfig.DEBUG) ({ go(Screen.DEV_MENU) }) else null,
             )
         }

@@ -48,7 +48,7 @@ fun HomeScreen(
     onHistory: () -> Unit,
     onSettings: () -> Unit,
     onOpenCharge: () -> Unit,
-    onBack: () -> Unit,
+    onBack: (() -> Unit)?,
     onDevMenu: (() -> Unit)? = null,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -141,7 +141,7 @@ private fun LastRecord(row: HistoryRowUi) {
 private fun HomePreview() {
     ChachelinTheme {
         Surface {
-            HomeScreen(HomeUiState(charge = HomeChargeStatus.REVIEW, carLabel = "아이오닉 5", recordCount = 3), {}, {}, {}, {}, onBack = {})
+            HomeScreen(HomeUiState(charge = HomeChargeStatus.REVIEW, carLabel = "아이오닉 5", recordCount = 3), {}, {}, {}, {}, onBack = null)
         }
     }
 }
@@ -149,5 +149,5 @@ private fun HomePreview() {
 @Preview(name = "홈 세로", widthDp = 720, heightDp = 1280)
 @Composable
 private fun HomePortraitPreview() {
-    ChachelinTheme { Surface { HomeScreen(HomeUiState(), {}, {}, {}, {}, onBack = {}) } }
+    ChachelinTheme { Surface { HomeScreen(HomeUiState(), {}, {}, {}, {}, onBack = null) } }
 }
