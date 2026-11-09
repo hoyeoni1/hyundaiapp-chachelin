@@ -155,6 +155,7 @@ fun ChachelinNav(container: AppContainer, onExit: () -> Unit) {
                 // 화면을 바꿀 때 짧게 밀어 넣는다: 들어가면 오른쪽에서, 돌아오면 왼쪽에서(11-09 시연 피드백: 전환 과정 없음)
                 AnimatedContent(
                     targetState = NavEntry(current, stack.size),
+                    contentKey = { it.screen },
                     modifier = Modifier.weight(1f),
                     transitionSpec = {
                         val forward = targetState.depth >= initialState.depth
