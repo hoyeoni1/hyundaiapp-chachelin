@@ -48,3 +48,5 @@
 공식 문서: [키 종류](https://supabase.com/docs/guides/getting-started/api-keys), [익명 인증](https://supabase.com/docs/guides/auth/auth-anonymous).
 
 시드 날짜가 오래되면 [시연 날짜 갱신 절차](demo-maintenance.md)를 따른다. 원래 migration은 재실행하지 않는다.
+
+[11월 9일 피드백 확인](review-20261109.md)에 별점 분포 조정, PR #36 SQL 검토, 프로젝트 리전·로그 근거, core v0.5.2 검토를 정리했다.
