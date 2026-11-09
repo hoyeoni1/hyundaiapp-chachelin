@@ -18,7 +18,7 @@
   - 아직 없는 것: 서버(황준용 — Supabase로 확정(11-02, PC 호스팅 안 함). 황준용이 이미 작업했고 곧 커밋 예정), release 서명, 앱이 뒤에 있을 때 충전 결과 알림, S2 실측 속도 분포
 - 진행 중 브랜치·PR:
   - 장호연 `fix/core-startup-resilience` — **11-04 머지 완료**(차슐랭 #30 → `0aa4032`, 크루즈 #42 → `9ff1318`). core v0.5.2 시작 크래시 방어 + `build-release.sh` 키 형식 검사(크루즈 쪽에는 안내 쿨다운 수정도). core(황준용)·`AppContainer`(이상준)를 장호연 결정으로 고쳤으므로 두 사람에게 알릴 것(황준용 확인 코멘트 없음)
-  - 열린 PR #37(길민종 `feat/charge-start-notification-20261109`, 11-09 확인, 마지막 머지 #36). 열린 이슈 #12·#13. GitHub 아이디: 이상준 `wklee316`, 황준용 `Aodlf123`
+  - 열린 PR #37(길민종 `feat/charge-start-notification-20261109`, 11-09 확인, 마지막 머지 #39 → `16547de`). #37은 main에 맞춰 다시 올리는 중(충돌 2파일). 열린 이슈 #12·#13. GitHub 아이디: 이상준 `wklee316`, 황준용 `Aodlf123`
   - 11-02 머지 때 승인한 것(장호연): `ui/` 2개 파일 수정(이상준, 길민종에게 알려 줄 것), `tools/windows-*.ps1`·`app/build.gradle.kts` 한 줄(황준용). 팀 문서 2절 담당표에 `AppContainer`·`ChachelinApp`·`RecordingService`·매니페스트를 이상준 담당으로 적는 일은 아직
   - 시연 배속 ×120(디버그 빌드만)·SoC 주입은 PT에서 밝혀야 함 → PRD 7절에 적기
   - 길민종 `feat/ui-screens` — 차슐랭 https://github.com/hoyeoni1/hyundaiapp-chachelin/pull/1 · 크루즈브레이커 https://github.com/hoyeoni1/hyundaiapp-cruisebreaker/pull/1 — **11-01 머지 완료**(Claude 리뷰 `✅ 머지 가능` 후 장호연 지시로 merge commit). 후속은 리뷰 코멘트의 "다음에 챙길 것"
@@ -27,7 +27,8 @@
   - 기타: 기획서(`docs/proposal.md`, `docs/submission/`)는 팀장 결정으로 `main`에 바로 push
 - 리뷰·머지: PR 리뷰는 Claude(정기 작업 "삼각고래 PR 리뷰", 매일 09~23시 매시), 머지는 장호연만(`docs/pr-review-guide.md`)
 - 다음 할 일(우선순위 순, 11-09 점검 기준. 서명 11-13, 발송 11-14, 사이트 마감 11-15):
-  1. **열린 PR #37(길민종, 충전 시작 알림) 판단** — 리뷰 `❓ 장호연 판단 필요`: 이상준 담당 경로(`AppContainer`·`MainActivity`·`ChargeNotifications`·`domain/ChargeStartNotices`) 수정 + PRD에 없는 새 기능. 빌드·테스트(101개)는 통과. 이상준 승인 또는 장호연 예외 허용 후 머지, 넣으면 PRD 115행·S7 문구 반영 + release APK 재빌드
+  1. **#39 머지 후속(시작 화면 S1 → 홈)**: `docs/demo-scenario.md` 1단계·PRD 5.4 화면 목록·211행·`tools/demo-charge.sh` 주석 고치기 → release APK 재빌드 → 리허설. 길민종에게 `ui/` 수정 허용 알리기
+  1-2. **열린 PR #37(길민종, 충전 시작 알림)**: 11-09 순서 결정(#39 먼저)에 따라 길민종이 main 병합·충돌 해결·버튼을 홈으로 옮기는 중. 다시 올라오면 재리뷰 → 이상준 확인 후 머지, PRD S1·S7·결과 알림 행 반영 + APK 재빌드
   2. **11-09 회의**: `docs/meeting-2026-11-09-station-data.md` — 충전소가 시드 10곳뿐인데 기획서는 "환경부 API 수집·캐시"로 읽힘(A1 문구 정직화는 꼭), 아파트·집 충전 처리(B1~B5). 결정 후 기획서 5·7절 수정·DOCX 재생성
   3. 주최 측 문의: **11-09 발송 완료(제출 1·2번 — 심사용 계정·영상 형식), 답 대기.** 답이 오면 저장소(아직 PRIVATE) 초대·접근 확인(또는 공개 전환), 영상 형식 맞춰 촬영. 출시 준비 3~6번은 1차 합격(11-23) 뒤 발송
   4. 시연 영상 촬영(`docs/demo-scenario.md` 순서, 촬영 대기). 촬영 직전 리허설 기록 정리는 `server/supabase/clear-rehearsal-data.sql`. 영상·GitHub 주소가 나오면 기획서 7번 칸 【제출 전 기입】 2곳 채우고 DOCX 재생성(앱명 인자 `"차슐랭 (Chachelin)"`)
@@ -48,6 +49,12 @@
 - 확인 방법: `./gradlew assembleDebug test` / 시연 전체는 `docs/demo-scenario.md` 순서대로 / 신호 모니터는 S1 제목 길게 누르기 → 개발 메뉴
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-09 — 차슐랭 #39 머지(장호연 "네, #39 먼저")
+- 순서 결정: #39·#37을 두 순서로 시험 머지 → 어느 쪽이든 `ui/ChachelinNav.kt` 2곳·`docs/handoff/gil-minjong.md` 충돌. #39(화면 구조를 `ScreenContent`+전환 애니메이션으로 바꿈)가 커서 먼저 넣고 #37을 그 위에 맞추기로 함. 버튼 `충전 알림 켜기`는 S1이 아니라 새 홈에 두기로 함
+- #39 헤드 `d8e886d`(리뷰한 #40 머지) 그대로 확인 후 merge commit → main `16547de`. 길민종 `ui/` 수정은 장호연 결정으로 허용(길민종에게 알릴 것). 머지 후 main `assembleDebug test` 통과
+- #37에 코멘트: main 병합·충돌 해결·버튼을 홈으로·이상준 확인 요청
+- **시작 화면이 바뀜**(동의 후 S1 → 홈): `docs/demo-scenario.md` 1단계, PRD 5.4 화면 목록·211행, `tools/demo-charge.sh` 주석 고치기, release APK 재빌드·리허설은 아직
 
 ### 2026-11-09 — 차슐랭 #40 머지(장호연 "네, 머지해 줘")
 - 리뷰한 헤드 2e6fef5 그대로 확인 후 #39 브랜치 `fix/demo-feedback-20261109`로 머지(d8e886d). main·release APK는 그대로
