@@ -65,7 +65,7 @@
 
 ## 5. 빌드 메모
 
-- 시작 화면: 동의 전 S7, 동의 후 **홈**. debug·release 모두 같다(11-09 PR #39로 S1 → 홈. 11-05 결정 때는 S1이었고, 그 전에는 debug가 개발 메뉴에서 시작했음). 홈에서 뒤로 가면 앱이 닫힌다.
+- 시작 화면: 동의 전 S7, 동의 후 **홈**. debug·release 모두 같다(11-09 PR #39로 S1 → 홈. 11-05 결정 때는 S1이었고, 그 전에는 debug가 개발 메뉴에서 시작했음). 첫 화면인 홈에는 헤더 뒤로 버튼이 없다(11-09 PR #42). 앱에서 나갈 때는 차량 홈 버튼을 쓴다.
 - 개발 메뉴(debug만): **홈 제목 "차슐랭"이나 S1 제목 "근처 충전소"를 길게 누르면** 열린다. 화면에는 보이지 않는다.
 - 판정 기준: `BuildConfig.DEMO_RULES`가 true면 `ChargeRules.DEMO`. debug는 항상 true, release는 `supabase.demo`(기본 true, 시연 데이터 모드)와 같이 간다. 실제 기준으로 빌드하려면 `local.properties`에 `supabase.demo=false`.
 - 제출 release APK: `bash tools/build-release.sh` → `apk/SamgakGorae_Chachelin_release.apk`. 심사위원이 직접 눌러도 위 시나리오가 그대로 된다(스크립트 대신 Virtual Console 웹 화면에서 충전구·SoC를 바꾸면 됨).
