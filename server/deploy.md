@@ -72,3 +72,8 @@ CLI를 쓰는 사람(황준용)은 `db push --linked --dry-run`으로 두 파일
 server/에서 `pnpm install --frozen-lockfile` 후 `node --test tests/database.test.mjs`.
 
 원격 Auth/JWT 대신 테스트 전용 auth.users/auth.uid()와 anon/authenticated 역할을 만든 별도 메모리 PostgreSQL에서 실제 migration SQL을 실행한다. SQL 문법·제약·RLS·RPC·시드 집계는 실행 검증하지만 Supabase 전체 서비스나 동시 실행을 완전히 재현하는 것은 아니다.
+
+
+## 11-09 추가 별점 분포
+
+검토 후 `20261109000100_demo_rating_variation.sql`을 적용한다. 화면의 평균 별점이 약 3.2~4.3점으로 구분된다. `20261107000100_demo_names.sql`과 함께 CLI dry-run으로 대상을 확인한다. 적용 뒤 `refresh-demo-dates.sql`, `verify.sql`을 실행하면 버전 6개·충전 시드 325건이어야 한다. 리허설 기록 삭제는 촬영 시점을 정해 별도로 실행한다. 자세한 범위와 테스트는 [피드백 확인 기록](review-20261109.md)에 있다.

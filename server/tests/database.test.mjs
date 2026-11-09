@@ -256,6 +256,43 @@ const freshDb = async () => {
 const sql = name => readFile(new URL(`../supabase/${name}`,import.meta.url),'utf8');
 const nearby = async conn => (await conn.query(`select public.pleos_nearby_stations(37.4127,127.0947,10000,true) data`)).rows[0].data;
 
+test('demo rating variation separates ten averages and preserves ranking reversal and client reviews', async () => {
+  const fresh = await freshDb();
+  try {
+    const variation = await sql('migrations/20261109000100_demo_rating_variation.sql');
+    await fresh.exec(variation);
+    assert.equal((await fresh.query(`select count(*)::int n from pleos_private.migration_versions where version='20261109000100'`)).rows[0].n, 0);
+    await fresh.exec(await sql('migrations/20261102000200_demo_data.sql'));
+    await fresh.exec(await sql('migrations/20261103000100_score_failure_penalty.sql'));
+    await fresh.exec(await sql('migrations/20261103000200_demo_failure_station.sql'));
+    await fresh.exec(`insert into auth.users values('${A}'); select set_config('request.jwt.claim.sub','${A}',false);
+      insert into pleos_private.app_installations(id,owner_user_id,app,vehicle_hash,data_source,consent_version)
+      values('${V}','${A}','CHACHELIN',repeat('a',64),'SIMULATED','test');
+      insert into pleos_private.charge_sessions(installation_id,id,station_id,started_at,ended_at,soc_start,soc_end,result)
+      values('${V}','${S}','st-001',now()-interval '30 minutes',now(),20,40,'SUCCESS');
+      insert into pleos_private.reviews(installation_id,session_id,rating,tags) values('${V}','${S}',5,array['CLEAN']);`);
+    const sessionDigest = async () => (await fresh.query(`select md5(string_agg(row_to_json(c)::text,'' order by installation_id,id)) digest from pleos_private.charge_sessions c`)).rows[0].digest;
+    const originalSessions = await sessionDigest();
+    await fresh.exec(`begin; delete from pleos_private.reviews where session_id=md5('pleos-demo-charge-session-1')::uuid;`);
+    await assert.rejects(fresh.exec(variation), /Original demo reviews are incomplete/);
+    await fresh.exec('rollback');
+    await fresh.exec(variation);
+    const rows = await nearby(fresh);
+    assert.equal(rows.length, 10);
+    assert.equal(new Set(rows.map(row => Number(row.avg_rating).toFixed(1))).size, 10);
+    assert.ok(Math.max(...rows.map(row => Number(row.avg_rating))) - Math.min(...rows.map(row => Number(row.avg_rating))) > 1);
+    assert.equal(rows.at(-1).id, 'st-004');
+    assert.equal(rows.find(row => Number(row.avg_rating) === Math.max(...rows.map(item => Number(item.avg_rating)))).id, 'st-004');
+    assert.equal(await sessionDigest(), originalSessions);
+    assert.equal((await fresh.query(`select rating from pleos_private.reviews where installation_id='${V}'`)).rows[0].rating, 5);
+    assert.equal((await fresh.query(`select count(*)::int n from pleos_private.reviews r join pleos_private.app_installations i on i.id=r.installation_id where i.data_source='SEED'`)).rows[0].n, 268);
+    await fresh.exec(variation);
+    assert.deepEqual(await nearby(fresh), rows);
+    await fresh.exec(await sql('refresh-demo-dates.sql'));
+    assert.deepEqual((await nearby(fresh)).map(row => Number(row.avg_rating)), rows.map(row => Number(row.avg_rating)));
+  } finally { await fresh.close(); }
+});
+
 test('score = stars x (1 - 30-day failure rate); under 5 sessions no penalty; retracted and old rows excluded', async () => {
   const fresh=await freshDb();
   try {
