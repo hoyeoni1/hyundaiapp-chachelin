@@ -244,6 +244,7 @@ private fun ScreenContent(
                 onHistory = { goTab(NavTab.HISTORY) },
                 onSettings = { goTab(NavTab.SETTINGS) },
                 onOpenCharge = openChargeFlow,
+                onBack = back,
                 onDevMenu = if (BuildConfig.DEBUG) ({ go(Screen.DEV_MENU) }) else null,
             )
         }

@@ -36,11 +36,16 @@ class HomeViewModel(
             target.collect { t -> _state.update { it.copy(charge = t.toHomeStatus()) } }
         }
         viewModelScope.launch {
+            profile.presetIndex.collect { index ->
+                val label = index?.let { VehiclePreset.ALL.getOrNull(it)?.label?.substringBefore(" (") }
+                _state.update { it.copy(carLabel = label) }
+            }
+        }
+        viewModelScope.launch {
             combine(records.myRecords(), profile.onboarded) { list, _ -> list }.collectLatest { list ->
                 val last = list.maxByOrNull { it.startedAtMs }
                 _state.update {
                     it.copy(
-                        carLabel = profile.presetIndex?.let { i -> VehiclePreset.ALL.getOrNull(i)?.label?.substringBefore(" (") },
                         recordCount = list.size,
                         lastRecord = last?.let { r ->
                             HistoryRowUi(

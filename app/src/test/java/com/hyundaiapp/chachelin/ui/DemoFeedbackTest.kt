@@ -57,9 +57,9 @@ class DemoFeedbackTest {
         vm.onSelectPreset(3)
         assertTrue(vm.onStart())
         assertEquals(64.8f, profile.capacityKwh!!, 0.001f)
-        assertEquals(3, profile.presetIndex)
+        assertEquals(3, profile.presetIndex.value)
         assertTrue(profile.onboarded.value)
-        assertEquals(1, started)
+        assertEquals(0, started)
     }
 
     @Test
@@ -82,10 +82,25 @@ class DemoFeedbackTest {
         profile.clear()
         vm.reload()
         assertFalse(vm.state.value.editing)
-        assertNull(profile.presetIndex)
+        assertNull(profile.presetIndex.value)
     }
 
     // 3. 홈 화면
+
+    @Test
+    fun `설정 저장 직후 같은 홈 인스턴스에 새 차종이 보인다`() = runTest {
+        profile.completeOnboarding(77.4f, presetIndex = 0)
+        val home = HomeViewModel(MutableStateFlow(ChargeScreenTarget.NONE), FakeChargeRecordRepository(), FakeStationRepository(), profile)
+        assertEquals("아이오닉 5", home.state.value.carLabel)
+
+        val settings = OnboardingViewModel(profile)
+        settings.reload()
+        settings.onSelectPreset(3)
+        assertTrue(settings.onStart())
+        runCurrent()
+
+        assertEquals("코나 일렉트릭", home.state.value.carLabel)
+    }
 
     @Test
     fun `홈은 충전 상태와 내 차와 최근 기록을 보여 준다`() = runTest {

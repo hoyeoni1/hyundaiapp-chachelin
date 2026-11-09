@@ -1,7 +1,6 @@
 package com.hyundaiapp.chachelin.ui.home
 
 import androidx.compose.foundation.BorderStroke
-import androidx.compose.foundation.gestures.detectTapGestures
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
@@ -21,7 +20,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.vector.ImageVector
-import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
@@ -32,6 +30,7 @@ import com.hyundaiapp.chachelin.ui.HomeUiState
 import com.hyundaiapp.chachelin.ui.components.CarCard
 import com.hyundaiapp.chachelin.ui.components.CarIcons
 import com.hyundaiapp.chachelin.ui.components.PrimaryButton
+import com.hyundaiapp.chachelin.ui.components.ScreenHeader
 import com.hyundaiapp.chachelin.ui.components.Text
 import com.hyundaiapp.chachelin.ui.components.formatDateTime
 import com.hyundaiapp.chachelin.ui.theme.CarColors
@@ -49,6 +48,7 @@ fun HomeScreen(
     onHistory: () -> Unit,
     onSettings: () -> Unit,
     onOpenCharge: () -> Unit,
+    onBack: () -> Unit,
     onDevMenu: (() -> Unit)? = null,
 ) {
     BoxWithConstraints(Modifier.fillMaxSize()) {
@@ -58,13 +58,12 @@ fun HomeScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(24.dp),
         ) {
-            val titleModifier = if (onDevMenu != null) {
-                Modifier.pointerInput(onDevMenu) { detectTapGestures(onLongPress = { onDevMenu() }) }
-            } else Modifier
-            Column(titleModifier, verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                Text("차슐랭", style = MaterialTheme.typography.headlineMedium)
-                Text("실제로 충전한 사람만 평가하는 충전소 가이드", style = MaterialTheme.typography.bodyLarge, color = CarColors.OnSurfaceVariant)
-            }
+            ScreenHeader(
+                "차슐랭",
+                subtitle = "실제로 충전한 사람만 평가하는 충전소 가이드",
+                onBack = onBack,
+                onTitleLongPress = onDevMenu,
+            )
             ChargeStatusCard(state.charge, onOpenCharge)
             val tiles: List<@Composable (Modifier) -> Unit> = listOf(
                 { m -> HomeTile(NavIcons.Pin, "근처 충전소", "차슐랭 점수순으로 보고 길안내", onStations, m) },
@@ -142,7 +141,7 @@ private fun LastRecord(row: HistoryRowUi) {
 private fun HomePreview() {
     ChachelinTheme {
         Surface {
-            HomeScreen(HomeUiState(charge = HomeChargeStatus.REVIEW, carLabel = "아이오닉 5", recordCount = 3), {}, {}, {}, {})
+            HomeScreen(HomeUiState(charge = HomeChargeStatus.REVIEW, carLabel = "아이오닉 5", recordCount = 3), {}, {}, {}, {}, onBack = {})
         }
     }
 }
@@ -150,5 +149,5 @@ private fun HomePreview() {
 @Preview(name = "홈 세로", widthDp = 720, heightDp = 1280)
 @Composable
 private fun HomePortraitPreview() {
-    ChachelinTheme { Surface { HomeScreen(HomeUiState(), {}, {}, {}, {}) } }
+    ChachelinTheme { Surface { HomeScreen(HomeUiState(), {}, {}, {}, {}, onBack = {}) } }
 }
