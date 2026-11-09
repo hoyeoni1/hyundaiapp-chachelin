@@ -14,7 +14,7 @@
 |---|---|
 | 앱 이름 | 차슐랭 (Chachelin) — 팀 삼각고래, 일반 부문 |
 | 한 줄 소개 | 차량이 직접 확인한 충전 기록(SoC·충전구·시간)으로 충전소를 평가해, "사용 가능"이라던 충전기 앞에서 허탕 치는 일을 줄이는 정차 전용 Pleos Connect 앱 |
-| APK 위치 | `apk/SamgakGorae_Chachelin_release.apk` (서명된 release 빌드, 시연 데이터 모드·시연 판정 기준, 11-05 빌드) |
+| APK 위치 | `apk/SamgakGorae_Chachelin_release.apk` (서명된 release 빌드, 시연 데이터 모드·시연 판정 기준, 11-07 빌드) |
 | 패키지 | `com.hyundaiapp.chachelin` |
 | 기획서 | [docs/proposal.md](docs/proposal.md) (접수양식 02 항목과 같은 내용), 제품 요구사항 [PRD.md](PRD.md) |
 | 시연 순서 | [docs/demo-scenario.md](docs/demo-scenario.md) — 약 3분, 이 순서대로 누르면 그대로 동작한다 |
