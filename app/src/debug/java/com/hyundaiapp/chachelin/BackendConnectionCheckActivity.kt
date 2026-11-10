@@ -34,7 +34,7 @@ class BackendConnectionCheckActivity : Activity() {
             report.put("vehicle_id", vehicle)
             var backend: SupabaseBackend? = null
             try {
-                val app = if (packageName.endsWith("chachelin")) "CHACHELIN" else "CRUISEBREAKER"
+                val app = if (packageName.endsWith("chachelin")) "CHACHELIN" else "CRONG"
                 val config = BackendConfig(BuildConfig.SUPABASE_URL, BuildConfig.SUPABASE_PUBLISHABLE_KEY, app, true)
                 val store = EncryptedBackendStore(applicationContext, config.storageNamespace + "-check")
                 fun client() = SupabaseBackend(config, store, HttpsBackendTransport(config), scope, startWorker = false)

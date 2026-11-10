@@ -50,7 +50,7 @@ erDiagram
 |---|---|---|
 | id | uuid PK | 서버가 발급하는 앱 설치 ID |
 | owner_user_id | uuid FK auth.users | 로그인한 소유자. 관리자가 만든 시드만 null 허용 |
-| app | text CHECK | CHACHELIN / CRUISEBREAKER |
+| app | text CHECK | CHACHELIN / CRONG |
 | vehicle_hash | text | 앱의 기존 무작위 vehicleId를 앱별로 가명화한 키. 원본 UUID는 저장하지 않음 |
 | state | text CHECK | ACTIVE / REVOKED |
 | data_source | text CHECK | LIVE / SIMULATED / SEED |
@@ -59,7 +59,7 @@ erDiagram
 
 - 무작위 차량 UUID를 안다는 것만으로 설치를 소유하거나 삭제할 수 없다. 소유권은 JWT의 `auth.uid()`와 서버 저장 값으로 확인한다.
 - 등록 재시도는 동일 owner/app/vehicle_hash에 대해 같은 설치 ID를 돌려준다. 철회한 설치는 다시 활성화하지 않고 재동의 시 새 가명 ID·새 설치 행을 만든다.
-- 차슐랭 기록은 CHACHELIN 설치, 크루즈 기록은 CRUISEBREAKER 설치에만 허용한다. 다른 앱의 철회로 함께 삭제하지 않는다.
+- 차슐랭 기록은 CHACHELIN 설치, 크루즈 기록은 CRONG 설치에만 허용한다. 다른 앱의 철회로 함께 삭제하지 않는다.
 - data_source=SEED와 owner=null 조합은 관리자만 생성 가능하다. 일반 앱은 SEED 권한이 없다. 시연은 SIMULATED로 등록하며 시드와 실측을 구분해 응답한다.
 - REVOKED 행은 늦은 업로드를 막기 위한 최소 차단 정보다. 이 행과 Auth 데이터의 보유·정리 기간은 팀 정책 확정이 필요하다. 이를 두고 모든 식별 정보가 즉시 삭제된다고 설명하지 않는다.
 
@@ -166,7 +166,7 @@ PK는 `(installation_id, segment_id, heading8, pass_date)`. 날짜는 기존 앱
 
 후기 전송은 해당 세션 업로드 성공 후에 실행한다. [실패 아님]은 실패 세션을 RETRACTED로 만들어 집계에서 제외한다. 시연 배속 기록은 SIMULATED로 구분한다. 최초에는 화면 진입/새로고침으로 조회하며 Realtime 구독은 필수로 도입하지 않는다.
 
-### 크루즈브레이커
+### 크롱
 
 작동 상태·차속·위치를 기기 내 판정 → geohash/방향·시간 또는 날짜로 축약 → 영속 outbox → 업로드 RPC → 9칸/28일 집계 → 앱이 주변 위험 구간 조회 → 앱의 기존 방향·거리·작동 상태·중복 안내 조건 판정 → 배너/TTS.
 

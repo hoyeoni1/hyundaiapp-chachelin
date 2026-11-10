@@ -4,6 +4,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 const migration = await readFile(new URL('../supabase/migrations/20261102000100_initial_schema.sql', import.meta.url), 'utf8');
+const rename = await readFile(new URL('../supabase/migrations/20261110000100_rename_crong.sql', import.meta.url), 'utf8');
 const A = '10000000-0000-4000-8000-000000000001';
 const B = '10000000-0000-4000-8000-000000000002';
 const S = '20000000-0000-4000-8000-000000000001';
@@ -27,17 +28,18 @@ test.before(async () => {
     create function auth.uid() returns uuid language sql stable as $$ select nullif(current_setting('request.jwt.claim.sub',true),'')::uuid $$;
     grant usage on schema auth to anon,authenticated; grant execute on function auth.uid() to anon,authenticated;`);
   await db.exec(migration);
+  await db.exec(rename);
   await db.exec(`insert into pleos_private.stations(id,name,operator,latitude,longitude,max_kw,source)
     values('st-001','Test station','Test operator',37.4127,127.0947,100,'SEED')`);
 });
 test.after(async () => { await db?.close(); });
 
 test('migration applies once, is transactional, and raw tables are all protected', async () => {
-  assert.equal(await scalar(`select count(*) from pleos_private.migration_versions`),1);
+  assert.equal(await scalar(`select count(*) from pleos_private.migration_versions`),2);
   assert.equal(await scalar(`select count(*) from pg_class c join pg_namespace n on n.oid=c.relnamespace where n.nspname='pleos_private' and relkind='r' and not relrowsecurity`),0);
   await assert.rejects(db.exec(migration));
   await db.exec('rollback');
-  assert.equal(await scalar(`select count(*) from pleos_private.migration_versions`),1);
+  assert.equal(await scalar(`select count(*) from pleos_private.migration_versions`),2);
 });
 test('unauthenticated users and PUBLIC cannot call client RPCs or read raw data', async () => {
   await asUser(null,async()=>{
@@ -54,7 +56,7 @@ test('registration is idempotent and bound to JWT owner and app', async () => {
   assert.equal(await asUser(A,register),id);
   assert.notEqual(await asUser(B,register),id);
   await asUser(B,async()=>await assert.rejects(charge(id)));
-  const cruise=await asUser(A,()=>register('CRUISEBREAKER'));
+  const cruise=await asUser(A,()=>register('CRONG'));
   await asUser(A,async()=>await assert.rejects(charge(cruise)));
   await asUser(A,async()=>await assert.rejects(db.query(`select * from pleos_private.app_installations`)));
 });
@@ -94,7 +96,7 @@ test('failure retraction is idempotent when absent and blocks a late upload', as
   assert.equal(await scalar(`select count(*) from pleos_private.charge_sessions where installation_id=$1 and id=$2`,[id,session]),0);
 });
 test('data bounds, invalid tags, simulated/live separation and future dates are enforced', async () => {
-  const cruise=await asUser(A,()=>register('CRUISEBREAKER'));
+  const cruise=await asUser(A,()=>register('CRONG'));
   await asUser(A,async()=>{
     await assert.rejects(db.query(`select public.pleos_upload_pass($1,'wydku4g',8::smallint,current_date)`,[cruise]));
     await assert.rejects(db.query(`select public.pleos_upload_pass($1,'invalid',0::smallint,current_date)`,[cruise]));
@@ -115,7 +117,7 @@ test('geohash encoding, center and eight neighbors match independent grid vector
   }
 });
 test('disengage atomically supplies pass; KST dates and retry deduplication are correct', async () => {
-  const id=await asUser(A,()=>register('CRUISEBREAKER'));
+  const id=await asUser(A,()=>register('CRONG'));
   await asUser(A,async()=>{
     const sql=`select public.pleos_upload_disengage($1,'wydku4g',0::smallint,'2026-10-30T15:00:00Z')`;
     await db.query(sql,[id]); await db.query(sql,[id]);
@@ -131,7 +133,7 @@ test('9-cell risk counts installation-days, not rows; direction and day-window e
   // 20 distinct seed installations, three adjacent pass rows each; six disengage days.
   for(let k=0;k<20;k++){
     const id=await scalar(`insert into pleos_private.app_installations(app,vehicle_hash,data_source,consent_version)
-      values('CRUISEBREAKER',encode(sha256(convert_to($1,'UTF8')),'hex'),'SEED','seed-v1') returning id`,[`risk-test-${k}`]);
+      values('CRONG',encode(sha256(convert_to($1,'UTF8')),'hex'),'SEED','seed-v1') returning id`,[`risk-test-${k}`]);
     for(const h of around.slice(0,3)) await db.query(`insert into pleos_private.cruise_passes(installation_id,segment_id,heading8,pass_date) values($1,$2,2,$3)`,[id,h,today]);
     if(k<6) for(const h of around.slice(0,2)) await db.query(`insert into pleos_private.cruise_events(installation_id,segment_id,heading8,occurred_hour)
       values($1,$2,2,($3::date::timestamp at time zone 'Asia/Seoul')+interval '1 hour')`,[id,h,today]);
@@ -182,7 +184,7 @@ test('history keyset cursor retains records with equal timestamps', async () => 
 });
 
 test('risk window includes KST today-27 and excludes today-28, and directions do not mix', async () => {
-  const id=await asUser(A,()=>register('CRUISEBREAKER','30000000-0000-4000-8000-000000000003'));
+  const id=await asUser(A,()=>register('CRONG','30000000-0000-4000-8000-000000000003'));
   await asUser(A,async()=>{
     await db.query(`select public.pleos_upload_pass($1,'wydku4g',5::smallint,(now() at time zone 'Asia/Seoul')::date-27)`,[id]);
     await db.query(`select public.pleos_upload_pass($1,'wydku4g',5::smallint,(now() at time zone 'Asia/Seoul')::date-28)`,[id]);
@@ -201,6 +203,9 @@ test('seed migration is replayable: exactly 10 demo stations, 300 sessions, 400 
     await seeded.exec(migration);
     const seed=await readFile(new URL('../supabase/migrations/20261102000200_demo_data.sql',import.meta.url),'utf8');
     await seeded.exec(seed); await seeded.exec(seed);
+    // 11-10 rename: seed rows move to CRONG, rename is re-runnable and the seed stays replayable after it.
+    await seeded.exec(rename); await seeded.exec(rename); await seeded.exec(seed);
+    assert.equal((await seeded.query(`select count(*)::int n from pleos_private.app_installations where app='CRONG'`)).rows[0].n,200);
     for(const [table,count] of [['stations',10],['charge_sessions',300],['cruise_events',400],['cruise_passes',2000]]) {
       assert.equal((await seeded.query(`select count(*)::int n from pleos_private.${table}`)).rows[0].n,count);
     }
@@ -265,6 +270,7 @@ test('demo rating variation separates ten averages and preserves ranking reversa
     await fresh.exec(await sql('migrations/20261102000200_demo_data.sql'));
     await fresh.exec(await sql('migrations/20261103000100_score_failure_penalty.sql'));
     await fresh.exec(await sql('migrations/20261103000200_demo_failure_station.sql'));
+    await fresh.exec(await sql('migrations/20261110000100_rename_crong.sql'));
     await fresh.exec(`insert into auth.users values('${A}'); select set_config('request.jwt.claim.sub','${A}',false);
       insert into pleos_private.app_installations(id,owner_user_id,app,vehicle_hash,data_source,consent_version)
       values('${V}','${A}','CHACHELIN',repeat('a',64),'SIMULATED','test');
@@ -340,6 +346,7 @@ test('failure-heavy demo station ranks first by stars but last by score, and dat
     await fresh.exec(demo);
     await fresh.exec(await sql('migrations/20261103000100_score_failure_penalty.sql'));
     await fresh.exec(failure); await fresh.exec(failure);
+    await fresh.exec(await sql('migrations/20261110000100_rename_crong.sql'));
     assert.equal((await fresh.query(`select count(*)::int n from pleos_private.charge_sessions`)).rows[0].n,325);
     await fresh.exec(`insert into auth.users values('${A}'); select set_config('request.jwt.claim.sub','${A}',false);`);
     const rows=await nearby(fresh);
@@ -397,4 +404,13 @@ test('clear-rehearsal-data deletes SIMULATED records only and keeps installation
     assert.equal((await fresh.query(`select count(*)::int n from pleos_private.reviews where installation_id='${sim}'`)).rows[0].n,0);
     assert.equal((await fresh.query(`select count(*)::int n from pleos_private.app_installations where id='${sim}'`)).rows[0].n,1);
   } finally { await fresh.close(); }
+});
+
+test('old cruise app code CRUISEBREAKER registers as CRONG (alias), raw CRUISEBREAKER rows are rejected', async () => {
+  const id=await asUser(A,()=>register('CRUISEBREAKER','30000000-0000-4000-8000-000000000009'));
+  assert.equal(await scalar(`select app from pleos_private.app_installations where id=$1`,[id]),'CRONG');
+  await asUser(A,()=>db.query(`select public.pleos_upload_pass($1,'wydm9qy',0::smallint,(now() at time zone 'Asia/Seoul')::date)`,[id]));
+  await assert.rejects(asUser(A,()=>register('NOPE','30000000-0000-4000-8000-00000000000a')),/Invalid registration/);
+  await assert.rejects(db.query(`insert into pleos_private.app_installations(app,vehicle_hash,data_source,consent_version)
+    values('CRUISEBREAKER',repeat('b',64),'SEED','seed-v1')`),/app_installations_app_check/);
 });

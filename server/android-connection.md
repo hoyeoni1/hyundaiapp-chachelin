@@ -58,8 +58,8 @@ supabase.publishableKey=sb_publishable_REPLACE_ME
 adb shell am start --user 10 -n com.hyundaiapp.chachelin/.BackendConnectionCheckActivity
 adb shell run-as com.hyundaiapp.chachelin --user 10 cat files/backend-check-result.json
 
-adb shell am start --user 10 -n com.hyundaiapp.cruisebreaker/.BackendConnectionCheckActivity
-adb shell run-as com.hyundaiapp.cruisebreaker --user 10 cat files/backend-check-result.json
+adb shell am start --user 10 -n com.hyundaiapp.crong/.BackendConnectionCheckActivity
+adb shell run-as com.hyundaiapp.crong --user 10 cat files/backend-check-result.json
 ```
 
 완료 결과는 ok=true와 네 가지 checks다. 실제 익명 테스트 사용자/설치를 만들므로 무한 반복하지 않는다. 정상 검사에서는 업무 기록 삭제와 로컬 토큰 제거까지 수행하며, 서버의 최소 REVOKED 설치/Auth 정리는 별도 관리 작업이다. 초기 Android 연결 검사에서 식별된 테스트 설치는 CLI로 정리했고, 실패한 검사에서 식별되지 않은 최소 차단 정보가 남아 있을 수 있다. 이는 시드/점수/위험도에는 포함되지 않는다.
