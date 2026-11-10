@@ -19,7 +19,7 @@ class TextWrappingTest {
         assertEquals("한",keepWordsTogether("한"))
     }
     @Test fun `url과 이메일은 기본 줄바꿈에 맡긴다`() {
-        for(text in listOf("https://example.com/a-very-long-path", "hoyhoyhoyeoni@gmail.com", "cruisebreaker-terms-2026-11-v1")) assertEquals(text,keepWordsTogether(text))
+        for(text in listOf("https://example.com/a-very-long-path", "hoyhoyhoyeoni@gmail.com", "crong-terms-2026-11-v1")) assertEquals(text,keepWordsTogether(text))
     }
     @Test fun `서로게이트와 결합 이모지는 분리하지 않는다`() {
         for(text in listOf("\uD83D\uDE97", "\uD83D\uDC69\u200D\uD83D\uDC69\u200D\uD83D\uDC67", "\uD83D\uDC4D\uD83C\uDFFD")) assertEquals(text,keepWordsTogether(text))

@@ -1,6 +1,6 @@
 # 공통 Supabase 서버
 
-차슐랭과 크루즈브레이커가 사용하는 서버의 원본은 이 디렉터리다. 담당은 황준용. SDK 진단 PR과 분리한 `codex/supabase-foundation-20261102`에서 작업한다.
+차슐랭과 크롱이 사용하는 서버의 원본은 이 디렉터리다. 담당은 황준용. SDK 진단 PR과 분리한 `codex/supabase-foundation-20261102`에서 작업한다.
 
 **처음 읽는 팀원:** [두 앱 공통 서버 설명서](../docs/server-overview.md)에서 아키텍처·테이블·RPC·권한·전송·철회·운영과 미완료 범위를 한 번에 확인할 수 있다. 현재 Android 공통 버전은 core v0.5.1이다.
 

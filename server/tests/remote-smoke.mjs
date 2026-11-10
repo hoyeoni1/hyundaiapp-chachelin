@@ -24,7 +24,7 @@ try {
   console.log('PASS anonymous sign-in: two independent users');
   const register=(app,s)=>rpc('pleos_register_installation',{p_app:app,p_vehicle_id:randomUUID(),p_consent_version:'integration-test-only',p_simulated:true},s);
   const ch=await register('CHACHELIN',a);installations.push(ch);await remember();
-  const cr=await register('CRUISEBREAKER',a);installations.push(cr);await remember();
+  const cr=await register('CRONG',a);installations.push(cr);await remember();
   const query={p_lat:37.4127,p_lon:127.0947,p_radius_m:10000,p_demo:true};
   const before=(await rpc('pleos_nearby_stations',query,a)).find(x=>x.id==='st-003');
   const payload={p_installation_id:ch,p_id:randomUUID(),p_station_id:'st-003',p_started_at:new Date(Date.now()-3600000).toISOString(),p_ended_at:new Date(Date.now()-1800000).toISOString(),p_soc_start:40,p_soc_end:60,p_avg_kw:30,p_result:'SUCCESS',p_time_scale:120};

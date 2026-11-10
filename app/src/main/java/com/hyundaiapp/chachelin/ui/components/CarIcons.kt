@@ -10,7 +10,7 @@ import androidx.compose.ui.unit.dp
 
 /*
  * 두 앱 공통 아이콘(24 그리드, 선 아이콘). material-icons 의존성 없이 쓰려고 직접 그린다.
- * 색은 Icon(tint = ...)으로 바꾼다. 크루즈브레이커 CarIcons.kt와 같은 내용.
+ * 색은 Icon(tint = ...)으로 바꾼다. 크롱 CarIcons.kt와 같은 내용.
  */
 object CarIcons {
     val Warning = stroke("Warning", "M12 3 2 20h20L12 3z", "M12 10v4", "M12 17.5h.01")

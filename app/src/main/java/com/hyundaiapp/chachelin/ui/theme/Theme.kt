@@ -13,10 +13,10 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /*
- * 두 앱 공통 테마(크루즈브레이커와 같은 값, Primary만 다름). 한쪽을 바꾸면 다른 앱 Theme.kt도 같이 바꾼다.
+ * 두 앱 공통 테마(크롱과 같은 값, Primary만 다름). 한쪽을 바꾸면 다른 앱 Theme.kt도 같이 바꾼다.
  * 와이어프레임: https://claude.ai/artifact/9vidSJtHrxzCqtEcjJjVTf ("공통 테마" 보드)
  * - 어두운 배경 + 큰 글씨, 강조색은 앱 대표색(Primary)과 주황(위험·실패) 둘만
- * - Primary만 앱마다 다르다: 크루즈브레이커 앰버, 차슐랭 레드
+ * - Primary만 앱마다 다르다: 크롱 앰버, 차슐랭 레드
  * - 상태는 색만으로 구분하지 않고 늘 글자와 함께 보여 준다
  */
 object CarColors {

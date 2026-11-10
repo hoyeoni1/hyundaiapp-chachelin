@@ -19,7 +19,7 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.TextUnit
 
 /*
- * 두 앱 공통(크루즈브레이커 Text.kt와 같은 내용). 화면 파일은 material3 Text 대신 이 Text를 import 한다.
+ * 두 앱 공통(크롱 Text.kt와 같은 내용). 화면 파일은 material3 Text 대신 이 Text를 import 한다.
  * 안드로이드는 한글을 글자 단위로 줄바꿈해서 "기록/합니다"처럼 단어 중간에서 끊는다.
  * 한글 단어와 한글에 붙은 영문·숫자 사이에 WORD JOINER를 넣는다.
  * 영문 URL·이메일과 이모지·분해형 문자는 원문을 유지한다.

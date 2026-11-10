@@ -53,7 +53,7 @@ import com.hyundaiapp.chachelin.ui.theme.CarDimens
 import java.util.Locale
 
 /*
- * 두 앱 공통 화면 부품. 크루즈브레이커 CarComponents.kt와 같은 내용(패키지만 다름).
+ * 두 앱 공통 화면 부품. 크롱 CarComponents.kt와 같은 내용(패키지만 다름).
  * 부품은 상태를 갖지 않는다. 값과 콜백만 받는다.
  */
 

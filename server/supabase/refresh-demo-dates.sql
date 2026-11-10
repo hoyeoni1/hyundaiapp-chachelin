@@ -15,7 +15,7 @@ select i.id, i.app from pleos_private.app_installations i
 join (
   select md5('pleos-demo-charge-owner-'||g)::uuid id, 'CHACHELIN' app from generate_series(1,(select charge_owners from demo_refresh_expected)) g
   union all
-  select md5('pleos-demo-cruise-owner-'||g)::uuid, 'CRUISEBREAKER' from generate_series(1,200) g
+  select md5('pleos-demo-cruise-owner-'||g)::uuid, 'CRONG' from generate_series(1,200) g
 ) expected on expected.id=i.id and expected.app=i.app
 where i.data_source='SEED' and i.owner_user_id is null and i.consent_version='demo-v1' and i.state='ACTIVE';
 

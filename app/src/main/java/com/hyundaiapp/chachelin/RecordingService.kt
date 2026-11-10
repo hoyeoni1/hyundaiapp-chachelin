@@ -14,7 +14,7 @@ import android.os.IBinder
 import androidx.core.app.ServiceCompat
 
 /**
- * 충전 기록 포그라운드 서비스(PRD 8절, 크루즈브레이커 docs/background-freeze-experiment.md와 같은 해법). 담당: 이상준.
+ * 충전 기록 포그라운드 서비스(PRD 8절, 크롱 docs/background-freeze-experiment.md와 같은 해법). 담당: 이상준.
  * 충전 중 앱이 뒤로 가도 프로세스가 얼지 않게 해서 충전구·SoC 신호를 계속 받는다.
  *
  * 시작: S7 동의 직후·동의된 상태로 앱을 열 때([MainActivity]), 시동(부팅) 때([BootReceiver]).

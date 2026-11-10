@@ -77,3 +77,9 @@ server/에서 `pnpm install --frozen-lockfile` 후 `node --test tests/database.t
 ## 11-09 추가 별점 분포
 
 검토 후 `20261109000100_demo_rating_variation.sql`을 적용한다. 화면의 평균 별점이 약 3.2~4.3점으로 구분된다. `20261107000100_demo_names.sql`과 함께 CLI dry-run으로 대상을 확인한다. 적용 뒤 `refresh-demo-dates.sql`, `verify.sql`을 실행하면 버전 6개·충전 시드 325건이어야 한다. 리허설 기록 삭제는 촬영 시점을 정해 별도로 실행한다. 자세한 범위와 테스트는 [피드백 확인 기록](review-20261109.md)에 있다.
+
+## 11-10 앱 이름 변경: CRUISEBREAKER → CRONG
+
+크루즈 앱 이름이 크롱(CRONG)으로 바뀌어(11-10 장호연 결정) 서버 앱 코드도 `CRONG`으로 바꾼다. `20261110000100_rename_crong.sql`이 기존 설치(시드·실제)의 `app`을 `CRONG`으로 바꾸고, CHECK 제약과 앱 이름을 쓰는 함수 4개(`pleos_register_installation`, `pleos_upload_pass`, `pleos_upload_disengage`, `pleos_nearby_risk`)를 다시 만든다. 다시 실행해도 된다.
+
+**적용 시점이 중요하다.** 적용하면 예전 앱(`CRUISEBREAKER`를 보내는 크롱 이전 APK)의 등록·업로드는 거절된다. 이름을 바꾼 크롱 release APK와 같은 때에 적용하고, 적용 뒤 `refresh-demo-dates.sql`(이제 `CRONG` 기준), `verify.sql`을 실행한다. 버전은 7개가 된다.
