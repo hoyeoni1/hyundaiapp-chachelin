@@ -406,8 +406,11 @@ test('clear-rehearsal-data deletes SIMULATED records only and keeps installation
   } finally { await fresh.close(); }
 });
 
-test('old cruise app code CRUISEBREAKER is rejected after the CRONG rename', async () => {
-  await assert.rejects(asUser(A,()=>register('CRUISEBREAKER','30000000-0000-4000-8000-000000000009')),/Invalid registration/);
+test('old cruise app code CRUISEBREAKER registers as CRONG (alias), raw CRUISEBREAKER rows are rejected', async () => {
+  const id=await asUser(A,()=>register('CRUISEBREAKER','30000000-0000-4000-8000-000000000009'));
+  assert.equal(await scalar(`select app from pleos_private.app_installations where id=$1`,[id]),'CRONG');
+  await asUser(A,()=>db.query(`select public.pleos_upload_pass($1,'wydm9qy',0::smallint,(now() at time zone 'Asia/Seoul')::date)`,[id]));
+  await assert.rejects(asUser(A,()=>register('NOPE','30000000-0000-4000-8000-00000000000a')),/Invalid registration/);
   await assert.rejects(db.query(`insert into pleos_private.app_installations(app,vehicle_hash,data_source,consent_version)
     values('CRUISEBREAKER',repeat('b',64),'SEED','seed-v1')`),/app_installations_app_check/);
 });

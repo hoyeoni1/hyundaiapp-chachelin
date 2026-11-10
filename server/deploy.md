@@ -82,4 +82,4 @@ server/에서 `pnpm install --frozen-lockfile` 후 `node --test tests/database.t
 
 크루즈 앱 이름이 크롱(CRONG)으로 바뀌어(11-10 장호연 결정) 서버 앱 코드도 `CRONG`으로 바꾼다. `20261110000100_rename_crong.sql`이 기존 설치(시드·실제)의 `app`을 `CRONG`으로 바꾸고, CHECK 제약과 앱 이름을 쓰는 함수 4개(`pleos_register_installation`, `pleos_upload_pass`, `pleos_upload_disengage`, `pleos_nearby_risk`)를 다시 만든다. 다시 실행해도 된다.
 
-**적용 시점이 중요하다.** 적용하면 예전 앱(`CRUISEBREAKER`를 보내는 크롱 이전 APK)의 등록·업로드는 거절된다. 이름을 바꾼 크롱 release APK와 같은 때에 적용하고, 적용 뒤 `refresh-demo-dates.sql`(이제 `CRONG` 기준), `verify.sql`을 실행한다. 버전은 7개가 된다.
+**적용 순서는 자유다.** 등록 함수가 예전 코드 `CRUISEBREAKER`를 `CRONG`의 별칭으로 받아 주므로, 이름을 바꾸기 전 APK도 적용 뒤 그대로 동작한다. 반대로 크롱 APK(`CRONG`을 보냄)는 **적용 전에는 등록이 거절돼 기록 업로드가 안 된다**(근처 구간 조회는 됨). 적용 뒤 `refresh-demo-dates.sql`(이제 `CRONG` 기준), `verify.sql`을 실행한다. 버전은 7개가 된다.

@@ -1,7 +1,7 @@
 -- Rename the cruise app code CRUISEBREAKER -> CRONG (app renamed to 크롱/CRONG, decided 2026-11-10 by 장호연).
 -- Updates existing installations (seed + real), swaps the app CHECK, and recreates the 4 functions that name the app.
 -- Same signatures, so existing grants stay. Safe to re-run. Run as project postgres after 20261109000100.
--- Apply together with the CRONG app release: an old app that still sends 'CRUISEBREAKER' is rejected after this.
+-- Order-safe: registration still accepts the old code 'CRUISEBREAKER' as an alias of CRONG, so an older APK keeps working.
 begin;
 select pg_advisory_xact_lock(20261102, 1);
 
@@ -13,6 +13,8 @@ create or replace function public.pleos_register_installation(p_app text,p_vehic
 returns uuid language plpgsql security definer set search_path='' as $$
 declare v_owner uuid:=pleos_private.require_user(); v_id uuid; v_hash text;
 begin
+  -- Alias: an app built before the rename still sends 'CRUISEBREAKER'; register it as CRONG so it keeps working.
+  if p_app='CRUISEBREAKER' then p_app:='CRONG'; end if;
   if p_app is null or p_app not in ('CHACHELIN','CRONG') or p_vehicle_id is null
     or p_consent_version is null or length(p_consent_version) not between 1 and 100 or p_simulated is null then
     raise exception 'Invalid registration' using errcode='22023';
