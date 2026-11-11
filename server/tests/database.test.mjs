@@ -261,6 +261,65 @@ const freshDb = async () => {
 const sql = name => readFile(new URL(`../supabase/${name}`,import.meta.url),'utf8');
 const nearby = async conn => (await conn.query(`select public.pleos_nearby_stations(37.4127,127.0947,10000,true) data`)).rows[0].data;
 
+test('expanded seed preserves the rehearsal stations and crosses the CRONG threshold on one new disengagement', async () => {
+  const fresh = await freshDb();
+  try {
+    for (const name of [
+      '20261102000200_demo_data', '20261103000100_score_failure_penalty',
+      '20261103000200_demo_failure_station', '20261107000100_demo_names',
+      '20261109000100_demo_rating_variation', '20261110000100_rename_crong',
+    ]) await fresh.exec(await sql(`migrations/${name}.sql`));
+    await fresh.exec(`insert into auth.users values('${A}'); select set_config('request.jwt.claim.sub','${A}',false);`);
+    await fresh.exec(await sql('refresh-demo-dates.sql'));
+
+    const protectedStations = rows => rows.filter(row => ['st-003','st-004'].includes(row.id));
+    const originalStations = protectedStations(await nearby(fresh));
+    const risks = async () => (await fresh.query(
+      'select public.pleos_nearby_risk(37.4127,127.0947,10000,true) data'
+    )).rows[0].data;
+    const originalBanner = (await risks()).find(row => row.road_name === '판교IC 진입로');
+    const spread = await sql('migrations/20261111000100_demo_seed_spread.sql');
+    await fresh.exec(spread);
+    await fresh.exec(spread);
+    await fresh.exec(await sql('refresh-demo-dates.sql'));
+
+    const stations = await nearby(fresh);
+    assert.equal(stations.length, 10);
+    assert.deepEqual(protectedStations(stations), originalStations);
+    const top = stations[0];
+    assert.equal(top.id, 'st-001');
+    assert.equal(Number(top.chachelin_score).toFixed(1), '4.8');
+    assert.equal(Number(top.verified_charges), 128);
+    assert.equal(Number(top.avg_kw), 68);
+    assert.equal(Number(top.recent_failures_7d), 0);
+    for (const [id, count, score] of [
+      ['st-002',64,'3.9'], ['st-005',12,'2.6'], ['st-006',3,null],
+    ]) {
+      const row = stations.find(item => item.id === id);
+      assert.equal(Number(row.verified_charges), count);
+      assert.equal(row.chachelin_score === null ? null : Number(row.chachelin_score).toFixed(1), score);
+    }
+    const before = await risks();
+    assert.deepEqual(before.filter(row => row.is_risk).map(row => Number(row.rate)), [0.45,0.4,0.34,0.31]);
+    const banner = before.find(row => row.segment_id === originalBanner.segment_id);
+    assert.deepEqual(banner, { ...originalBanner, road_name: '판교JC 합류부' });
+    const boundary = before.find(row => row.road_name.includes('경계 시연'));
+    assert.equal(Number(boundary.pass_vehicles), 19);
+    assert.equal(Number(boundary.disengages), 5);
+    assert.equal(boundary.is_risk, false);
+    await fresh.exec(`
+      select public.pleos_upload_disengage(
+        public.pleos_register_installation('CRONG','${V}','test',true),
+        '${boundary.segment_id}',0::smallint,date_trunc('hour',now()));
+    `);
+    const after = (await risks()).find(row => row.segment_id === boundary.segment_id);
+    assert.equal(Number(after.pass_vehicles), 20);
+    assert.equal(Number(after.disengages), 6);
+    assert.equal(Number(after.rate), 0.30);
+    assert.equal(after.is_risk, true);
+  } finally { await fresh.close(); }
+});
+
 test('demo rating variation separates ten averages and preserves ranking reversal and client reviews', async () => {
   const fresh = await freshDb();
   try {

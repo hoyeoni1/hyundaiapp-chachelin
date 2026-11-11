@@ -7,8 +7,13 @@ select pg_advisory_xact_lock(20261102,1);
 
 create temporary table demo_refresh_expected on commit drop as
 select case when has_failure_station then 42 else 30 end charge_owners,
-  case when has_failure_station then 325 else 300 end charges
-from (select exists(select 1 from pleos_private.migration_versions where version='20261103000200') has_failure_station) v;
+  case when has_spread then 376 when has_failure_station then 325 else 300 end charges,
+  case when has_spread then 2019 else 2000 end passes,
+  case when has_spread then 755 else 400 end events
+from (select
+  exists(select 1 from pleos_private.migration_versions where version='20261103000200') has_failure_station,
+  exists(select 1 from pleos_private.migration_versions where version='20261111000100') has_spread
+) v;
 
 create temporary table demo_refresh_owners on commit drop as
 select i.id, i.app from pleos_private.app_installations i
@@ -23,9 +28,9 @@ do $check$
 begin
   if (select count(*) from demo_refresh_owners) <> 200+(select charge_owners from demo_refresh_expected)
     or (select count(*) from pleos_private.charge_sessions c join demo_refresh_owners o on o.id=c.installation_id) <> (select charges from demo_refresh_expected)
-    or (select count(*) from pleos_private.cruise_passes p join demo_refresh_owners o on o.id=p.installation_id) <> 2000
-    or (select count(*) from pleos_private.cruise_events e join demo_refresh_owners o on o.id=e.installation_id) <> 400 then
-    raise exception 'Demo seed differs from expected owners / charges (230/300, or 242/325 with 20261103000200) / 2000 passes / 400 events. No refresh applied.';
+    or (select count(*) from pleos_private.cruise_passes p join demo_refresh_owners o on o.id=p.installation_id) <> (select passes from demo_refresh_expected)
+    or (select count(*) from pleos_private.cruise_events e join demo_refresh_owners o on o.id=e.installation_id) <> (select events from demo_refresh_expected) then
+    raise exception 'Demo seed differs from expected owners / charges / passes / events for the applied migrations. No refresh applied.';
   end if;
 end $check$;
 
