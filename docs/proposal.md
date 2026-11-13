@@ -194,7 +194,7 @@ Pleos Connect는 2030년까지 글로벌 약 2,000만 대 탑재를 목표로 �
 ## 7. 참고자료
 
 - GitHub 저장소: https://github.com/hoyeoni1/hyundaiapp-chachelin (소스 코드와 apk/SamgakGorae_Chachelin_release.apk)
-- 시연 영상: 【제출 전 기입 — 영상 링크 또는 첨부 파일명】
+- 시연 영상: https://drive.google.com/file/d/1iJ1_q-m9Zrn2L6H8IELWuJjooweq62j9/view?usp=sharing
 - 아래 화면은 제출한 release APK를 Pleos Connect 에뮬레이터 2.1.0에서 실행해 캡처한 것입니다.
 
 ![첫 실행 동의 — 위치정보·개인정보 동의를 받고 차종(배터리 용량)을 고릅니다. 알림 권한은 선택입니다](images/ch-s7-consent.png)
