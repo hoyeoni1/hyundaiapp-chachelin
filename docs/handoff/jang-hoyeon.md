@@ -2,7 +2,7 @@
 
 담당 경로: `tools/`, `apk/`, `README.md`, `PRD.md`, `docs/`, 릴리스. 총괄로서 전체 기반(초기 core·앱 뼈대)도 만들었음
 
-## 현재 상태 (2026-11-11 기준, 매번 덮어쓰기)
+## 현재 상태 (2026-11-13 기준, 매번 덮어쓰기)
 
 - 한 일 요약:
   - **11-05 시연 흐름 확정**: 확정 시나리오 `docs/demo-scenario.md`(이 순서대로 누르면 그대로 동작해야 함). 앱은 debug·release 모두 S7→S1로 시작, 개발 메뉴는 S1 제목 길게 누르기, 제출 release도 시연 판정 기준(`DEMO_RULES`). 에뮬레이터 + 실제 서버로 처음부터 끝까지 확인. 차슐랭 PR #35 → `1047949`, 크루즈 PR #47 → `0823124` **머지 완료**, release APK `apk/` 커밋(아래 작업 기록)
@@ -29,6 +29,7 @@
   - 기타: 기획서(`docs/proposal.md`, `docs/submission/`)는 팀장 결정으로 `main`에 바로 push
 - 리뷰·머지: PR 리뷰는 Claude(정기 작업 "삼각고래 PR 리뷰", 매일 09~23시 매시), 머지는 장호연만(`docs/pr-review-guide.md`)
 - 다음 할 일(우선순위 순, 11-09 점검 기준. 서명 11-13, 발송 11-14, 사이트 마감 11-15):
+  0-1. **11-13 저장소 이력 정리(장호연 "차슐랭이랑 크루즈 새로 해줘")**: 10-29 아이디어 회의 문서 12개 경로를 git 이력 전체에서 빼고 같은 이름 `hyundaiapp-chachelin`로 새 저장소에 다시 올림(비공개). 옛 저장소는 `hyundaiapp-chachelin-archive`(비공개, 옛 PR·이슈·리뷰 기록 보관). 커밋 수·작성자·시간·메시지·최신 코드는 같고 **해시만 바뀜**(main ad9a69b→22cfdbd. 열린 PR #47→새 #1(이민하), 이슈 #12·#13→새 #2·#3). 팀원 4명은 다시 초대함(수락 필요), **각자 새로 clone해야 함**(옛 clone에서 push하면 옛 이력이 다시 올라감). 이 문서 등에 적힌 11-13 이전 커밋 해시는 archive 기준
   1. **#39 머지 후속(시작 화면 S1 → 홈)**: 문서는 고침(main `4a7b6d1`). #41(`demo-charge.sh` 주석) 머지 완료(`197eabb`). release APK 재빌드·리허설 통과(11-09). **11-10 #42(홈 뒤로 버튼 숨김)까지 넣어 다시 빌드·커밋**. #37이 머지되면 APK 다시 빌드·짧게 재확인. 길민종에게 `ui/` 수정 허용 알리기
   1-2. ~~열린 PR #37(길민종, 충전 시작 알림)~~ → **11-11 장호연 결정으로 머지 없이 닫음**(이번 제출에 안 넣음, 브랜치는 남김 — 필요하면 reopen). APK 재빌드·PRD 반영 필요 없음 — 끝남
   1-3. ~~피드백 5·7 이번 제출 포함 여부~~ → **11-11 회의로 확정: 둘 다 이번 제출에서 빼고 확장 계획 유지**(11-09 문서 그대로, 앱 코드 변경 없음). #39에 확정 코멘트 — 끝남
@@ -53,6 +54,13 @@
 - 확인 방법: `./gradlew assembleDebug test` / 시연 전체는 `docs/demo-scenario.md` 순서대로 / 신호 모니터는 S1 제목 길게 누르기 → 개발 메뉴
 
 ## 작업 기록 (최신이 위, 지우지 않음)
+
+### 2026-11-13 — 저장소 이력에서 아이디어 회의 문서 제거, 같은 이름으로 새 저장소(장호연 "둘다 하고 비교해서 보고해줘")
+- 뺀 경로(10-29에만 있던 것): `docs/` 아래 final-recommendation·final-review-report-standalone.html·idea-candidates-review·my-car-lab-meeting/one-pager-standalone.html·top-2-candidates와 같은 문서의 한글 이름 판 6개. `기획서.md`·`planning.md`(이 앱 초안)와 `docs/transcript.txt`(대회 설명회 녹취)는 남김
+- 방법: `git-filter-repo --invert-paths --prune-empty never`(빈 커밋도 남겨 1:1 대응). 옛 저장소 → `hyundaiapp-chachelin-archive`로 이름 변경, 같은 이름 새 저장소(비공개)에 모든 브랜치 push. GitHub PR 참조(refs/pull)는 지울 수 없어 같은 저장소 강제 push 대신 새 저장소로 함
+- 비교: 커밋 수 같음, 모든 커밋의 작성자·메일·작성 시간·커밋 시간·메시지 같음, 모든 브랜치의 최신 파일 트리 같음, 새 이력에 뺀 경로·파일 0건. 커밋 메시지 "Keep only docs relevant to this idea; drop previous-plan docs"는 빈 커밋으로 남음
+- 뒤처리: 팀원 4명 재초대(write), 열린 PR·이슈를 새 저장소에 다시 열고 원래 작성자·archive 번호 적음(main ad9a69b→22cfdbd. 열린 PR #47→새 #1(이민하), 이슈 #12·#13→새 #2·#3), 이 PC의 로컬 clone을 새 이력으로 맞춤(로컬 전용 `pr37` 브랜치 삭제)
+- 남은 것: 팀원 초대 수락과 새 clone 안내, 11-14 메일에는 새 해시 기재
 
 ### 2026-11-11 — PR #46 머지(장호연 "차슐랭 머지 진행")
 - 머지 전 확인: 열림·충돌 없음·검사 없음, head `7c3f559`. `.github/workflows` 없음(머지로 migration이 다시 실행되지 않음)
